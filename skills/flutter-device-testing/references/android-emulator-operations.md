@@ -55,6 +55,29 @@ Orientation, locale, font scale, accessibility, network shaping, battery, and ot
 
 Flutter `ValueKey`s work for Flutter test finders. Native black-box tools generally require stable semantics or accessibility identifiers exposed to the platform tree; do not fall back to screen coordinates without an explicit, unavoidable reason.
 
+## Appearance, font scale, and demo mode
+
+```sh
+adb -s <serial> shell cmd uimode night            # read current value first
+adb -s <serial> shell cmd uimode night yes
+adb -s <serial> shell settings get system font_scale
+adb -s <serial> shell settings put system font_scale 2.0
+adb -s <serial> shell settings put global sysui_demo_allowed 1
+adb -s <serial> shell am broadcast -a com.android.systemui.demo -e command enter
+adb -s <serial> shell am broadcast -a com.android.systemui.demo -e command exit
+```
+
+Use dark mode, font scale, and System UI demo mode for theme, large-text, and consistent screenshot passes. These are device-wide: record the prior values, restore them in failure-safe cleanup, and exit demo mode even after failures. `settings get` may print `null` for an unset value; restore that by deleting the key the task added (`settings delete system font_scale`) rather than writing a guessed default.
+
+## Inspect persisted app data
+
+```sh
+adb -s <serial> shell run-as <application-id> ls shared_prefs
+adb -s <serial> shell run-as <application-id> cat shared_prefs/<file>.xml
+```
+
+`run-as` works only for debuggable builds. It confirms what the app persisted without root or backups. Check the plugin version and API before assuming file names, since newer plugin APIs may use a different store. Treat the contents as user data and keep secrets out of reports.
+
 ## Focused diagnostics and artifacts
 
 Start with Flutter output, then narrow Android logs to the application process or relevant tags:

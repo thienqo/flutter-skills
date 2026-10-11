@@ -33,6 +33,7 @@ Report target kind and a safe label, OS/runtime, build mode, flavor, entrypoint 
 - Read [device discovery and emulators](references/device-discovery-and-emulators.md) for shared target selection, ownership, readiness, safety, and evidence rules.
 - Read [Android emulator operations](references/android-emulator-operations.md) when starting or controlling an Android virtual or physical target with Flutter and `adb`.
 - Read [iOS Simulator operations](references/ios-simulator-operations.md) when controlling Simulator with Flutter and `simctl`, including permissions, location, screenshots, or simulated push.
+- Read [semantic UI inspection](references/semantic-ui-inspection.md) when an agent must read or drive a running app through the platform accessibility tree (`idb`, `uiautomator`), when that tree is empty for a Flutter screen, or when stable `Semantics` identifiers are needed instead of coordinates or repeated screenshots.
 - Read [integration test workflows](references/integration-test-workflows.md) when writing or running `package:integration_test` suites, deep links, or smoke tests on a live target.
 - Read [lifecycle entry matrix](references/lifecycle-entry-matrix.md) when deep links or notification taps must be replayed across cold/warm start, authentication, duplicate delivery, slow data, or account changes. Resolve placeholders and require the included runner's dry run to exit successfully with the expected plan before adding `--execute`.
 

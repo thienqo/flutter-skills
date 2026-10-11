@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add a `flutter-device-testing` semantic UI inspection reference for driving a running app through the platform accessibility tree (`idb`, `uiautomator`) instead of repeated screenshots, re-reading after every action, preferring `Semantics(identifier:)` over coordinates, and diagnosing an empty Flutter semantics tree with a debug-only entrypoint. Approach adapted from conorluddy/ios-simulator-skill (MIT).
+- Add appearance, text-size, status-bar or System UI demo-mode, and read-only persisted-data inspection commands with restore rules to the iOS Simulator and Android emulator references.
+- Add two behavior cases (218 to 220), including a mandatory check that an empty semantics tree is not silently replaced by coordinate taps.
+
 ## 0.10.0 - 2026-10-05
 
 - Complete `flutter-app-workflow` specialist routing so every relevant skill is named explicitly, and restructure its preflight into a checklist.
