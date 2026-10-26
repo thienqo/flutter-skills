@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Focused Flutter and Dart Agent Skills for complete app delivery",
-    "version": "0.10.0"
+    "version": "0.11.0"
   },
   "plugins": [
     {
       "name": "all-flutter-skills",
       "source": "./",
       "description": "Complete Flutter and Dart delivery collection",
-      "version": "0.10.0",
+      "version": "0.11.0",
       "category": "development",
       "strict": false,
       "skills": [
@@ -59,7 +59,7 @@
       "name": "flutter-core-skills",
       "source": "./",
       "description": "Dart, architecture, state, data, and testing skills",
-      "version": "0.10.0",
+      "version": "0.11.0",
       "category": "development",
       "strict": false,
       "skills": [
@@ -80,7 +80,7 @@
       "name": "flutter-ui-skills",
       "source": "./",
       "description": "Flutter UI, effects, layout, motion, navigation, accessibility, and localization skills",
-      "version": "0.10.0",
+      "version": "0.11.0",
       "category": "development",
       "strict": false,
       "skills": [
@@ -100,7 +100,7 @@
       "name": "flutter-engineering-skills",
       "source": "./",
       "description": "End-to-end delivery, review, security, performance, platform, release, and device verification skills",
-      "version": "0.10.0",
+      "version": "0.11.0",
       "category": "development",
       "strict": false,
       "skills": [
