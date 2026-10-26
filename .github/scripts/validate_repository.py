@@ -329,7 +329,7 @@ def validate_packages(skill_names: set[str]) -> list[str]:
     codex_interface = codex.get("interface", {})
     required_interface = {
         "displayName": "Flutter Skills",
-        "developerName": "thiennc-tesoglobal",
+        "developerName": "thienqo",
         "category": "Developer Tools",
     }
     for field, expected in required_interface.items():

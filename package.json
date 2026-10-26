@@ -28,11 +28,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/thiennc-tesoglobal/flutter-skills.git"
+    "url": "git+https://github.com/thienqo/flutter-skills.git"
   },
-  "homepage": "https://github.com/thiennc-tesoglobal/flutter-skills#readme",
+  "homepage": "https://github.com/thienqo/flutter-skills#readme",
   "bugs": {
-    "url": "https://github.com/thiennc-tesoglobal/flutter-skills/issues"
+    "url": "https://github.com/thienqo/flutter-skills/issues"
   },
   "keywords": [
     "agent-skills",
