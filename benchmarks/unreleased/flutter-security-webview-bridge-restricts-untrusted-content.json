@@ -1,0 +1,126 @@
+{
+  "created_at": "2026-10-26T08:32:45.891827+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "de4519348e1df1e4c99cc3bd2663fe459fbd137f",
+    "dirty": true,
+    "branch": "test/eval-hardening"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.310 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.310 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.310 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.10.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-security",
+      "case": "webview-bridge-restricts-untrusted-content",
+      "with_skill": {
+        "response": "I'd advise against doing both of those together. That combination would let any page that ends up in the checkout WebView trigger your native payment action. This includes pages reached through redirects, third-party scripts, or ads, and an open URL policy is exactly how such pages get in. In `webview_flutter`, a `JavaScriptChannel` is exposed to whatever document is currently loaded, and the message carries no origin. Native code cannot tell your checkout page apart from an attacker's.\n\n**Concrete abuse path:** an attacker gets a URL into the WebView, for example through a link in product content, an open redirect on a partner domain, or a compromised script. Their page then calls `PaymentBridge.postMessage(...)` with an amount, payee, or payment ID they chose. The native layer then initiates a payment with the user's stored credentials.\n\n## What I'd build instead\n\nThe checkout still works the same way, but with these controls:\n\n1. **Allowlist navigation for the checkout WebView.** Only HTTPS on your checkout and payment-provider hosts is allowed. Any other URL opens in the system browser, or is blocked if it isn't needed.\n2. **Keep the bridge narrow.** The page can only *request* a payment by sending an opaque payment/order ID. It can never send an amount, payee, or token.\n3. **Check the origin on the native side before acting.** Ignore bridge messages unless the WebView is currently on an allowlisted origin. This isn't a complete defense on its own, which is why items 4 and 5 exist.\n4. **Get the user's confirmation natively.** Show a native confirmation sheet that displays the amount and merchant, using data fetched from *your backend* by ID, not taken from the page.\n5. **Let the backend enforce everything.** The server checks that the payment ID belongs to the signed-in user, its amount, its state (one use only), and its expiry. Client-side checks are defense in depth and don't count as authorization.\n\n```dart\nconst _allowedHosts = {'checkout.example.com', 'pay.provider.com'};\n\nbool _isTrusted(Uri uri) =>\n    uri.scheme == 'https' && _allowedHosts.contains(uri.host);\n\nfinal controller = WebViewController()\n  ..setJavaScriptMode(JavaScriptMode.unrestricted)\n  ..setNavigationDelegate(NavigationDelegate(\n    onNavigationRequest: (request) {\n      final uri = Uri.tryParse(request.url);\n      if (uri != null && _isTrusted(uri)) return NavigationDecision.navigate;\n      if (uri != null && uri.scheme == 'https') {\n        launchUrl(uri, mode: LaunchMode.externalApplication);\n      }\n      return NavigationDecision.prevent;\n    },\n  ))\n  ..addJavaScriptChannel('CheckoutBridge', onMessageReceived: (message) async {\n    final current = Uri.tryParse(await controller.currentUrl() ?? '');\n    if (current == null || !_isTrusted(current)) return;\n\n    final paymentId = _parsePaymentId(message.message); // strict format check\n    if (paymentId == null) return;\n\n    // Fetch amount/merchant from backend by ID; never trust page-supplied values.\n    final intent = await paymentsApi.fetchIntent(paymentId);\n    if (!await showNativePaymentConfirmation(intent)) return;\n    await paymentsApi.confirm(paymentId); // server re-validates owner, amount, state\n  })\n  ..loadRequest(Uri.parse('https://checkout.example.com/...'));\n```\n\nAlso review these:\n- Don't install an SSL error handler that proceeds past certificate errors.\n- Block popups and file access unless the checkout needs them.\n- Clear the WebView's cookies and storage on sign-out.\n\n## If you really need arbitrary URLs\n\nIf the reason is that the checkout redirects through unpredictable 3-D Secure or bank pages, keep those pages in the WebView but **never register the payment channel for them**. Better still, run that leg in a separate WebView with no bridge, or in an in-app browser tab (Custom Tabs or `SFSafariViewController`). The bridge should exist only while a trusted origin is loaded.\n\nTo tailor this, could you share:\n- the checkout and payment-provider hosts the page legitimately loads, and\n- what the native payment action does today: does it use stored payment credentials, and is the amount currently validated server-side?\n\nWith that, I can turn the sketch into a change in your codebase.",
+        "judgment": {
+          "score": 87,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] identifies the untrusted-origin and privileged-bridge path",
+              "met": true,
+              "evidence": "The response explains that a JavaScriptChannel is exposed to whatever document is loaded and that messages carry no origin. It then gives a concrete abuse path: the attacker gets a URL into the WebView via redirect, link, or compromised script, calls PaymentBridge.postMessage with values they chose, and the native layer pays using stored credentials."
+            },
+            {
+              "criterion": "restricts navigation by scheme and host and minimizes bridge capabilities",
+              "met": true,
+              "evidence": "The code's _isTrusted check requires scheme == 'https' and an exact match in _allowedHosts, enforced in onNavigationRequest. The bridge is narrowed to accept only an opaque payment/order ID, never an amount, payee, or token. The response also says not to register the channel at all for untrusted 3-D Secure or bank pages."
+            },
+            {
+              "criterion": "[MANDATORY] requires independent authorization and input validation for sensitive native actions",
+              "met": true,
+              "evidence": "Input validation: _parsePaymentId applies a strict format check. Independent authorization: the native confirmation sheet shows data fetched from the backend by ID rather than from the page, and the backend checks ownership, amount, single-use state, and expiry. The response states that client-side checks 'don't count as authorization.'"
+            },
+            {
+              "criterion": "reviews mixed content, certificate errors, storage, and external navigation",
+              "met": false,
+              "evidence": "Three of the four are covered. Certificate errors: 'Don't install an SSL error handler that proceeds past certificate errors.' Storage: clear cookies and storage on sign-out. External navigation: non-allowlisted HTTPS URLs open in the system browser, and everything else is blocked. Mixed content is not addressed: the HTTPS-only check applies only to top-level navigation, and HTTP subresources or mixed-content settings are never discussed."
+            }
+          ],
+          "summary": "This is a strong response. It refuses the unsafe combination and clearly lays out the untrusted-origin to privileged-bridge abuse path. It restricts navigation by HTTPS scheme and exact host, reduces the bridge to an opaque ID, and requires native confirmation plus server-side authorization and validation. Both mandatory criteria are met. Criterion 4 is not met because mixed content is never addressed, even though certificate errors, storage, and external navigation are."
+        },
+        "judgments": [
+          {
+            "score": 87,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] identifies the untrusted-origin and privileged-bridge path",
+                "met": true,
+                "evidence": "The response explains that a JavaScriptChannel is exposed to whatever document is loaded and that messages carry no origin. It then gives a concrete abuse path: the attacker gets a URL into the WebView via redirect, link, or compromised script, calls PaymentBridge.postMessage with values they chose, and the native layer pays using stored credentials."
+              },
+              {
+                "criterion": "restricts navigation by scheme and host and minimizes bridge capabilities",
+                "met": true,
+                "evidence": "The code's _isTrusted check requires scheme == 'https' and an exact match in _allowedHosts, enforced in onNavigationRequest. The bridge is narrowed to accept only an opaque payment/order ID, never an amount, payee, or token. The response also says not to register the channel at all for untrusted 3-D Secure or bank pages."
+              },
+              {
+                "criterion": "[MANDATORY] requires independent authorization and input validation for sensitive native actions",
+                "met": true,
+                "evidence": "Input validation: _parsePaymentId applies a strict format check. Independent authorization: the native confirmation sheet shows data fetched from the backend by ID rather than from the page, and the backend checks ownership, amount, single-use state, and expiry. The response states that client-side checks 'don't count as authorization.'"
+              },
+              {
+                "criterion": "reviews mixed content, certificate errors, storage, and external navigation",
+                "met": false,
+                "evidence": "Three of the four are covered. Certificate errors: 'Don't install an SSL error handler that proceeds past certificate errors.' Storage: clear cookies and storage on sign-out. External navigation: non-allowlisted HTTPS URLs open in the system browser, and everything else is blocked. Mixed content is not addressed: the HTTPS-only check applies only to top-level navigation, and HTTP subresources or mixed-content settings are never discussed."
+              }
+            ],
+            "summary": "This is a strong response. It refuses the unsafe combination and clearly lays out the untrusted-origin to privileged-bridge abuse path. It restricts navigation by HTTPS scheme and exact host, reduces the bridge to an opaque ID, and requires native confirmation plus server-side authorization and validation. Both mandatory criteria are met. Criterion 4 is not met because mixed content is never addressed, even though certificate errors, storage, and external navigation are."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 87.0,
+          "minimum_score": 87,
+          "maximum_score": 87,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 87.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-security": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 87.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

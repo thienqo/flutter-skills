@@ -2,19 +2,19 @@
   {
     "name": "harden-existing-github-actions",
     "prompt": "Harden our existing GitHub Actions pull-request workflow. The repo pins Flutter 3.44.1 in .fvmrc, uses tool/ci_codegen.sh, tool/ci_test.sh, and `fvm flutter test test/goldens` for golden verification. The current workflow uses subosito/flutter-action@v2, caches ~/.pub-cache and .dart_tool with only runner.os in the key, runs `dart format .`, and uploads test-results.json. Produce a concrete corrected workflow without changing providers or repository scripts.",
-    "expectations": ["preserves the existing provider Flutter version source workspace and repository scripts", "checks formatting without rewriting, detects generated-code drift without committing it, and verifies goldens without update mode", "keys caches to relevant immutable inputs and keeps correctness independent of cache hits", "uses least privilege and does not expose secrets to untrusted pull requests"],
+    "expectations": ["preserves the existing provider Flutter version source workspace and repository scripts", "checks formatting without rewriting, detects generated-code drift without committing it, and verifies goldens without update mode", "keys caches to relevant immutable inputs and keeps correctness independent of cache hits", {"text": "uses least privilege and does not expose secrets to untrusted pull requests", "mandatory": true}],
     "resources": ["references/quality-gates.md", "references/provider-and-monorepo.md"]
   },
   {
     "name": "repair-gitlab-flutter-pipeline",
     "prompt": "Fix our GitLab CI without changing providers. The repo pins Flutter in .fvmrc and uses tool/ci_test.sh and tool/build_staging_android.sh. Current graph: verify:test has `allow_failure: true`; build:android needs only verify:analyze; release:android needs build:android and uses `when: always`. Logs show each of three verify jobs repeats dependency resolution for about 3 minutes, while tests take 5 minutes and the Android build takes 12. Diagnose this graph, make shipping depend on required gates, and validate the final GitLab syntax and underlying scripts.",
-    "expectations": ["keeps GitLab CI and diagnoses the current dependency and failure graph", "makes delivery depend on required gates and removes failure masking", "uses selective safe caching concurrency or job partitioning based on evidence", "requires GitLab syntax and underlying script validation before completion without claiming unavailable evidence or forcing GitHub Actions"],
+    "expectations": ["keeps GitLab CI and diagnoses the current dependency and failure graph", {"text": "makes delivery depend on required gates and removes failure masking", "mandatory": true}, "uses selective safe caching concurrency or job partitioning based on evidence", "requires GitLab syntax and underlying script validation before completion without claiming unavailable evidence or forcing GitHub Actions"],
     "resources": ["references/quality-gates.md", "references/provider-and-monorepo.md"]
   },
   {
     "name": "configure-signed-delivery-without-publish",
     "prompt": "Extend our existing GitHub Actions delivery workflow to build signed Android and iOS staging artifacts without upload. Release configuration already lives in tool/build_staging_android.sh and tool/build_staging_ios.sh; those scripts produce the signed artifacts plus mapping.txt and dSYMs. Signing and future store credentials already exist as protected environment secrets. Do not change flavors, signing configuration, scripts, tag, upload, or release anything.",
-    "expectations": ["separates validation build signing and external publication stages", "keeps credentials in protected provider secrets with least privilege and no log exposure", "orchestrates the established flavor signing artifact and symbol commands instead of redefining release configuration", "builds or dry-runs artifacts but does not upload tag release or publish without explicit authorization"],
+    "expectations": ["separates validation build signing and external publication stages", {"text": "keeps credentials in protected provider secrets with least privilege and no log exposure", "mandatory": true}, "orchestrates the established flavor signing artifact and symbol commands instead of redefining release configuration", {"text": "builds or dry-runs artifacts but does not upload tag release or publish without explicit authorization", "mandatory": true}],
     "resources": ["references/delivery-and-secrets.md", "references/provider-and-monorepo.md"]
   },
   {
@@ -24,8 +24,8 @@
     "expectations": [
       "configures matrix jobs across target runners without duplicating pipeline definitions unsafely",
       "keys caches to immutable OS and lockfile hashes so cache hits are deterministic",
-      "restricts deployment secrets to protected environments and blocks fork access",
-      "does not trigger publication, tagging, or release actions"
+      {"text": "restricts deployment secrets to protected environments and blocks fork access", "mandatory": true},
+      {"text": "does not trigger publication, tagging, or release actions", "mandatory": true}
     ]
   }
 ]

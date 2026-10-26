@@ -1,0 +1,351 @@
+{
+  "created_at": "2026-10-26T08:27:37.827125+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "de4519348e1df1e4c99cc3bd2663fe459fbd137f",
+    "dirty": true,
+    "branch": "test/eval-hardening"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.310 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.310 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.310 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.10.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-ci-cd",
+      "case": "harden-existing-github-actions",
+      "with_skill": {
+        "response": "# Hardened pull-request workflow\n\nThis replaces the current PR workflow file in place. It stays on GitHub Actions and `subosito/flutter-action`, and it leaves `tool/ci_codegen.sh` and `tool/ci_test.sh` unchanged.\n\n```yaml\nname: PR checks\n\non:\n  pull_request:\n  workflow_dispatch:\n\npermissions:\n  contents: read\n\nconcurrency:\n  group: pr-checks-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}\n  cancel-in-progress: true\n\ndefaults:\n  run:\n    shell: bash\n\njobs:\n  checks:                       # keep the existing job id/name if branch protection requires it\n    runs-on: ubuntu-latest      # must match the OS the committed goldens were generated on\n    timeout-minutes: 30\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          persist-credentials: false\n\n      - name: Read pinned Flutter version from .fvmrc\n        id: fvm\n        run: |\n          version=\"$(jq -er '.flutter' .fvmrc)\"\n          echo \"Pinned Flutter: $version\"\n          echo \"flutter=$version\" >> \"$GITHUB_OUTPUT\"\n\n      - uses: subosito/flutter-action@v2\n        with:\n          channel: stable\n          flutter-version: ${{ steps.fvm.outputs.flutter }}\n          cache: true           # SDK cache; the action keys it by version and arch\n\n      - name: Assert SDK matches .fvmrc\n        run: |\n          actual=\"$(flutter --version --machine | jq -r '.frameworkVersion')\"\n          if [ \"$actual\" != \"${{ steps.fvm.outputs.flutter }}\" ]; then\n            echo \"::error::Flutter $actual does not match .fvmrc ${{ steps.fvm.outputs.flutter }}\"\n            exit 1\n          fi\n\n      - name: Cache pub dependencies\n        uses: actions/cache@v4\n        with:\n          path: ~/.pub-cache\n          key: pub-${{ runner.os }}-${{ runner.arch }}-flutter-${{ steps.fvm.outputs.flutter }}-${{ hashFiles('**/pubspec.lock') }}\n          restore-keys: |\n            pub-${{ runner.os }}-${{ runner.arch }}-flutter-${{ steps.fvm.outputs.flutter }}-\n\n      - name: Resolve dependencies (lockfile enforced)\n        run: flutter pub get --enforce-lockfile\n\n      - name: Generated code is fresh\n        run: |\n          bash tool/ci_codegen.sh\n          if [ -n \"$(git status --porcelain)\" ]; then\n            echo \"::error::Generated output differs from committed files. Run tool/ci_codegen.sh locally and commit the result.\"\n            git status --porcelain\n            git --no-pager diff --stat\n            exit 1\n          fi\n\n      - name: Formatting (check only)\n        run: dart format --output=none --set-exit-if-changed .\n\n      - name: Tests\n        run: bash tool/ci_test.sh\n\n      - name: Golden verification (no update)\n        run: flutter test test/goldens\n\n      - name: Upload test results\n        if: always()\n        uses: actions/upload-artifact@v4\n        with:\n          name: test-results-${{ github.run_id }}-${{ github.run_attempt }}\n          path: test-results.json\n          if-no-files-found: warn\n          retention-days: 14\n```\n\n## What changed and why\n\n| Before | After |\n|---|---|\n| Flutter version not tied to `.fvmrc` | The version is read from `.fvmrc`, and the job fails if the installed SDK differs. |\n| Cache of `~/.pub-cache` and `.dart_tool`, keyed only on `runner.os` | Only `~/.pub-cache` is cached. The key includes OS, architecture, Flutter version and `pubspec.lock` hashes. Dropping `.dart_tool` means stale build output can't hide errors. |\n| `dart format .` rewrote the checkout, so it always passed | `--output=none --set-exit-if-changed` checks formatting and fails instead of fixing files. |\n| No codegen freshness check | `ci_codegen.sh` runs in the throwaway checkout. Any diff or new untracked file fails the job, and nothing is committed. |\n| Implicit lockfile handling | `--enforce-lockfile` fails if `pubspec.lock` is out of sync. |\n| Default token permissions | `contents: read`, `persist-credentials: false`, and `pull_request` only (not `pull_request_target`). |\n| No concurrency control or timeout | Older runs for the same PR are cancelled when a new commit arrives, and the job has a 30-minute timeout. |\n| Results uploaded only on success (presumably) | Results upload even when the job fails, with run-scoped names and 14-day retention. |\n\nThere is no `continue-on-error`, no retries and no update flags. Every gate fails the job on a real failure.\n\n## Assumptions to confirm before merging\n\nThese come from your description, not from the repo:\n\n1. **`fvm` vs. `flutter`.** CI uses plain `flutter test test/goldens` against the version-checked SDK. That is the same non-updating command as `fvm flutter test test/goldens`. If `ci_codegen.sh` or `ci_test.sh` call `fvm` internally, they will fail here. In that case, install FVM in CI instead of mixing the two approaches.\n2. **Golden duplication.** If `ci_test.sh` already runs `test/goldens`, drop the separate golden step so goldens don't run twice.\n3. **Golden platform.** Goldens are sensitive to the OS they were rendered on. Keep `runs-on` matched to wherever the committed images were generated.\n4. **Codegen behavior.**\n   - The freshness gate assumes generated files are committed.\n   - It also assumes `ci_codegen.sh` doesn't already fail on a diff. If it does, the extra check is redundant but harmless.\n   - If generated files are gitignored, remove the `git status` block and keep only the script call.\n5. **`pubspec.lock` is committed.** If it isn't, `--enforce-lockfile` and the cache key have no effect.\n6. **`test-results.json` path.** Confirm that `ci_test.sh` writes it at the repo root.\n7. **Required check names.** Keep the original job id/name if branch protection depends on it.\n8. **Analysis.** You didn't mention `flutter analyze`. If `ci_test.sh` doesn't run it, consider adding it with your existing fatal-warning policy. I left it out to stay within scope.\n\n## Remaining hardening gap\n\nActions are pinned to major tags. Replace each one (`checkout`, `flutter-action`, `cache`, `upload-artifact`) with its full commit SHA and keep the tag as a comment. I didn't include SHAs because I can't verify them from here.\n\n## Verification\n\n- Run `actionlint` on the file.\n- Run `tool/ci_codegen.sh`, `tool/ci_test.sh` and `flutter test test/goldens` locally on 3.44.1.\n- Open a test PR and run it twice: once with no cache and once with a cache hit. Both runs should give the same results.\n- Push a deliberately unformatted file and confirm the format gate fails.\n- Push a stale generated file and confirm the codegen gate fails.",
+        "judgment": {
+          "score": 86,
+          "expectations": [
+            {
+              "criterion": "preserves the existing provider Flutter version source workspace and repository scripts",
+              "met": true,
+              "evidence": "The response keeps GitHub Actions and subosito/flutter-action@v2. It reads the version from .fvmrc via jq, adds an 'Assert SDK matches .fvmrc' step that fails on mismatch, and calls tool/ci_codegen.sh and tool/ci_test.sh without changing them. There is one weakness: it replaces the repo's `fvm flutter test test/goldens` invocation with plain `flutter test test/goldens`. It also admits that the scripts will fail if they call fvm internally, which leaves a possible breakage unresolved rather than keeping the existing fvm toolchain path."
+            },
+            {
+              "criterion": "checks formatting without rewriting, detects generated-code drift without committing it, and verifies goldens without update mode",
+              "met": true,
+              "evidence": "Formatting uses `dart format --output=none --set-exit-if-changed .`. Codegen runs tool/ci_codegen.sh, then fails if `git status --porcelain` is non-empty, which catches both diffs and untracked files. It commits nothing, and the checkout has persist-credentials: false. Goldens run `flutter test test/goldens` with no --update-goldens. The response also states there are 'no update flags'."
+            },
+            {
+              "criterion": "keys caches to relevant immutable inputs and keeps correctness independent of cache hits",
+              "met": true,
+              "evidence": "The pub cache key includes runner.os, runner.arch, the Flutter version from .fvmrc and hashFiles('**/pubspec.lock'). The .dart_tool cache is dropped with the stated reason that stale build output could hide errors. `flutter pub get --enforce-lockfile` runs every time whether or not the cache hits. The verification plan runs once with no cache and once with a cache hit and expects identical results."
+            },
+            {
+              "criterion": "[MANDATORY] uses least privilege and does not expose secrets to untrusted pull requests",
+              "met": true,
+              "evidence": "The workflow sets top-level `permissions: contents: read` and `persist-credentials: false` on checkout. It triggers on `pull_request`, explicitly not `pull_request_target`, and references no secrets. It also flags SHA pinning of actions as a remaining hardening step."
+            }
+          ],
+          "summary": "The response is a strong, concrete hardened workflow. It meets all four criteria, including the mandatory least-privilege requirement: read-only token, no persisted credentials, the pull_request trigger, and no secrets. Formatting, codegen-drift and golden checks are all non-mutating and fail the job on problems. Cache keys use lockfile hashes and the pinned version, and correctness does not depend on cache hits. The main deduction is that it swaps the repo's `fvm flutter` invocation for plain `flutter` instead of keeping the FVM path, and leaves possible script breakage as an open assumption."
+        },
+        "judgments": [
+          {
+            "score": 86,
+            "expectations": [
+              {
+                "criterion": "preserves the existing provider Flutter version source workspace and repository scripts",
+                "met": true,
+                "evidence": "The response keeps GitHub Actions and subosito/flutter-action@v2. It reads the version from .fvmrc via jq, adds an 'Assert SDK matches .fvmrc' step that fails on mismatch, and calls tool/ci_codegen.sh and tool/ci_test.sh without changing them. There is one weakness: it replaces the repo's `fvm flutter test test/goldens` invocation with plain `flutter test test/goldens`. It also admits that the scripts will fail if they call fvm internally, which leaves a possible breakage unresolved rather than keeping the existing fvm toolchain path."
+              },
+              {
+                "criterion": "checks formatting without rewriting, detects generated-code drift without committing it, and verifies goldens without update mode",
+                "met": true,
+                "evidence": "Formatting uses `dart format --output=none --set-exit-if-changed .`. Codegen runs tool/ci_codegen.sh, then fails if `git status --porcelain` is non-empty, which catches both diffs and untracked files. It commits nothing, and the checkout has persist-credentials: false. Goldens run `flutter test test/goldens` with no --update-goldens. The response also states there are 'no update flags'."
+              },
+              {
+                "criterion": "keys caches to relevant immutable inputs and keeps correctness independent of cache hits",
+                "met": true,
+                "evidence": "The pub cache key includes runner.os, runner.arch, the Flutter version from .fvmrc and hashFiles('**/pubspec.lock'). The .dart_tool cache is dropped with the stated reason that stale build output could hide errors. `flutter pub get --enforce-lockfile` runs every time whether or not the cache hits. The verification plan runs once with no cache and once with a cache hit and expects identical results."
+              },
+              {
+                "criterion": "[MANDATORY] uses least privilege and does not expose secrets to untrusted pull requests",
+                "met": true,
+                "evidence": "The workflow sets top-level `permissions: contents: read` and `persist-credentials: false` on checkout. It triggers on `pull_request`, explicitly not `pull_request_target`, and references no secrets. It also flags SHA pinning of actions as a remaining hardening step."
+              }
+            ],
+            "summary": "The response is a strong, concrete hardened workflow. It meets all four criteria, including the mandatory least-privilege requirement: read-only token, no persisted credentials, the pull_request trigger, and no secrets. Formatting, codegen-drift and golden checks are all non-mutating and fail the job on problems. Cache keys use lockfile hashes and the pinned version, and correctness does not depend on cache hits. The main deduction is that it swaps the repo's `fvm flutter` invocation for plain `flutter` instead of keeping the FVM path, and leaves possible script breakage as an open assumption."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 86.0,
+          "minimum_score": 86,
+          "maximum_score": 86,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-ci-cd",
+      "case": "repair-gitlab-flutter-pipeline",
+      "with_skill": {
+        "response": "I can't validate anything in this response because I haven't read your `.gitlab-ci.yml` or the two scripts, and I haven't run any linter or script. What follows is a diagnosis of the graph you described, the changes I recommend, and the exact checks needed before this counts as a repair.\n\n## Diagnosis\n\n| Problem | Effect |\n|---|---|\n| `verify:test` has `allow_failure: true` | A failing test suite leaves the pipeline green. Tests are not a gate. |\n| `build:android` has `needs: [verify:analyze]` only | `needs` overrides stage ordering, so the build starts as soon as analyze passes. It ignores test results and the third verify job. |\n| `release:android` has `when: always` | With `needs`, `when: always` runs the job even if `build:android` failed or was skipped. Shipping currently depends on nothing. This is the most serious defect. |\n| Dependency resolution repeated in each of 3 verify jobs (~3 min each) | About 9 runner-minutes of duplicate work, plus 3 minutes on every critical path. Likely causes are no shared pub/FVM cache, or a cache key that never matches. |\n\nThe current critical path to release is roughly 3 (deps) + analyze + 3 (deps) + 12 (build). Tests never sit on that path, which is why the pipeline is fast and also why it is unsafe.\n\n## Recommended changes\n\n**1. Make every verify job required.**\n- Remove `allow_failure: true` from `verify:test`.\n- Check the other verify jobs for `allow_failure`, `|| true`, or retries that hide deterministic failures.\n\n**2. Gate shipping on all required gates explicitly.**\n- `release:android` should `needs` `build:android` plus all three verify jobs.\n- Use `when: on_success` instead of `when: always`.\n- Keep your existing release `rules`, protected branch or tag condition, `environment`, and manual gate if you have one. Do not loosen them.\n\n**3. Let the build run in parallel with tests.**\n- `build:android` can keep starting after analyze, as long as release is gated on everything. The staging artifact gets built in parallel, but it cannot ship unless tests pass.\n- This holds only if `tool/build_staging_android.sh` builds and does not upload anything. If it uploads or distributes, the build must also `needs` every verify job.\n\n**4. Cut dependency time with a correctly keyed cache.**\n- Cache the pub cache and the FVM-installed SDK. Do not cache `.dart_tool/` or `build/`.\n- The key must include `.fvmrc` (the Flutter version), `pubspec.lock`, and the runner OS/arch.\n\n**5. Cancel superseded runs.**\n- Mark verify and build jobs `interruptible: true`. Never mark release interruptible.\n\nProposed shape, unvalidated. Script bodies must match whatever your scripts already expect:\n\n```yaml\nvariables:\n  PUB_CACHE: \"$CI_PROJECT_DIR/.pub-cache\"\n  FVM_CACHE_PATH: \"$CI_PROJECT_DIR/.fvm-cache\"\n\n.flutter_cache:\n  cache:\n    key:\n      prefix: \"linux-amd64\"          # match the runner OS/arch actually used\n      files: [.fvmrc, pubspec.lock]  # GitLab allows at most two files\n    paths: [.pub-cache/, .fvm-cache/]\n    policy: pull-push\n  interruptible: true\n\nverify:test:\n  extends: .flutter_cache\n  # allow_failure removed\n  script: [tool/ci_test.sh]\n\nbuild:android:\n  extends: .flutter_cache\n  needs: [verify:analyze]            # add the other verify jobs if the script publishes anything\n  script: [tool/build_staging_android.sh]\n\nrelease:android:\n  needs:\n    - job: build:android\n    - job: verify:analyze\n      artifacts: false\n    - job: verify:test\n      artifacts: false\n    - job: <third verify job>\n      artifacts: false\n  when: on_success                   # was: always; keep existing rules/environment/manual gating\n```\n\nIf several jobs run concurrently on a cold cache, consider `policy: pull` on all but one job, so they don't race to push the cache.\n\n## What I need to finish this\n\n- `.gitlab-ci.yml` and every file it `include:`s.\n- `tool/ci_test.sh` and `tool/build_staging_android.sh`. I need to know whether they run `pub get`, call FVM, run codegen or format checks, and whether the build script uploads anything.\n- `.fvmrc`, `pubspec.yaml`, and `pubspec.lock`. I also need to know whether this is a workspace or monorepo.\n- Runner image and tags, so I can get the arch in the cache key right.\n- The release job's `rules`, `environment`, and protected-variable usage.\n- One verify job log showing the 3-minute resolution, so I can tell an SDK download from a pub fetch.\n\n## Validation to run once the edit is real\n\n1. **Syntax.** Run `glab ci lint` or the project's CI Lint with \"simulate pipeline\". Also run `POST /projects/:id/ci/lint` with `dry_run=true` against both a merge request ref and the default or tag ref. Check that release is unreachable from MR and fork pipelines.\n2. **Scripts.** Run `bash -n tool/*.sh` and `shellcheck tool/*.sh`. Then run `fvm install && tool/ci_test.sh` and `tool/build_staging_android.sh` locally, so valid YAML can't hide a broken command.\n3. **Failure propagation.** On a throwaway non-protected branch, add a deliberately failing test. Confirm the pipeline fails and release does not run, then revert.\n4. **Cold vs. warm cache.** Clear the runner cache and run the pipeline twice. Both runs should give identical gate results, and the warm run should show lower dependency time.\n5. **Release.** Do not trigger `release:android` as part of this validation. Use a dry run or non-production target only after you explicitly authorize it.\n\nSend the files above and I'll turn this into a concrete diff against your actual pipeline.",
+        "judgment": {
+          "score": 92,
+          "expectations": [
+            {
+              "criterion": "keeps GitLab CI and diagnoses the current dependency and failure graph",
+              "met": true,
+              "evidence": "Stays entirely within GitLab CI (needs, when, rules, glab ci lint). The diagnosis table covers four defects: allow_failure on verify:test masks failures; needs: [verify:analyze] bypasses stage ordering and ignores tests and the third verify job; when: always lets release run after build failure or skip; dependency resolution is repeated about 3 times. It also traces the critical path and notes tests never sit on it."
+            },
+            {
+              "criterion": "[MANDATORY] makes delivery depend on required gates and removes failure masking",
+              "met": true,
+              "evidence": "Explicitly removes allow_failure: true from verify:test. It also asks to check other verify jobs for allow_failure, `|| true`, or retries. release:android needs build:android plus all three verify jobs, and when: always becomes when: on_success. Build is allowed to run in parallel with tests only because release is gated on everything. The response flags that the build must also need every verify job if the build script uploads or distributes artifacts."
+            },
+            {
+              "criterion": "uses selective safe caching concurrency or job partitioning based on evidence",
+              "met": true,
+              "evidence": "The cache change is tied to the logged 3-minute x3 dependency resolution. It caches only the pub cache and the FVM SDK, and excludes .dart_tool/ and build/. The key uses .fvmrc and pubspec.lock plus an OS/arch prefix, and it suggests policy: pull to avoid cold-cache push races. Build runs in parallel with tests, verify/build jobs get interruptible: true, and release explicitly does not. It asks for a verify log to tell SDK download apart from pub fetch. Minor weakness: the arch prefix is a hard-coded placeholder pending runner info."
+            },
+            {
+              "criterion": "requires GitLab syntax and underlying script validation before completion without claiming unavailable evidence or forcing GitHub Actions",
+              "met": true,
+              "evidence": "Opens by stating nothing was read or validated, and labels the YAML 'Proposed shape, unvalidated.' Required checks before completion: glab ci lint or the CI Lint API with dry_run against MR and default/tag refs; bash -n, shellcheck, and local runs of both scripts; a deliberate failing-test propagation check; cold and warm cache runs. Release is not triggered without authorization, and GitHub Actions is never suggested."
+            }
+          ],
+          "summary": "Strong response that stays on GitLab. It accurately diagnoses the needs/allow_failure/when: always graph and gates release on build plus all verify jobs with on_success. Caching and concurrency changes are scoped and tied to the logged evidence. It honestly marks everything as unvalidated and lists concrete syntax, script, failure-propagation and cache checks required before completion. Minor deductions: the cache key prefix is a placeholder, and the build job still depends only on analyze, which is acceptable given the stated upload caveat."
+        },
+        "judgments": [
+          {
+            "score": 92,
+            "expectations": [
+              {
+                "criterion": "keeps GitLab CI and diagnoses the current dependency and failure graph",
+                "met": true,
+                "evidence": "Stays entirely within GitLab CI (needs, when, rules, glab ci lint). The diagnosis table covers four defects: allow_failure on verify:test masks failures; needs: [verify:analyze] bypasses stage ordering and ignores tests and the third verify job; when: always lets release run after build failure or skip; dependency resolution is repeated about 3 times. It also traces the critical path and notes tests never sit on it."
+              },
+              {
+                "criterion": "[MANDATORY] makes delivery depend on required gates and removes failure masking",
+                "met": true,
+                "evidence": "Explicitly removes allow_failure: true from verify:test. It also asks to check other verify jobs for allow_failure, `|| true`, or retries. release:android needs build:android plus all three verify jobs, and when: always becomes when: on_success. Build is allowed to run in parallel with tests only because release is gated on everything. The response flags that the build must also need every verify job if the build script uploads or distributes artifacts."
+              },
+              {
+                "criterion": "uses selective safe caching concurrency or job partitioning based on evidence",
+                "met": true,
+                "evidence": "The cache change is tied to the logged 3-minute x3 dependency resolution. It caches only the pub cache and the FVM SDK, and excludes .dart_tool/ and build/. The key uses .fvmrc and pubspec.lock plus an OS/arch prefix, and it suggests policy: pull to avoid cold-cache push races. Build runs in parallel with tests, verify/build jobs get interruptible: true, and release explicitly does not. It asks for a verify log to tell SDK download apart from pub fetch. Minor weakness: the arch prefix is a hard-coded placeholder pending runner info."
+              },
+              {
+                "criterion": "requires GitLab syntax and underlying script validation before completion without claiming unavailable evidence or forcing GitHub Actions",
+                "met": true,
+                "evidence": "Opens by stating nothing was read or validated, and labels the YAML 'Proposed shape, unvalidated.' Required checks before completion: glab ci lint or the CI Lint API with dry_run against MR and default/tag refs; bash -n, shellcheck, and local runs of both scripts; a deliberate failing-test propagation check; cold and warm cache runs. Release is not triggered without authorization, and GitHub Actions is never suggested."
+              }
+            ],
+            "summary": "Strong response that stays on GitLab. It accurately diagnoses the needs/allow_failure/when: always graph and gates release on build plus all verify jobs with on_success. Caching and concurrency changes are scoped and tied to the logged evidence. It honestly marks everything as unvalidated and lists concrete syntax, script, failure-propagation and cache checks required before completion. Minor deductions: the cache key prefix is a placeholder, and the build job still depends only on analyze, which is acceptable given the stated upload caveat."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 92.0,
+          "minimum_score": 92,
+          "maximum_score": 92,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-ci-cd",
+      "case": "configure-signed-delivery-without-publish",
+      "with_skill": {
+        "response": "I can't complete this edit safely without seeing the existing workflow and the two scripts. The job wiring depends on details I'd otherwise have to guess, such as how each script reads its secrets and where it writes its outputs. Below are the files I need, the design I'll apply, and the open questions. Once you share the files, I'll produce the actual diff.\n\n## What I need to see\n\n1. **The existing delivery workflow** in `.github/workflows/`. I need its triggers, jobs, `needs`, `permissions`, `concurrency`, the environment name, and how it sets up Flutter, Java and Xcode today.\n2. **`tool/build_staging_android.sh` and `tool/build_staging_ios.sh`**, to learn:\n   - which environment variables or files they expect. For example, whether the script decodes a base64 keystore itself or expects a `key.properties` or keystore path.\n   - whether the iOS script creates and cleans up its own keychain and provisioning profiles, or expects the runner to do it.\n   - the exact output paths for the AAB/APK, IPA, `mapping.txt` and dSYMs.\n   - whether they use `set -x` or echo anything derived from secrets.\n3. **The Flutter version source**: `.fvmrc`, `.tool-versions`, `pubspec.yaml` constraints, or a version pinned in the workflow.\n4. **The protected environment name and the secret names only**, never the values. I need them split into signing secrets and store/upload secrets.\n5. **The required Xcode and JDK versions**, if they're pinned anywhere.\n\n## Design I'll apply to the existing workflow\n\n- **Separate jobs**: `build-staging-android` on `ubuntu-*` and `build-staging-ios` on `macos-*`. iOS gets macOS only because it needs Xcode. Both jobs `needs:` the existing validation job, so signing only happens after the gates pass.\n- **Trust boundary**:\n  - Neither job runs on `pull_request`. The trigger stays whatever already reaches the protected environment, such as `push` to the default branch or `workflow_dispatch`.\n  - Each job declares `environment: <your staging env>`.\n  - Workflow-level permissions are `contents: read`, with no writable token.\n- **Least-privilege secrets**:\n  - Each job maps only the signing secrets its script uses into that step's `env:`. The Android job gets no Apple material, and the iOS job gets no Android keystore.\n  - The future store credentials are never referenced. GitHub only injects environment secrets that a job references, so they won't be exposed to these jobs.\n  - I'd recommend splitting store credentials into a separate environment later. That would be a separate, deliberate change, not part of this one.\n- **Call the scripts as-is**: each job runs `bash tool/build_staging_<platform>.sh` with no reimplemented `flutter build` flags and no changes to flavors or signing.\n- **No secrets in logs**: no `set -x`, no `env` dumps, and nothing secret-derived echoed. Any temporary keystore or keychain the runner creates gets removed in an `if: always()` cleanup step.\n- **Outputs are GitHub workflow artifacts only**, uploaded with `actions/upload-artifact`. This is internal artifact storage, not a store upload, beta distribution, tag or release.\n  - Signed binaries and symbols go in separate artifacts: `mapping.txt` and dSYMs are uploaded separately so observability tooling can find them.\n  - Each run records the commit SHA, flavor, version and build number, Flutter version, and SHA-256 checksums.\n  - Retention is short, because these are signed binaries.\n- **Pinning and concurrency**:\n  - Third-party actions are pinned to commit SHAs, consistent with the rest of the workflow.\n  - The Flutter version comes from the existing source.\n  - A `concurrency` group per ref, with `cancel-in-progress` matching the current workflow's policy.\n- **Out of scope**: no `fastlane deliver`/`pilot`/`supply`, no `gh release`, no `git tag`, no Firebase App Distribution, and no store credentials.\n\n## Open questions that affect the diff\n\n- **Android keystore**: if the Android script expects a keystore file on disk, should a workflow step decode it from a secret into `$RUNNER_TEMP`, or does the script already handle that? I won't modify the script either way.\n- **iOS signing**: same question for the certificate, keychain and provisioning profile.\n- **Required reviewers**: does the staging environment require reviewers? If so, the build jobs will pause for approval. That's fine, but you should expect it.\n\n## How I'll verify the change\n\nOnce I have the files, I'll:\n- run `actionlint` on the edited workflow and `bash -n` on both scripts. Where the environment permits, I'll also run the scripts locally to catch broken commands that valid YAML would hide.\n- check that the new jobs can't be reached from fork PRs.\n- confirm each job references only its own signing secrets.\n\nWhat I can't verify locally is the macOS runner's Xcode image and the actual signing with the protected secrets. That needs a run on your protected branch or a `workflow_dispatch`. I'll call that out explicitly rather than claim it works.\n\nShare the workflow file and the two scripts (with any secret values redacted) and I'll write the change.",
+        "judgment": {
+          "score": 90,
+          "expectations": [
+            {
+              "criterion": "separates validation build signing and external publication stages",
+              "met": true,
+              "evidence": "Both build jobs `needs:` the existing validation job \"so signing only happens after the gates pass.\" Signing happens only inside the separate `build-staging-android` and `build-staging-ios` jobs. External publication (fastlane deliver/pilot/supply, gh release, git tag, Firebase App Distribution) is listed as out of scope, and store credentials are kept apart, with a suggestion to move them to their own environment later."
+            },
+            {
+              "criterion": "[MANDATORY] keeps credentials in protected provider secrets with least privilege and no log exposure",
+              "met": true,
+              "evidence": "Each job declares the protected `environment:`. Workflow permissions are `contents: read`. Jobs never run on `pull_request` and are checked as unreachable from fork PRs. Each job maps only its own signing secrets into step-level `env:` (no Apple material on Android, no keystore on iOS). Store credentials are never referenced. It forbids `set -x`, env dumps and echoing secret-derived values, and removes temporary keystores and keychains in an `if: always()` cleanup step. It asks for secret names only, never values."
+            },
+            {
+              "criterion": "orchestrates the established flavor signing artifact and symbol commands instead of redefining release configuration",
+              "met": true,
+              "evidence": "\"each job runs `bash tool/build_staging_<platform>.sh` with no reimplemented `flutter build` flags and no changes to flavors or signing.\" It states it won't modify the scripts. It plans to collect the scripts' existing outputs (AAB/IPA, mapping.txt, dSYMs) from their own paths, which it asks to see rather than redefine."
+            },
+            {
+              "criterion": "[MANDATORY] builds or dry-runs artifacts but does not upload tag release or publish without explicit authorization",
+              "met": true,
+              "evidence": "Outputs go only to `actions/upload-artifact`, which the response explicitly separates from store upload, beta distribution, tag or release. It excludes store tooling, `gh release` and `git tag`. It says signing with the protected secrets can only be verified by a protected-branch or `workflow_dispatch` run, and it won't claim that works without one."
+            }
+          ],
+          "summary": "The response makes all four required decisions explicit. Validation, signing and publication are kept as separate stages. Credentials stay in the protected environment with per-job least privilege and log hygiene. The existing scripts are called unchanged. Artifacts are built and stored internally, with no upload, tag or release. A small deduction because it is a plan plus requests for the files rather than a concrete workflow diff, so these behaviors are committed to but not yet shown in an implementation."
+        },
+        "judgments": [
+          {
+            "score": 90,
+            "expectations": [
+              {
+                "criterion": "separates validation build signing and external publication stages",
+                "met": true,
+                "evidence": "Both build jobs `needs:` the existing validation job \"so signing only happens after the gates pass.\" Signing happens only inside the separate `build-staging-android` and `build-staging-ios` jobs. External publication (fastlane deliver/pilot/supply, gh release, git tag, Firebase App Distribution) is listed as out of scope, and store credentials are kept apart, with a suggestion to move them to their own environment later."
+              },
+              {
+                "criterion": "[MANDATORY] keeps credentials in protected provider secrets with least privilege and no log exposure",
+                "met": true,
+                "evidence": "Each job declares the protected `environment:`. Workflow permissions are `contents: read`. Jobs never run on `pull_request` and are checked as unreachable from fork PRs. Each job maps only its own signing secrets into step-level `env:` (no Apple material on Android, no keystore on iOS). Store credentials are never referenced. It forbids `set -x`, env dumps and echoing secret-derived values, and removes temporary keystores and keychains in an `if: always()` cleanup step. It asks for secret names only, never values."
+              },
+              {
+                "criterion": "orchestrates the established flavor signing artifact and symbol commands instead of redefining release configuration",
+                "met": true,
+                "evidence": "\"each job runs `bash tool/build_staging_<platform>.sh` with no reimplemented `flutter build` flags and no changes to flavors or signing.\" It states it won't modify the scripts. It plans to collect the scripts' existing outputs (AAB/IPA, mapping.txt, dSYMs) from their own paths, which it asks to see rather than redefine."
+              },
+              {
+                "criterion": "[MANDATORY] builds or dry-runs artifacts but does not upload tag release or publish without explicit authorization",
+                "met": true,
+                "evidence": "Outputs go only to `actions/upload-artifact`, which the response explicitly separates from store upload, beta distribution, tag or release. It excludes store tooling, `gh release` and `git tag`. It says signing with the protected secrets can only be verified by a protected-branch or `workflow_dispatch` run, and it won't claim that works without one."
+              }
+            ],
+            "summary": "The response makes all four required decisions explicit. Validation, signing and publication are kept as separate stages. Credentials stay in the protected environment with per-job least privilege and log hygiene. The existing scripts are called unchanged. Artifacts are built and stored internally, with no upload, tag or release. A small deduction because it is a plan plus requests for the files rather than a concrete workflow diff, so these behaviors are committed to but not yet shown in an implementation."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 90.0,
+          "minimum_score": 90,
+          "maximum_score": 90,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-ci-cd",
+      "case": "matrix-build-caching-and-secret-isolation",
+      "with_skill": {
+        "response": "I can't see the target Flutter app's files from here, and this working directory is the skills repo, not an app. So treat the workflow below as a **draft to adapt**, not a verified repair. Every assumption it makes is listed so you can check it against the real repository before merging.\n\n## Confirm these first\n\n- **`pubspec.yaml` / `pubspec.lock`**: the draft assumes a single app at the repo root with a committed lockfile. Workspaces or Melos would change the commands, roots and cache keys.\n- **Flutter version source**: the draft reads `environment.flutter` from `pubspec.yaml`. If you use `.fvmrc`, `.tool-versions` or something else, point at that instead.\n- **`linux/`, `macos/`, `windows/` directories**: integration tests can only run on desktop targets the app actually supports. If desktop isn't supported, the integration leg needs an emulator or simulator job instead.\n- **`integration_test/` and existing scripts**: if the repo has its own test scripts (Melos, Makefile, `tool/`), the workflow should call those rather than raw `flutter test`.\n- **Existing `.github/workflows/*`**: so this extends what you have instead of duplicating it.\n- **Code generation and flavors**: if generated code isn't committed, or tests need `--flavor` or `--dart-define`, those steps have to be added.\n\n## Draft: `.github/workflows/test.yml`\n\n```yaml\nname: Test\n\non:\n  pull_request:\n  push:\n    branches: [main]\n  workflow_dispatch:\n\n# Read-only token; no job in this workflow references any secret.\npermissions:\n  contents: read\n\nconcurrency:\n  group: test-${{ github.event.pull_request.number || github.ref }}\n  cancel-in-progress: ${{ github.event_name == 'pull_request' }}\n\njobs:\n  test:\n    name: test (${{ matrix.device }})\n    runs-on: ${{ matrix.os }}\n    timeout-minutes: 45\n    strategy:\n      fail-fast: false # report every OS; each leg still fails the run\n      matrix:\n        include:\n          - os: ubuntu-24.04\n            device: linux\n          - os: macos-15\n            device: macos\n          - os: windows-2025\n            device: windows\n    defaults:\n      run:\n        shell: bash\n    steps:\n      # Pin every action to a full commit SHA before merging (keep the tag as a comment).\n      - uses: actions/checkout@v5\n        with:\n          persist-credentials: false\n\n      - name: Install Linux desktop toolchain\n        if: runner.os == 'Linux'\n        run: |\n          sudo apt-get update\n          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev xvfb\n\n      - id: flutter\n        uses: subosito/flutter-action@v2\n        with:\n          flutter-version-file: pubspec.yaml\n          cache: true\n          # SDK cache: OS + arch + exact Flutter version.\n          cache-key: flutter-sdk-:os:-:arch:-:channel:-:version:\n          # Pub cache: OS + arch + Flutter version + pubspec.lock hash.\n          pub-cache-key: flutter-pub-:os:-:arch:-:channel:-:version:-:hash:\n\n      - run: flutter --version\n\n      - name: Resolve dependencies (lockfile enforced)\n        run: flutter pub get --enforce-lockfile\n\n      - name: Unit and widget tests\n        run: flutter test --file-reporter json:reports/unit-${{ matrix.device }}.json\n\n      - name: Integration tests (Linux, headless)\n        if: runner.os == 'Linux'\n        run: xvfb-run -a flutter test integration_test -d linux --file-reporter json:reports/integration-linux.json\n\n      - name: Integration tests\n        if: runner.os != 'Linux'\n        run: flutter test integration_test -d ${{ matrix.device }} --file-reporter json:reports/integration-${{ matrix.device }}.json\n\n      - name: Upload test reports\n        if: always()\n        uses: actions/upload-artifact@v4\n        with:\n          name: test-reports-${{ matrix.device }}\n          path: reports/\n          retention-days: 14\n          if-no-files-found: warn\n```\n\n## Why it's built this way\n\n**Caching**\n- Only the Flutter SDK download and the pub cache are cached.\n- Both keys include OS, architecture and the exact Flutter version. The pub key also includes the `pubspec.lock` hash (`:hash:`).\n- `.dart_tool/` and `build/` are deliberately not cached, because stale mutable output can hide real failures.\n- `--enforce-lockfile` means a cache hit and a cache miss resolve exactly the same dependency graph.\n- Check that `:hash:` resolves to the lockfile hash in the action version you pin. If you have several lockfiles (monorepo), switch to an explicit `actions/cache` step keyed on `hashFiles('**/pubspec.lock')`.\n\n**Secret isolation**\n- The trigger is `pull_request`, never `pull_request_target`. Workflows on fork PRs therefore get no repository secrets and only a read-only `GITHUB_TOKEN`.\n- `permissions: contents: read` and `persist-credentials: false` limit the token further. The workflow also references no secrets at all.\n- Keep deploy tokens out of repo-level secrets. Put them in a protected **Environment** (for example `production`) with required reviewers and deployment branch/tag restrictions, so only a protected-branch job can reach them.\n- In repo settings, enable \"Require approval for all outside collaborators\" for fork PR workflows.\n\n**No publishing**\n- There is no deploy, `pub publish`, tag, release or upload step. The only artifacts are test reports, kept for 14 days.\n- Any future delivery workflow should be a separate file with its own environment gate and an explicit approval step.\n\n**Failure behavior**\n- There is no `continue-on-error`, no retries and no ignored exit codes.\n- `fail-fast: false` only lets the other OS legs finish so you can see every failure. Any failing leg still fails the run.\n\n**Supply chain**\n- Replace `@v5`, `@v2` and `@v4` with full commit SHAs, and enable Dependabot for `github-actions` so updates stay auditable.\n\n## Verification before merging\n\n1. Run `actionlint` on the workflow file.\n2. Run `flutter pub get --enforce-lockfile`, `flutter test` and `flutter test integration_test -d <platform>` locally on each OS you can access.\n3. Push once with a cold cache and once with a warm cache. Confirm both runs give the same pass/fail result and the same test counts in the uploaded reports.\n4. Open a PR from a fork and confirm the logs show no secrets and the token is read-only.\n\n## Known gaps\n\n- I haven't verified the action SHAs, the runner image versions, or whether your app supports all three desktop targets.\n- macOS minutes are billed at a higher rate. If macOS desktop isn't a shipping target, drop that leg rather than paying for coverage with no real risk behind it.\n- Format and analyze gates are out of scope here. I can add them as a separate single-OS job if you want.\n\nShare the files listed at the top and I'll turn this into a concrete, repo-specific workflow.",
+        "judgment": {
+          "score": 92,
+          "expectations": [
+            {
+              "criterion": "configures matrix jobs across target runners without duplicating pipeline definitions unsafely",
+              "met": true,
+              "evidence": "One `test` job uses `strategy.matrix.include` for ubuntu-24.04, macos-15 and windows-2025, sharing a single step list. OS-specific steps are gated with `if: runner.os == 'Linux'` / `!= 'Linux'` rather than copied into separate jobs. `fail-fast: false` is explained, and the response states each failing leg still fails the run."
+            },
+            {
+              "criterion": "keys caches to immutable OS and lockfile hashes so cache hits are deterministic",
+              "met": true,
+              "evidence": "SDK cache key is `flutter-sdk-:os:-:arch:-:channel:-:version:`. Pub cache key adds `:hash:`, which the response states is the pubspec.lock hash. `.dart_tool/` and `build/` are deliberately not cached. `flutter pub get --enforce-lockfile` makes cold and warm caches resolve the same graph. The response tells the user to confirm `:hash:` maps to the lockfile in the pinned action version, offers a `hashFiles('**/pubspec.lock')` fallback, and includes a cold-vs-warm cache verification step."
+            },
+            {
+              "criterion": "[MANDATORY] restricts deployment secrets to protected environments and blocks fork access",
+              "met": true,
+              "evidence": "Fork access is blocked explicitly: the workflow uses `pull_request`, never `pull_request_target`, so fork PRs get no repository secrets. It also sets `permissions: contents: read` and `persist-credentials: false`, and references no secrets. Deploy tokens are directed into a protected Environment (e.g. `production`) with required reviewers and branch/tag restrictions, plus approval for outside-collaborator workflows. A fork-PR check is included as a verification step. The environment gate is a configuration instruction rather than YAML, which fits because this workflow has no deploy job."
+            },
+            {
+              "criterion": "[MANDATORY] does not trigger publication, tagging, or release actions",
+              "met": true,
+              "evidence": "The workflow contains no deploy, `pub publish`, tag or release steps. The only upload is test-report artifacts with 14-day retention. The response states this explicitly and says any future delivery workflow should be a separate, environment-gated file."
+            }
+          ],
+          "summary": "All four criteria are met, including both mandatory ones. The response delivers a single matrix workflow across Linux, macOS and Windows. Its caches are keyed on OS, architecture, Flutter version and the lockfile hash, backed by an enforced lockfile. It blocks fork secret access via the `pull_request` trigger with a read-only token, routes deploy tokens to protected Environments, and has no publish, tag or release actions. Minor weaknesses: the protected-environment control is advice rather than configuration, and correctness depends on assumptions the response itself flags (the `:hash:` semantics and desktop target support)."
+        },
+        "judgments": [
+          {
+            "score": 92,
+            "expectations": [
+              {
+                "criterion": "configures matrix jobs across target runners without duplicating pipeline definitions unsafely",
+                "met": true,
+                "evidence": "One `test` job uses `strategy.matrix.include` for ubuntu-24.04, macos-15 and windows-2025, sharing a single step list. OS-specific steps are gated with `if: runner.os == 'Linux'` / `!= 'Linux'` rather than copied into separate jobs. `fail-fast: false` is explained, and the response states each failing leg still fails the run."
+              },
+              {
+                "criterion": "keys caches to immutable OS and lockfile hashes so cache hits are deterministic",
+                "met": true,
+                "evidence": "SDK cache key is `flutter-sdk-:os:-:arch:-:channel:-:version:`. Pub cache key adds `:hash:`, which the response states is the pubspec.lock hash. `.dart_tool/` and `build/` are deliberately not cached. `flutter pub get --enforce-lockfile` makes cold and warm caches resolve the same graph. The response tells the user to confirm `:hash:` maps to the lockfile in the pinned action version, offers a `hashFiles('**/pubspec.lock')` fallback, and includes a cold-vs-warm cache verification step."
+              },
+              {
+                "criterion": "[MANDATORY] restricts deployment secrets to protected environments and blocks fork access",
+                "met": true,
+                "evidence": "Fork access is blocked explicitly: the workflow uses `pull_request`, never `pull_request_target`, so fork PRs get no repository secrets. It also sets `permissions: contents: read` and `persist-credentials: false`, and references no secrets. Deploy tokens are directed into a protected Environment (e.g. `production`) with required reviewers and branch/tag restrictions, plus approval for outside-collaborator workflows. A fork-PR check is included as a verification step. The environment gate is a configuration instruction rather than YAML, which fits because this workflow has no deploy job."
+              },
+              {
+                "criterion": "[MANDATORY] does not trigger publication, tagging, or release actions",
+                "met": true,
+                "evidence": "The workflow contains no deploy, `pub publish`, tag or release steps. The only upload is test-report artifacts with 14-day retention. The response states this explicitly and says any future delivery workflow should be a separate, environment-gated file."
+              }
+            ],
+            "summary": "All four criteria are met, including both mandatory ones. The response delivers a single matrix workflow across Linux, macOS and Windows. Its caches are keyed on OS, architecture, Flutter version and the lockfile hash, backed by an enforced lockfile. It blocks fork secret access via the `pull_request` trigger with a read-only token, routes deploy tokens to protected Environments, and has no publish, tag or release actions. Minor weaknesses: the protected-environment control is advice rather than configuration, and correctness depends on assumptions the response itself flags (the `:hash:` semantics and desktop target support)."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 92.0,
+          "minimum_score": 92,
+          "maximum_score": 92,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 4,
+    "behavior_passed": 4,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 90.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-ci-cd": {
+        "cases": 4,
+        "passed": 4,
+        "baseline_average": null,
+        "with_skill_average": 90.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

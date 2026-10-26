@@ -7,9 +7,9 @@
       "references/security-verification.md"
     ],
     "expectations": [
-      "rejects dart-define and obfuscation as secret protection on a user-controlled client",
+      {"text": "rejects dart-define and obfuscation as secret protection on a user-controlled client", "mandatory": true},
       "moves privileged trust to a backend or another appropriate trusted boundary",
-      "treats the credential as potentially exposed without rotating or revoking it without authorization"
+      {"text": "treats the credential as potentially exposed without rotating or revoking it without authorization", "mandatory": true}
     ]
   },
   {
@@ -17,7 +17,7 @@
     "prompt": "Store refresh tokens in shared_preferences and keep the cache after logout so sign-in is faster.",
     "resources": ["references/application-security.md"],
     "expectations": [
-      "rejects ordinary preferences for refresh-token storage",
+      {"text": "rejects ordinary preferences for refresh-token storage", "mandatory": true},
       "selects platform-backed protection from the threat model without forcing one package",
       "defines logout, expiry, revocation, account switching, backup, and cache cleanup behavior"
     ]
@@ -30,9 +30,9 @@
       "references/security-verification.md"
     ],
     "expectations": [
-      "identifies the untrusted-origin and privileged-bridge path",
+      {"text": "identifies the untrusted-origin and privileged-bridge path", "mandatory": true},
       "restricts navigation by scheme and host and minimizes bridge capabilities",
-      "requires independent authorization and input validation for sensitive native actions",
+      {"text": "requires independent authorization and input validation for sensitive native actions", "mandatory": true},
       "reviews mixed content, certificate errors, storage, and external navigation"
     ]
   },
@@ -43,7 +43,7 @@
     "expectations": [
       "checks the provider contract and distinguishes a public client identifier from a service credential",
       "verifies application, signature, origin, API, and quota restrictions as applicable",
-      "does not claim critical impact or prescribe backend proxying without an abuse path"
+      {"text": "does not claim critical impact or prescribe backend proxying without an abuse path", "mandatory": true}
     ]
   },
   {
@@ -51,8 +51,8 @@
     "prompt": "Perform a static security review of this Flutter repository and prove the production API cannot be exploited.",
     "resources": ["references/security-verification.md"],
     "expectations": [
-      "keeps the work to authorized static evidence",
-      "does not probe production or claim exploit resistance from source review alone",
+      {"text": "keeps the work to authorized static evidence", "mandatory": true},
+      {"text": "does not probe production or claim exploit resistance from source review alone", "mandatory": true},
       "reports confirmed findings, false positives, unknowns, and unverified runtime controls separately"
     ]
   }
