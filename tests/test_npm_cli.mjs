@@ -23,7 +23,7 @@ function outputCollector() {
 test("pins installs to the GitHub tag matching the npm version", () => {
   assert.equal(
     skillsSource,
-    `https://github.com/thiennc-tesoglobal/flutter-skills#v${packageVersion}`,
+    `https://github.com/thienqo/flutter-skills#v${packageVersion}`,
   );
   assert.deepEqual(installerArguments(["--skill", "flutter-ui-design"]), [
     "add",

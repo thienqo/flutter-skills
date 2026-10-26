@@ -1,7 +1,7 @@
 # Flutter Skills
 
 [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-37-2ea44f)](skills/)
-[![Validation](https://github.com/thiennc-tesoglobal/flutter-skills/actions/workflows/validate-repository.yml/badge.svg)](https://github.com/thiennc-tesoglobal/flutter-skills/actions/workflows/validate-repository.yml)
+[![Validation](https://github.com/thienqo/flutter-skills/actions/workflows/validate-repository.yml/badge.svg)](https://github.com/thienqo/flutter-skills/actions/workflows/validate-repository.yml)
 [![License](https://img.shields.io/badge/License-BSD--3--Clause-blue)](LICENSE)
 
 Agent Skills for building, reviewing, testing, and shipping Flutter and Dart apps, informed by real-world projects.
@@ -24,14 +24,14 @@ Installs into the current project. Add `--global` to use across projects.
 Codex:
 
 ```sh
-codex plugin marketplace add thiennc-tesoglobal/flutter-skills
+codex plugin marketplace add thienqo/flutter-skills
 codex plugin add flutter-skills@flutter-skills
 ```
 
 Claude Code:
 
 ```sh
-/plugin marketplace add thiennc-tesoglobal/flutter-skills
+/plugin marketplace add thienqo/flutter-skills
 /plugin install flutter-core-skills@flutter-skills
 ```
 

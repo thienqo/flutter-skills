@@ -57,7 +57,7 @@ Before publishing, finalize the version heading in `CHANGELOG.md` with an ISO da
 python3 .github/scripts/validate_repository.py --release
 ```
 
-The npm package uses trusted publishing. Configure `@thiennc/flutter-skills` on npm with GitHub Actions publisher `thiennc-tesoglobal/flutter-skills`, workflow filename `release.yml`, and permission to run `npm publish`. The tag-only release workflow uses OIDC, publishes provenance, verifies the immutable registry version, and smoke-tests the installed CLI before continuing to Tessl and GitHub Release.
+The npm package uses trusted publishing. Configure `@thiennc/flutter-skills` on npm with GitHub Actions publisher `thienqo/flutter-skills`, workflow filename `release.yml`, and permission to run `npm publish`. The tag-only release workflow uses OIDC, publishes provenance, verifies the immutable registry version, and smoke-tests the installed CLI before continuing to Tessl and GitHub Release.
 
 ## Pull-request checklist
 

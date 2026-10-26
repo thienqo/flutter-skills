@@ -8,6 +8,7 @@
 - Require the semantic inspection reference to diagnose an empty Flutter semantics tree before offering a labeled coordinate-tap fallback, even when the user asks for a pixel tap, and route new `Semantics(identifier:)` work to `flutter-accessibility`. The measured case moved from 35 with a mandatory failure to 96.
 - Mark secret-handling, authorization, production-probing, fork-isolation, and no-publication expectations in `flutter-security` and `flutter-ci-cd` as mandatory.
 - Add four routing boundaries (72 to 76): a frozen UI that is not jank, production cold-start signals that are not local profiling, a Figma node that contains a glass effect, and a blur added without redesign.
+- Point repository, marketplace, plugin, tessl, npm metadata, CLI, and README install commands at `thienqo/flutter-skills` after the repository moved from `thiennc-tesoglobal`.
 
 ## 0.10.0 - 2026-10-05
 

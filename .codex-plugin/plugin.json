@@ -3,11 +3,11 @@
   "version": "0.10.0",
   "description": "Package-neutral Flutter and Dart skills for building, reviewing, testing, and releasing applications.",
   "author": {
-    "name": "thiennc-tesoglobal",
-    "url": "https://github.com/thiennc-tesoglobal"
+    "name": "thienqo",
+    "url": "https://github.com/thienqo"
   },
-  "homepage": "https://github.com/thiennc-tesoglobal/flutter-skills",
-  "repository": "https://github.com/thiennc-tesoglobal/flutter-skills",
+  "homepage": "https://github.com/thienqo/flutter-skills",
+  "repository": "https://github.com/thienqo/flutter-skills",
   "license": "BSD-3-Clause",
   "keywords": [
     "flutter",
@@ -21,12 +21,12 @@
     "displayName": "Flutter Skills",
     "shortDescription": "Build and ship Flutter apps with focused skills.",
     "longDescription": "Use package-neutral Flutter and Dart skills for complete delivery, focused implementation, review, testing, performance, security, and release workflows.",
-    "developerName": "thiennc-tesoglobal",
+    "developerName": "thienqo",
     "category": "Developer Tools",
     "capabilities": [
       "Skills"
     ],
-    "websiteURL": "https://github.com/thiennc-tesoglobal/flutter-skills",
+    "websiteURL": "https://github.com/thienqo/flutter-skills",
     "defaultPrompt": [
       "Build a complete Flutter feature and verify it.",
       "Review this Flutter change for concrete risks.",
