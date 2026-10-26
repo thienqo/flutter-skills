@@ -48,6 +48,28 @@ Direct permission grant or revocation prepares state but does not prove the real
 
 `simctl push` tests local payload parsing, presentation, tap handling, and navigation in Simulator. It does not prove APNs registration, credentials, entitlement configuration, provider acceptance, network delivery, background policy on hardware, or every push type. Keep those claims for the appropriate provider and physical-device verification.
 
+## Appearance, text size, and status bar
+
+```sh
+xcrun simctl ui <UDID> appearance            # read current value first
+xcrun simctl ui <UDID> appearance dark
+xcrun simctl ui <UDID> content_size           # read current value first
+xcrun simctl ui <UDID> content_size accessibility-extra-extra-extra-large
+xcrun simctl status_bar <UDID> override --time 9:41 --batteryState charged --batteryLevel 100
+xcrun simctl status_bar <UDID> clear
+```
+
+Use these to run a theme, Dynamic Type, or screenshot-consistency pass without editing app code. Record each value before changing it and restore it afterward; `status_bar clear` removes every override, so use it only when the task applied the override. Pair large text sizes with `flutter-responsive-layout` or `flutter-accessibility` when overflow is the subject.
+
+## Inspect persisted app data
+
+```sh
+xcrun simctl get_app_container <UDID> <bundle-id> data
+plutil -p "<data-container>/Library/Preferences/<bundle-id>.plist"
+```
+
+Read-only inspection of the data container confirms what the app persisted, for example values written through `NSUserDefaults`-backed plugins. Check the plugin version and API before assuming key names or storage location. Treat container contents as user data: do not copy tokens or personal data into reports, and do not edit files in place to fake a state the app should produce.
+
 ## Screenshots and video
 
 ```sh

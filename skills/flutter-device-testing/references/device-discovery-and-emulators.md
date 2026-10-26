@@ -46,6 +46,7 @@ For location, appearance, status bar, orientation, permissions, network shaping,
 - Use Dart and Flutter MCP inspection or `package:integration_test` for Flutter-owned widgets and semantic assertions.
 - Use `adb` or `simctl` for bounded platform state and lifecycle control.
 - Use the native-capable automation stack already present in the repository for permission dialogs, notification trays, external account pickers, or platform views. Do not add a framework without a project-specific need and compatibility review.
+- Read [semantic UI inspection](semantic-ui-inspection.md) before driving a live app through the platform accessibility tree.
 - Prefer stable keys, semantics/accessibility identifiers, or visible text contracts over coordinates. Bound waits on observable state rather than sleeping.
 
 An OS command accepting a deep link or notification payload proves only trigger acceptance. Assert the destination, Back behavior, restored state, and allowed side effects inside the application.

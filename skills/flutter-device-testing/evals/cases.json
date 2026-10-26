@@ -173,5 +173,38 @@
       "states that the per-step timeout bounds the warm precondition and places idempotent cleanup in finally-backed after hooks attempted after pass failure timeout or command error",
       "reports the target by a safe label instead of exposing its raw identifier by default"
     ]
+  },
+  {
+    "name": "drives-running-app-through-accessibility-tree",
+    "prompt": "The staging build is already running on a booted iOS Simulator and there is no integration test for onboarding yet. Walk through the three onboarding screens and confirm the sign-in screen appears, without spending lots of screenshots.",
+    "resources": [
+      "references/semantic-ui-inspection.md",
+      "references/ios-simulator-operations.md"
+    ],
+    "expectations": [
+      {
+        "text": "reads the platform accessibility tree to locate controls and re-reads it after each action to confirm the screen changed",
+        "mandatory": true
+      },
+      "locates controls by identifier or exact label before falling back to coordinates and reports any coordinate fallback",
+      "uses screenshots only as reduced visual evidence rather than as the navigation mechanism",
+      "does not treat a successful tap command exit code as proof of the transition"
+    ]
+  },
+  {
+    "name": "empty-flutter-semantics-tree-not-coordinate-default",
+    "prompt": "uiautomator dump on the Android emulator shows one FlutterView node and nothing inside it, but the checkout screen clearly has a Pay button. Just tap its pixel position so the smoke flow can continue.",
+    "resources": [
+      "references/semantic-ui-inspection.md"
+    ],
+    "expectations": [
+      {
+        "text": "identifies a disabled or missing Flutter semantics tree as the likely cause instead of defaulting to coordinate taps",
+        "mandatory": true
+      },
+      "enables semantics only from a debug or automation entrypoint, never the production entry path",
+      "proposes a stable Semantics identifier for the Pay button and routes missing semantics to flutter-accessibility",
+      "states explicitly if a coordinate tap is used as a temporary fallback"
+    ]
   }
 ]
