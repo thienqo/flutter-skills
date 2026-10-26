@@ -1,0 +1,126 @@
+{
+  "created_at": "2026-10-26T08:25:25.442553+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "de4519348e1df1e4c99cc3bd2663fe459fbd137f",
+    "dirty": true,
+    "branch": "test/eval-hardening"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.310 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.310 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.310 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.10.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-device-testing",
+      "case": "empty-flutter-semantics-tree-not-coordinate-default",
+      "with_skill": {
+        "response": "A single empty `FlutterView` almost always means **Flutter's semantics tree isn't being built**, not that the Pay button lacks semantics. Android's embedding typically bridges semantics only when the OS reports an accessibility service or automation client, and `uiautomator dump` alone often doesn't trigger that. So any black-box tool will see nothing on every screen, not just checkout.\n\n## Diagnose first (about 1 minute)\n\n1. **Rule out timing.** Confirm the app is foregrounded and past launch, then re-dump after a short bounded wait:\n   ```sh\n   adb -s <serial> shell dumpsys activity activities | grep -i mResumedActivity\n   adb -s <serial> shell uiautomator dump /sdcard/task-dump.xml\n   adb -s <serial> exec-out cat /sdcard/task-dump.xml | grep -c 'node '\n   adb -s <serial> shell rm /sdcard/task-dump.xml\n   ```\n2. **If it's still one node, semantics is off.** This depends on Flutter version and platform, so check against your installed SDK rather than assuming.\n\n## Durable fix\n\nEnable semantics from a **debug/automation entrypoint you own**, never from `main.dart`'s production path:\n\n```dart\n// lib/main_smoke.dart (or your existing test/dev entrypoint)\nlate final SemanticsHandle _semantics;\n\nvoid main() {\n  WidgetsFlutterBinding.ensureInitialized();\n  _semantics = SemanticsBinding.instance.ensureSemantics(); // held for app lifetime\n  runApp(const App());\n}\n```\n\nLaunch with `flutter run -t lib/main_smoke.dart --flavor <flavor>`. The dump should then show real nodes, and you can tap the Pay button by its bounds and re-read to confirm the next screen. If nodes appear but Pay has no label or identifier, adding `Semantics(identifier: 'checkout-pay')` belongs in a `flutter-accessibility` change, not in permanent coordinate automation.\n\n## Temporary fallback: coordinate tap\n\nI can do this, but **Pay is an irreversible-class control**, so first please confirm:\n\n- **The build points at a test/sandbox payment backend and a test account.** Which flavor and defines is it running?\n\nOnce confirmed:\n\n```sh\nadb -s <serial> exec-out screencap -p > /tmp/checkout-before.png   # locate Pay, derive center x,y\nadb -s <serial> shell input tap <x> <y>\n```\n\nA zero exit code only proves the event was sent. With no tree to read, I'd verify the outcome with a bounded check: a follow-up screenshot of the expected confirmation screen plus filtered app logs (`adb logcat --pid=$(adb shell pidof -s <appId>)`) showing the payment or navigation event.\n\nIn the smoke report, this step will be labeled **\"coordinate tap, semantics tree unavailable, temporary fallback.\"** Coordinates will break across screen sizes, densities, and layout changes.\n\n**My recommendation:** take the entrypoint fix. It's a few lines and unblocks every step of the smoke flow, not just this tap. If you need to proceed right now, confirm the test backend and I'll do the fallback tap.",
+        "judgment": {
+          "score": 96,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] identifies a disabled or missing Flutter semantics tree as the likely cause instead of defaulting to coordinate taps",
+              "met": true,
+              "evidence": "Opens with 'A single empty FlutterView almost always means Flutter's semantics tree isn't being built'. It explains that Android bridges semantics only when an accessibility or automation client is detected. It offers a diagnosis step (rule out timing, re-dump) and recommends the entrypoint fix before any coordinate tap."
+            },
+            {
+              "criterion": "enables semantics only from a debug or automation entrypoint, never the production entry path",
+              "met": true,
+              "evidence": "States 'Enable semantics from a debug/automation entrypoint you own, never from main.dart's production path'. Provides lib/main_smoke.dart calling SemanticsBinding.instance.ensureSemantics() with a retained handle, launched via flutter run -t lib/main_smoke.dart."
+            },
+            {
+              "criterion": "proposes a stable Semantics identifier for the Pay button and routes missing semantics to flutter-accessibility",
+              "met": true,
+              "evidence": "Says 'If nodes appear but Pay has no label or identifier, adding Semantics(identifier: 'checkout-pay') belongs in a flutter-accessibility change, not in permanent coordinate automation.'"
+            },
+            {
+              "criterion": "states explicitly if a coordinate tap is used as a temporary fallback",
+              "met": true,
+              "evidence": "Has a section titled 'Temporary fallback: coordinate tap'. Commits to labeling the step 'coordinate tap, semantics tree unavailable, temporary fallback' in the smoke report and notes that coordinates break across sizes and densities. It also requires confirmation of a test payment backend first and verifies the outcome beyond the exit code."
+            }
+          ],
+          "summary": "The response meets all four criteria. It correctly diagnoses the empty FlutterView as an unbuilt semantics tree and enables semantics only from a dedicated smoke entrypoint. It proposes a stable Semantics identifier routed to flutter-accessibility, and it explicitly labels the coordinate tap as a temporary fallback. The fallback is gated on confirming a sandbox payment backend and includes outcome verification. One minor weakness: the diagnosis step hedges on version specifics without giving a concrete check."
+        },
+        "judgments": [
+          {
+            "score": 96,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] identifies a disabled or missing Flutter semantics tree as the likely cause instead of defaulting to coordinate taps",
+                "met": true,
+                "evidence": "Opens with 'A single empty FlutterView almost always means Flutter's semantics tree isn't being built'. It explains that Android bridges semantics only when an accessibility or automation client is detected. It offers a diagnosis step (rule out timing, re-dump) and recommends the entrypoint fix before any coordinate tap."
+              },
+              {
+                "criterion": "enables semantics only from a debug or automation entrypoint, never the production entry path",
+                "met": true,
+                "evidence": "States 'Enable semantics from a debug/automation entrypoint you own, never from main.dart's production path'. Provides lib/main_smoke.dart calling SemanticsBinding.instance.ensureSemantics() with a retained handle, launched via flutter run -t lib/main_smoke.dart."
+              },
+              {
+                "criterion": "proposes a stable Semantics identifier for the Pay button and routes missing semantics to flutter-accessibility",
+                "met": true,
+                "evidence": "Says 'If nodes appear but Pay has no label or identifier, adding Semantics(identifier: 'checkout-pay') belongs in a flutter-accessibility change, not in permanent coordinate automation.'"
+              },
+              {
+                "criterion": "states explicitly if a coordinate tap is used as a temporary fallback",
+                "met": true,
+                "evidence": "Has a section titled 'Temporary fallback: coordinate tap'. Commits to labeling the step 'coordinate tap, semantics tree unavailable, temporary fallback' in the smoke report and notes that coordinates break across sizes and densities. It also requires confirmation of a test payment backend first and verifies the outcome beyond the exit code."
+              }
+            ],
+            "summary": "The response meets all four criteria. It correctly diagnoses the empty FlutterView as an unbuilt semantics tree and enables semantics only from a dedicated smoke entrypoint. It proposes a stable Semantics identifier routed to flutter-accessibility, and it explicitly labels the coordinate tap as a temporary fallback. The fallback is gated on confirming a sandbox payment backend and includes outcome verification. One minor weakness: the diagnosis step hedges on version specifics without giving a concrete check."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 96.0,
+          "minimum_score": 96,
+          "maximum_score": 96,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 96.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-device-testing": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 96.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

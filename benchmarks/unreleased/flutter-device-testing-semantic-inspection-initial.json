@@ -1,0 +1,201 @@
+{
+  "created_at": "2026-10-26T08:23:50.965467+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "de4519348e1df1e4c99cc3bd2663fe459fbd137f",
+    "dirty": true,
+    "branch": "test/eval-hardening"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.310 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.310 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.310 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.10.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-device-testing",
+      "case": "drives-running-app-through-accessibility-tree",
+      "with_skill": {
+        "response": "Here's how I'd run this onboarding check against the Simulator that's already running. It reads the accessibility tree instead of taking screenshots, and it doesn't reinstall, reset, or clear data. I haven't run anything yet, so there are no results below. The commands use placeholders until I resolve them on your machine.\n\n## 1. Identify the target and app (read-only)\n\n```sh\nxcrun simctl list -j devices booted          # take the UDID of the booted device\nflutter devices                               # confirm Flutter sees the same UDID\nxcrun simctl get_app_container <UDID> <staging-bundle-id> app\n```\n\n- I'll get the staging bundle identifier from the Xcode staging scheme or build configuration. I won't guess it from the Dart package name.\n- I'll record the Simulator as **reused, not created for this task**. That means cleanup only covers files I create.\n- If onboarding has already been completed on this install, the app will open past it. In that case I'll stop and ask you before uninstalling, clearing app data, or erasing the Simulator.\n\n## 2. Read the tree instead of taking screenshots\n\nI'll use `idb` only if it's already installed or you approve it. If the Dart and Flutter MCP server is connected to the running staging session, its widget inspection is an equivalent read-only option.\n\n```sh\nidb ui describe-all --udid <UDID> --json \\\n  | jq '[.[] | select(.AXLabel or .AXUniqueId) |\n        {type, label: .AXLabel, id: .AXUniqueId, enabled, frame}]'\n```\n\nThe filtered output is a few hundred tokens per screen. I'll keep that summary, not the raw dump.\n\n**If the tree is empty** (a single full-screen Flutter view, or no actionable nodes):\n1. Make sure the app is in the foreground and past the splash screen, then read again after a short wait.\n2. This usually means semantics isn't enabled. The fix is a debug or automation entrypoint that calls `SemanticsBinding.instance.ensureSemantics()`, never the production entry path. That requires relaunching staging with a different `-t`, so I'd ask you first. As a last resort I could use coordinates, and I'd say so in the report.\n\n## 3. Walk the three screens: act, then re-read\n\nFor each onboarding screen:\n\n1. Confirm the screen from its distinctive node: an identifier if one exists, otherwise its title label or page indicator.\n2. Find the advance control (\"Next\" / \"Continue\" / \"Get started\") by `AXUniqueId`, then by exact label, then by role and index.\n3. Tap the center of its frame: `idb ui tap --udid <UDID> <x> <y>`.\n4. Re-read the tree, retrying for a few seconds at most, until the next screen's node appears. A tap command exiting with code 0 only proves the event was sent.\n\nAfter screen 3, the check passes when the tree shows the **sign-in screen**: its heading plus the email/password fields or sign-in button. I'll assert on those nodes, not on the absence of onboarding nodes.\n\nDetails I'll watch for:\n- Buttons and `ListTile`s merge their child labels, so I'll match on the joined label.\n- A `PageView` only exposes pages it has built, so I'll re-read after each transition instead of searching ahead.\n\n## 4. Evidence and cleanup\n\n- **Logs:** a short capture filtered to the app, started before the first tap:\n  ```sh\n  xcrun simctl spawn <UDID> log stream --predicate 'process == \"Runner\"'\n  ```\n- **Screenshot:** at most one, of the final sign-in screen, using `xcrun simctl io <UDID> screenshot <task-path>.png`, cropped or downscaled. The tree reads are the main evidence.\n- **Cleanup:** stop the log stream and delete only the files I created. I won't change permissions, appearance, status bar, or app data.\n\n## Report you'll get\n\n| Field | Value |\n|---|---|\n| Target | iOS Simulator (reused), device model + iOS runtime |\n| Build | staging flavor, as already launched (debug mode unless shown otherwise) |\n| Entrypoint | existing session's entrypoint; I'll note it if a semantics-enabled entrypoint was needed |\n| Data source | staging backend, though onboarding is likely local-only |\n| Flow | onboarding 1 \u2192 2 \u2192 3 \u2192 sign-in |\n| Assertions | node found per screen, sign-in nodes present |\n| Artifacts | filtered tree summaries, one screenshot, filtered log excerpt |\n| Not exercised | onboarding Back/skip paths, a fresh install's first-run state (if the existing data already reflects it), physical-device behavior, any native permission prompts |\n\n**Before I run it:** is `idb` (or the Dart/Flutter MCP server) available? If not, do you approve installing `idb` for this check? If you'd like this to become a durable check, the next step is a `package:integration_test` smoke test that uses `Semantics(identifier:)` on the onboarding buttons. That's outside what you asked for here, so I'd only do it if you want it.",
+        "judgment": {
+          "score": 92,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] reads the platform accessibility tree to locate controls and re-reads it after each action to confirm the screen changed",
+              "met": true,
+              "evidence": "Section 2 reads the tree with `idb ui describe-all` (filtered via jq) instead of taking screenshots. Section 3 step 4 says: 'Re-read the tree, retrying for a few seconds at most, until the next screen's node appears.' It also says it re-reads after each PageView transition. The final pass condition asserts that sign-in nodes are present in the tree."
+            },
+            {
+              "criterion": "locates controls by identifier or exact label before falling back to coordinates and reports any coordinate fallback",
+              "met": true,
+              "evidence": "Step 3.2 sets the lookup order: 'by `AXUniqueId`, then by exact label, then by role and index'. Taps go to the center of the located node's frame, not to blind coordinates. Section 2 says: 'As a last resort I could use coordinates, and I'd say so in the report.'"
+            },
+            {
+              "criterion": "uses screenshots only as reduced visual evidence rather than as the navigation mechanism",
+              "met": true,
+              "evidence": "Section 4 limits screenshots to 'at most one, of the final sign-in screen ... cropped or downscaled' and says 'The tree reads are the main evidence.' Navigation relies only on tree reads."
+            },
+            {
+              "criterion": "does not treat a successful tap command exit code as proof of the transition",
+              "met": true,
+              "evidence": "Step 3.4 says: 'A tap command exiting with code 0 only proves the event was sent.' The transition is confirmed only when the next screen's node appears in a re-read tree."
+            }
+          ],
+          "summary": "The response is a plan; nothing was executed. Each criterion is still met as an explicit decision. It navigates through the accessibility tree and re-reads the tree after every tap. Control lookup goes identifier, then exact label, then role/index, and any coordinate fallback will be reported. Screenshots are capped at one reduced image used only as evidence. It states that a tap's exit code is not proof of the transition. Points are deducted only because no results were produced and success depends on idb or semantics being available."
+        },
+        "judgments": [
+          {
+            "score": 92,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] reads the platform accessibility tree to locate controls and re-reads it after each action to confirm the screen changed",
+                "met": true,
+                "evidence": "Section 2 reads the tree with `idb ui describe-all` (filtered via jq) instead of taking screenshots. Section 3 step 4 says: 'Re-read the tree, retrying for a few seconds at most, until the next screen's node appears.' It also says it re-reads after each PageView transition. The final pass condition asserts that sign-in nodes are present in the tree."
+              },
+              {
+                "criterion": "locates controls by identifier or exact label before falling back to coordinates and reports any coordinate fallback",
+                "met": true,
+                "evidence": "Step 3.2 sets the lookup order: 'by `AXUniqueId`, then by exact label, then by role and index'. Taps go to the center of the located node's frame, not to blind coordinates. Section 2 says: 'As a last resort I could use coordinates, and I'd say so in the report.'"
+              },
+              {
+                "criterion": "uses screenshots only as reduced visual evidence rather than as the navigation mechanism",
+                "met": true,
+                "evidence": "Section 4 limits screenshots to 'at most one, of the final sign-in screen ... cropped or downscaled' and says 'The tree reads are the main evidence.' Navigation relies only on tree reads."
+              },
+              {
+                "criterion": "does not treat a successful tap command exit code as proof of the transition",
+                "met": true,
+                "evidence": "Step 3.4 says: 'A tap command exiting with code 0 only proves the event was sent.' The transition is confirmed only when the next screen's node appears in a re-read tree."
+              }
+            ],
+            "summary": "The response is a plan; nothing was executed. Each criterion is still met as an explicit decision. It navigates through the accessibility tree and re-reads the tree after every tap. Control lookup goes identifier, then exact label, then role/index, and any coordinate fallback will be reported. Screenshots are capped at one reduced image used only as evidence. It states that a tap's exit code is not proof of the transition. Points are deducted only because no results were produced and success depends on idb or semantics being available."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 92.0,
+          "minimum_score": 92,
+          "maximum_score": 92,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-device-testing",
+      "case": "empty-flutter-semantics-tree-not-coordinate-default",
+      "with_skill": {
+        "response": "You can tap by coordinates to unblock the smoke run. The tap's exit code won't tell you whether Pay worked, though, so you'll need to check the result yourself.\n\n**Before tapping Pay:** make sure this build uses a test or sandbox payment backend and a test account. A coordinate tap is blind, and it could submit a real charge.\n\n### Tap by position\n\n```sh\n# Confirm the checkout screen is in the foreground and settled\nadb -s <serial> exec-out screencap -p > /tmp/checkout-before.png\n\n# Screencap pixels match input coordinates; check for any size override\nadb -s <serial> shell wm size\n```\n\nFind the center of the Pay button on the full-resolution screenshot, not a downscaled preview. Then tap:\n\n```sh\nadb -s <serial> shell input tap <x> <y>\n```\n\n### Verify that it did something\n\nYou can't re-read an empty tree, so check the outcome another way within a bounded wait:\n\n```sh\nadb -s <serial> exec-out screencap -p > /tmp/checkout-after.png\nadb -s <serial> logcat -d -s flutter | tail -n 50\n```\n\nConfirm that the confirmation or processing screen appeared, or that the expected log line fired. If nothing changed, don't retry blindly. The tap may have missed, or the button may have been disabled. In the smoke report, mark this step as \"coordinate tap; semantics tree unavailable.\"\n\n### Why the tree is empty\n\nThis usually doesn't mean the button lacks semantics. Flutter often builds the Android accessibility bridge only when the OS reports an assistive technology or automation client. That's why `uiautomator` sees only the `FlutterView`. If you want this step to be stable later instead of tied to coordinates:\n\n- Use the project's `integration_test` harness, or an existing debug or automation entrypoint, that holds `SemanticsBinding.instance.ensureSemantics()`. Keep it out of the production `main`.\n- Give the button a `Semantics(identifier: 'checkout-pay')`. On Android it shows up as the resource ID, so `uiautomator` can find it on any screen size.\n\nThe coordinate approach will break on a different emulator resolution, font scale, or layout change. That's fine for getting this run through, but it isn't durable for automation.",
+        "judgment": {
+          "score": 35,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] identifies a disabled or missing Flutter semantics tree as the likely cause instead of defaulting to coordinate taps",
+              "met": false,
+              "evidence": "The response opens with 'You can tap by coordinates to unblock the smoke run' and spends most of its length on the tap procedure. It does explain later, under 'Why the tree is empty', that Flutter builds the accessibility bridge only when an assistive or automation client is detected. But that diagnosis comes after the coordinate tap has already been chosen as the primary action. The criterion asks for the semantics diagnosis to replace defaulting to coordinate taps, and the response defaulted to them anyway."
+            },
+            {
+              "criterion": "enables semantics only from a debug or automation entrypoint, never the production entry path",
+              "met": true,
+              "evidence": "'Use the project's integration_test harness, or an existing debug or automation entrypoint, that holds SemanticsBinding.instance.ensureSemantics(). Keep it out of the production main.'"
+            },
+            {
+              "criterion": "proposes a stable Semantics identifier for the Pay button and routes missing semantics to flutter-accessibility",
+              "met": false,
+              "evidence": "It proposes Semantics(identifier: 'checkout-pay') and notes it surfaces as the Android resource ID. It never routes missing semantics to flutter-accessibility. Only half of the criterion is satisfied."
+            },
+            {
+              "criterion": "states explicitly if a coordinate tap is used as a temporary fallback",
+              "met": true,
+              "evidence": "It tells the user to mark the step in the smoke report as 'coordinate tap; semantics tree unavailable'. It also says the approach is 'fine for getting this run through, but it isn't durable for automation.'"
+            }
+          ],
+          "summary": "The response gives a careful coordinate-tap procedure, including a payment-safety warning and outcome checks, and it labels the tap as a temporary workaround. It correctly scopes ensureSemantics to a non-production entrypoint and proposes a stable identifier. However, it fails the mandatory criterion: it defaults to the coordinate tap and offers the disabled-semantics diagnosis only as a later aside. It also never routes the missing-semantics issue to flutter-accessibility."
+        },
+        "judgments": [
+          {
+            "score": 35,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] identifies a disabled or missing Flutter semantics tree as the likely cause instead of defaulting to coordinate taps",
+                "met": false,
+                "evidence": "The response opens with 'You can tap by coordinates to unblock the smoke run' and spends most of its length on the tap procedure. It does explain later, under 'Why the tree is empty', that Flutter builds the accessibility bridge only when an assistive or automation client is detected. But that diagnosis comes after the coordinate tap has already been chosen as the primary action. The criterion asks for the semantics diagnosis to replace defaulting to coordinate taps, and the response defaulted to them anyway."
+              },
+              {
+                "criterion": "enables semantics only from a debug or automation entrypoint, never the production entry path",
+                "met": true,
+                "evidence": "'Use the project's integration_test harness, or an existing debug or automation entrypoint, that holds SemanticsBinding.instance.ensureSemantics(). Keep it out of the production main.'"
+              },
+              {
+                "criterion": "proposes a stable Semantics identifier for the Pay button and routes missing semantics to flutter-accessibility",
+                "met": false,
+                "evidence": "It proposes Semantics(identifier: 'checkout-pay') and notes it surfaces as the Android resource ID. It never routes missing semantics to flutter-accessibility. Only half of the criterion is satisfied."
+              },
+              {
+                "criterion": "states explicitly if a coordinate tap is used as a temporary fallback",
+                "met": true,
+                "evidence": "It tells the user to mark the step in the smoke report as 'coordinate tap; semantics tree unavailable'. It also says the approach is 'fine for getting this run through, but it isn't durable for automation.'"
+              }
+            ],
+            "summary": "The response gives a careful coordinate-tap procedure, including a payment-safety warning and outcome checks, and it labels the tap as a temporary workaround. It correctly scopes ensureSemantics to a non-production entrypoint and proposes a stable identifier. However, it fails the mandatory criterion: it defaults to the coordinate tap and offers the disabled-semantics diagnosis only as a later aside. It also never routes the missing-semantics issue to flutter-accessibility."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 35.0,
+          "minimum_score": 35,
+          "maximum_score": 35,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": true,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 1,
+    "mandatory_failures": 1,
+    "baseline_average": null,
+    "with_skill_average": 63.5,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-device-testing": {
+        "cases": 2,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 63.5,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}
