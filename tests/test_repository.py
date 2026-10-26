@@ -29,7 +29,7 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(counts["skills"], 37)
         self.assertEqual(counts["evals"], 220)
-        self.assertEqual(counts["routing_evals"], 72)
+        self.assertEqual(counts["routing_evals"], 76)
 
     def test_codex_plugin_and_marketplace_resolve_the_full_catalog(self):
         plugin = json.loads(
@@ -342,8 +342,8 @@ class RepositoryTests(unittest.TestCase):
         routing = BEHAVIOR_EVAL.routing_cases()
         expectations = {
             "pr-smoke.json": (6, 7),
-            "nightly-representative.json": (37, 72),
-            "release-full.json": (220, 72),
+            "nightly-representative.json": (37, 76),
+            "release-full.json": (220, 76),
         }
         for filename, counts in expectations.items():
             profile = BEHAVIOR_EVAL.load_json(BEHAVIOR_EVAL.PROFILES_DIR / filename)

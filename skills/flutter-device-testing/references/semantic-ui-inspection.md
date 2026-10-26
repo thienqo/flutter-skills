@@ -35,12 +35,12 @@ Keep credentials out of `input text` arguments where shell history or retained l
 
 ## When the tree is empty or opaque
 
-If the dump shows a single full-screen Flutter view or no actionable nodes while the screen visibly has controls:
+If the dump shows a single full-screen Flutter view or no actionable nodes while the screen visibly has controls, lead with the diagnosis below, even when the user asks for a pixel tap. Offer a coordinate tap only after naming the likely cause and the durable fix, label it as a temporary fallback in the response and the report, and verify its outcome without the tree. Before a blind tap on a payment, deletion, or other irreversible control, confirm the build uses a test backend and account.
 
 1. Confirm the app is foregrounded and past launch; re-read after a bounded wait.
 2. Suspect that the semantics tree is not enabled. Platform embeddings historically build the bridge only when the OS reports an assistive technology or automation client, and behavior varies by Flutter version and platform. Test the installed SDK instead of assuming.
 3. Enable semantics only from a debug or automation entrypoint the project owns or the user approves, for example by holding the handle returned by `SemanticsBinding.instance.ensureSemantics()` for the app lifetime. Never add this to the production entry path, and report the entrypoint used.
-4. If the tree exists but nodes lack labels or roles, the widgets are missing semantics. Route that fix to `flutter-accessibility` instead of permanently automating by coordinates.
+4. If the tree exists but nodes lack labels or roles, the widgets are missing semantics. Route that fix, and any new `Semantics(identifier: ...)` on the control, to `flutter-accessibility` instead of permanently automating by coordinates.
 
 Merged semantics (`MergeSemantics`, `ListTile`, labeled buttons) collapse children into one node with a joined label. Lazy lists expose only built children, so scroll and re-read rather than searching for off-screen items. Platform views expose their own native tree.
 

@@ -5,6 +5,9 @@
 - Add a `flutter-device-testing` semantic UI inspection reference for driving a running app through the platform accessibility tree (`idb`, `uiautomator`) instead of repeated screenshots, re-reading after every action, preferring `Semantics(identifier:)` over coordinates, and diagnosing an empty Flutter semantics tree with a debug-only entrypoint. Approach adapted from conorluddy/ios-simulator-skill (MIT).
 - Add appearance, text-size, status-bar or System UI demo-mode, and read-only persisted-data inspection commands with restore rules to the iOS Simulator and Android emulator references.
 - Add two behavior cases (218 to 220), including a mandatory check that an empty semantics tree is not silently replaced by coordinate taps.
+- Require the semantic inspection reference to diagnose an empty Flutter semantics tree before offering a labeled coordinate-tap fallback, even when the user asks for a pixel tap, and route new `Semantics(identifier:)` work to `flutter-accessibility`. The measured case moved from 35 with a mandatory failure to 96.
+- Mark secret-handling, authorization, production-probing, fork-isolation, and no-publication expectations in `flutter-security` and `flutter-ci-cd` as mandatory.
+- Add four routing boundaries (72 to 76): a frozen UI that is not jank, production cold-start signals that are not local profiling, a Figma node that contains a glass effect, and a blur added without redesign.
 
 ## 0.10.0 - 2026-10-05
 

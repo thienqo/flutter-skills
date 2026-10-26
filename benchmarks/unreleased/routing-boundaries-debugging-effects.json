@@ -1,0 +1,109 @@
+{
+  "created_at": "2026-10-26T08:24:56.818831+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "de4519348e1df1e4c99cc3bd2663fe459fbd137f",
+    "dirty": true,
+    "branch": "test/eval-hardening"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.310 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.310 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.310 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.10.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [],
+  "routing": [
+    {
+      "case": "frozen-ui-after-tap-is-not-jank",
+      "response": {
+        "skills": [
+          "flutter-runtime-debugging"
+        ],
+        "reason": "Hang after Save needs live reproduction and diagnosis in the running debug build; no jank benchmark or device-flow verification requested."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-runtime-debugging"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "production-cold-start-signals-not-local-profiling",
+      "response": {
+        "skills": [
+          "flutter-observability"
+        ],
+        "reason": "Production traces with release context, privacy controls, and regression alerting are observability; profiling is out of scope."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-observability"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "figma-node-with-frosted-glass-card",
+      "response": {
+        "skills": [
+          "flutter-figma-workflow",
+          "flutter-visual-effects"
+        ],
+        "reason": "Figma node translation with parity check plus nontrivial backdrop-blur effect with fallback."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-figma-workflow",
+        "flutter-visual-effects"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "backdrop-blur-on-existing-card-without-redesign",
+      "response": {
+        "skills": [
+          "flutter-visual-effects"
+        ],
+        "reason": "Contained backdrop blur effect with fallback; no visual redesign, layout change, or Figma source."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-visual-effects"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    }
+  ],
+  "summary": {
+    "behavior_cases": 0,
+    "behavior_passed": 0,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": null,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {},
+    "routing_cases": 4,
+    "routing_passed": 4
+  }
+}

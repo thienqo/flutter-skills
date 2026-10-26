@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-10-26T08:32:14.470721+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "de4519348e1df1e4c99cc3bd2663fe459fbd137f",
+    "dirty": true,
+    "branch": "test/eval-hardening"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.310 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.310 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.310 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.10.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-security",
+      "case": "token-storage-has-a-lifecycle",
+      "with_skill": {
+        "response": "I'd recommend against both parts of this. A refresh token is a long-lived bearer credential, and keeping it after logout means logout no longer ends the session. You can still get fast sign-in without either risk.\n\n## Why this design is unsafe\n\n**1. Refresh token in `shared_preferences`**\n- **Asset:** the refresh token, which can mint new access tokens without the user.\n- **Where it ends up:** `shared_preferences` is plain storage, not a secret store.\n  - On Android it's an unencrypted XML file, included in Auto Backup unless you exclude it.\n  - On iOS and macOS it's `NSUserDefaults`, a plaintext plist that goes into device backups.\n  - On web it's `localStorage`, which any injected script can read.\n- **Who can get it:** anyone with backup access, a rooted or jailbroken device, a forensic image, or a web XSS.\n- **Impact:** account takeover that lasts until the token expires or is revoked.\n\n**2. Keeping the token after logout**\n- **Who can use it:** the next person on a shared or lost device, or a second account on the same install.\n- **Path:** the user taps \"Sign out\", but the credential stays on the device and can still be used.\n- **Impact:** the user believes their session ended when it didn't. This also breaks account switching, because data from the previous user can leak into the new session.\n\n## What to do instead\n\n| Goal | Control |\n|---|---|\n| Persist the session between app launches | Store the refresh token in platform-backed storage (Keychain on iOS, Keystore-backed encryption on Android, e.g. via `flutter_secure_storage`). Exclude it from backups. |\n| Fast return without retyping credentials | Offer a **lock** state separate from **sign out**. Keep the token in secure storage and gate it behind biometrics or device credentials. Biometrics only unlock the local token; the backend still enforces authorization. |\n| Fast re-sign-in after a real logout | Keep only non-secret hints in `shared_preferences`: last-used email or username, the chosen sign-in provider, theme and UI preferences. Use platform autofill or passkeys for the credential itself. |\n| Logout | Delete the refresh token, access token, and user-scoped caches for that account. Call the provider's revocation endpoint so the server-side session ends too. Don't delete other accounts' data or app-wide settings. |\n\n## Open questions that affect the design\n- Which platforms are you targeting? Web needs a different approach, such as an HttpOnly cookie or a backend-for-frontend, because there's no Keychain equivalent.\n- Does your identity provider support refresh-token rotation and revocation? Rotation limits the damage if a token leaks.\n- Which \"cache\" do you want to keep? Non-sensitive app data can usually stay, but anything user-specific (profile, messages, financial data) should be cleared or scoped per account.\n\nThe token lifecycle itself (login, refresh, lock and unlock, logout, revocation) belongs in your auth layer. I can sketch that with the lock-vs-sign-out split if you tell me your target platforms and identity provider.",
+        "judgment": {
+          "score": 72,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] rejects ordinary preferences for refresh-token storage",
+              "met": true,
+              "evidence": "Opens with 'I'd recommend against both parts of this.' It explains that shared_preferences is 'plain storage, not a secret store' and covers the per-platform exposure: unencrypted XML plus Auto Backup on Android, NSUserDefaults plist in backups on iOS/macOS, and localStorage/XSS on web. It limits shared_preferences to 'non-secret hints' such as the last-used email and the chosen provider."
+            },
+            {
+              "criterion": "selects platform-backed protection from the threat model without forcing one package",
+              "met": true,
+              "evidence": "Gives an explicit threat model (asset, storage location, attacker, impact) and selects 'platform-backed storage (Keychain on iOS, Keystore-backed encryption on Android, e.g. via `flutter_secure_storage`)'. The package is only an example, not a requirement. It also notes that web needs a different control (an HttpOnly cookie or a backend-for-frontend) because there is no Keychain equivalent. The choice of control is tied to the threats identified."
+            },
+            {
+              "criterion": "defines logout, expiry, revocation, account switching, backup, and cache cleanup behavior",
+              "met": false,
+              "evidence": "Defined: logout (delete the refresh token, access token, and user-scoped caches), revocation (call the provider's revocation endpoint so the server-side session ends), backup (exclude the token from backups), and cache cleanup (clear or scope user-specific data per account; keep app-wide settings and other accounts' data). Partial: account switching is raised as a risk ('data from the previous user can leak into the new session'), and per-account scoping is suggested, but no concrete switching procedure is given. Missing: expiry behavior. Expiry appears only as an impact bound ('until the token expires'). The response does not say what happens when the refresh token expires or a refresh fails (for example, clear the stored credentials and force re-authentication). Rotation is posed as an open question rather than a defined behavior. The token lifecycle is explicitly deferred: 'I can sketch that... if you tell me'."
+            }
+          ],
+          "summary": "The response meets the mandatory criterion: it rejects shared_preferences for refresh tokens and rejects keeping the token after logout, with a platform-specific threat model. It selects platform-backed secure storage based on that threat model, names flutter_secure_storage only as an example, and gives a separate approach for web. It covers logout, revocation, backup exclusion, and cache cleanup, but it does not define expiry or refresh-failure behavior and treats account switching only as a risk, not a defined procedure. Criterion 3 is therefore not fully met."
+        },
+        "judgments": [
+          {
+            "score": 72,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] rejects ordinary preferences for refresh-token storage",
+                "met": true,
+                "evidence": "Opens with 'I'd recommend against both parts of this.' It explains that shared_preferences is 'plain storage, not a secret store' and covers the per-platform exposure: unencrypted XML plus Auto Backup on Android, NSUserDefaults plist in backups on iOS/macOS, and localStorage/XSS on web. It limits shared_preferences to 'non-secret hints' such as the last-used email and the chosen provider."
+              },
+              {
+                "criterion": "selects platform-backed protection from the threat model without forcing one package",
+                "met": true,
+                "evidence": "Gives an explicit threat model (asset, storage location, attacker, impact) and selects 'platform-backed storage (Keychain on iOS, Keystore-backed encryption on Android, e.g. via `flutter_secure_storage`)'. The package is only an example, not a requirement. It also notes that web needs a different control (an HttpOnly cookie or a backend-for-frontend) because there is no Keychain equivalent. The choice of control is tied to the threats identified."
+              },
+              {
+                "criterion": "defines logout, expiry, revocation, account switching, backup, and cache cleanup behavior",
+                "met": false,
+                "evidence": "Defined: logout (delete the refresh token, access token, and user-scoped caches), revocation (call the provider's revocation endpoint so the server-side session ends), backup (exclude the token from backups), and cache cleanup (clear or scope user-specific data per account; keep app-wide settings and other accounts' data). Partial: account switching is raised as a risk ('data from the previous user can leak into the new session'), and per-account scoping is suggested, but no concrete switching procedure is given. Missing: expiry behavior. Expiry appears only as an impact bound ('until the token expires'). The response does not say what happens when the refresh token expires or a refresh fails (for example, clear the stored credentials and force re-authentication). Rotation is posed as an open question rather than a defined behavior. The token lifecycle is explicitly deferred: 'I can sketch that... if you tell me'."
+              }
+            ],
+            "summary": "The response meets the mandatory criterion: it rejects shared_preferences for refresh tokens and rejects keeping the token after logout, with a platform-specific threat model. It selects platform-backed secure storage based on that threat model, names flutter_secure_storage only as an example, and gives a separate approach for web. It covers logout, revocation, backup exclusion, and cache cleanup, but it does not define expiry or refresh-failure behavior and treats account switching only as a risk, not a defined procedure. Criterion 3 is therefore not fully met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 72.0,
+          "minimum_score": 72,
+          "maximum_score": 72,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 0,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 72.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-security": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 72.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

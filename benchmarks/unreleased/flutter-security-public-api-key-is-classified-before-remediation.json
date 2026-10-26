@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-10-26T08:33:23.283838+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "de4519348e1df1e4c99cc3bd2663fe459fbd137f",
+    "dirty": true,
+    "branch": "test/eval-hardening"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.310 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.310 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.310 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.10.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-security",
+      "case": "public-api-key-is-classified-before-remediation",
+      "with_skill": {
+        "response": "I'd hold off on both the \"critical leak\" declaration and the blanket move to the backend. A Maps key in an Android app is usually expected, not a leak in itself.\n\n## Why this probably isn't a critical leak\n\nThe Google Maps SDK for Android is built to read its key from the app, typically `com.google.android.geo.API_KEY` in `AndroidManifest.xml`. Anyone with the APK can recover it, and Google's security model assumes that. Protection comes from restrictions configured on the key, not from keeping it secret.\n\nSo the severity depends on how the key is configured, not on the fact that it appears in the app.\n\n## What determines severity\n\n| Key configuration | Classification | Severity |\n|---|---|---|\n| Restricted to Android apps (package name + signing-cert SHA-1) **and** limited to Maps SDK for Android | Public identifier, working as designed | Not a finding |\n| Restricted to the app, but other APIs also enabled | Over-scoped key | Defense-in-depth fix: narrow the API list |\n| **No application restriction**, or web-service APIs enabled (Geocoding, Directions, Places, Distance Matrix, Static Maps) | Abusable credential | Real finding. Impact is mainly billing abuse and quota exhaustion. Severity depends on spend caps and enabled APIs. |\n| Key also used by backend services or shared across projects | Service credential shipped in the client | Real finding: split the keys, and the server key leaves the app |\n\nNote that Android app restrictions only constrain SDK calls. Web-service REST calls made with the same key are not protected by the package/SHA-1 restriction.\n\n## Why \"move every API key to the backend\" doesn't work here\n\n- **The Maps SDK would break.** It needs a key on the device to render tiles. Proxying map rendering through the backend isn't supported for the native SDK.\n- **It doesn't apply uniformly.** Some keys are public identifiers by design, such as the Maps SDK key or the Firebase `google-services.json` API key. Others are real secrets that must never ship, such as server keys, third-party service tokens, or anything granting write or admin access. Each key needs to be classified on its own.\n\n## What I recommend\n\n1. **Inspect the key's configuration** in Google Cloud Console (read-only): application restrictions, API restrictions, which project it belongs to, and the quota/billing alerts in place.\n2. **Search the codebase for other uses of the same key value.** Check Dart code, `--dart-define`s, env files, and iOS config. Pay particular attention to direct HTTP calls to Maps web services.\n3. **Remediate proportionately:**\n   - Restrict the Android key to the package name + release (and debug, if needed) SHA-1, and to **Maps SDK for Android** only.\n   - Use a separate iOS key restricted to the bundle ID.\n   - If the app calls Geocoding, Directions, or Places web services, move *those calls* behind your backend with a separate, server-restricted key.\n   - Set quotas and budget alerts.\n4. **Audit the other keys individually** using the classification above. Only service credentials, signing keys, and similar secrets need to move to the backend or build infrastructure.\n\n## Things I won't do without your explicit go-ahead\n\nRotating or regenerating the key, changing restrictions on the live key, or editing production quotas all change external state. Tightening restrictions on a key the shipped app depends on can break maps for existing users if the SHA-1s are wrong, so it's worth coordinating with a release.\n\nIf you share the key's current restriction settings, or the places it's referenced in the repo, I can give you a concrete severity rating and the exact changes.",
+        "judgment": {
+          "score": 95,
+          "expectations": [
+            {
+              "criterion": "checks the provider contract and distinguishes a public client identifier from a service credential",
+              "met": true,
+              "evidence": "The response explains that the Maps SDK for Android is designed to read its key from the app via `com.google.android.geo.API_KEY` and that 'Google's security model assumes that.' Its severity table separates 'Public identifier, working as designed' from 'Service credential shipped in the client.' It also contrasts public-by-design keys (Maps SDK, Firebase google-services.json) with real secrets (server keys, third-party tokens, write/admin access)."
+            },
+            {
+              "criterion": "verifies application, signature, origin, API, and quota restrictions as applicable",
+              "met": true,
+              "evidence": "Step 1 has the user inspect application restrictions, API restrictions, project, and quota/billing alerts. Remediation restricts the key to package name plus release/debug signing SHA-1 and to Maps SDK for Android only. It adds a separate iOS key restricted to bundle ID, quotas, and budget alerts. It also notes that Android restrictions do not protect web-service REST calls. Web referrer/origin restrictions are not discussed, but they do not apply to an Android SDK key."
+            },
+            {
+              "criterion": "[MANDATORY] does not claim critical impact or prescribe backend proxying without an abuse path",
+              "met": true,
+              "evidence": "The response explicitly declines the 'critical leak' declaration and says severity depends on configuration. It rejects the blanket backend move because the native SDK needs an on-device key. It recommends backend proxying only for Geocoding, Directions, and Places web-service calls, and ties that to a concrete abuse path: those REST calls are not covered by the package/SHA-1 restriction and can lead to billing abuse and quota exhaustion."
+            }
+          ],
+          "summary": "The response meets all three criteria. It grounds the analysis in Google's Maps key model and classifies keys by configuration rather than by their presence in the APK. It checks application, signing-certificate, API, bundle-ID, and quota restrictions. It refuses to declare a critical leak or move all keys to the backend, and proposes backend proxying only for web-service calls with an explicit abuse path. A minor gap is that web referrer/origin restrictions are never mentioned, though they are largely irrelevant for an Android key."
+        },
+        "judgments": [
+          {
+            "score": 95,
+            "expectations": [
+              {
+                "criterion": "checks the provider contract and distinguishes a public client identifier from a service credential",
+                "met": true,
+                "evidence": "The response explains that the Maps SDK for Android is designed to read its key from the app via `com.google.android.geo.API_KEY` and that 'Google's security model assumes that.' Its severity table separates 'Public identifier, working as designed' from 'Service credential shipped in the client.' It also contrasts public-by-design keys (Maps SDK, Firebase google-services.json) with real secrets (server keys, third-party tokens, write/admin access)."
+              },
+              {
+                "criterion": "verifies application, signature, origin, API, and quota restrictions as applicable",
+                "met": true,
+                "evidence": "Step 1 has the user inspect application restrictions, API restrictions, project, and quota/billing alerts. Remediation restricts the key to package name plus release/debug signing SHA-1 and to Maps SDK for Android only. It adds a separate iOS key restricted to bundle ID, quotas, and budget alerts. It also notes that Android restrictions do not protect web-service REST calls. Web referrer/origin restrictions are not discussed, but they do not apply to an Android SDK key."
+              },
+              {
+                "criterion": "[MANDATORY] does not claim critical impact or prescribe backend proxying without an abuse path",
+                "met": true,
+                "evidence": "The response explicitly declines the 'critical leak' declaration and says severity depends on configuration. It rejects the blanket backend move because the native SDK needs an on-device key. It recommends backend proxying only for Geocoding, Directions, and Places web-service calls, and ties that to a concrete abuse path: those REST calls are not covered by the package/SHA-1 restriction and can lead to billing abuse and quota exhaustion."
+              }
+            ],
+            "summary": "The response meets all three criteria. It grounds the analysis in Google's Maps key model and classifies keys by configuration rather than by their presence in the APK. It checks application, signing-certificate, API, bundle-ID, and quota restrictions. It refuses to declare a critical leak or move all keys to the backend, and proposes backend proxying only for web-service calls with an explicit abuse path. A minor gap is that web referrer/origin restrictions are never mentioned, though they are largely irrelevant for an Android key."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 95.0,
+          "minimum_score": 95,
+          "maximum_score": 95,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 95.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-security": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 95.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

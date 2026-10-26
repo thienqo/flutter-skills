@@ -514,5 +514,33 @@
     "required": ["flutter-text-rendering"],
     "optional": ["flutter-ui-patterns"],
     "forbidden": ["flutter-app-workflow", "flutter-animation", "flutter-persistence"]
+  },
+  {
+    "name": "frozen-ui-after-tap-is-not-jank",
+    "prompt": "After tapping Save on the Flutter settings screen, the UI stops responding entirely until the app is killed. No frame-time regression is reported; reproduce it in the running debug build, find the blocking call, and fix it.",
+    "required": ["flutter-runtime-debugging"],
+    "optional": ["dart-concurrency", "flutter-testing"],
+    "forbidden": ["flutter-app-workflow", "flutter-performance", "flutter-observability"]
+  },
+  {
+    "name": "production-cold-start-signals-not-local-profiling",
+    "prompt": "Add privacy-safe production traces for Flutter cold-start duration tagged with release version and device class, and alert when a release regresses. Local profiling and code optimization are out of scope.",
+    "required": ["flutter-observability"],
+    "optional": ["flutter-build-release", "flutter-testing"],
+    "forbidden": ["flutter-app-workflow", "flutter-performance", "flutter-product-analytics"]
+  },
+  {
+    "name": "figma-node-with-frosted-glass-card",
+    "prompt": "Implement the supplied Figma promo card node, which includes a frosted backdrop-blur surface, in our Flutter app using the existing theme tokens, with an opaque fallback where blur is unsupported, and verify parity at the reference size.",
+    "required": ["flutter-figma-workflow"],
+    "optional": ["flutter-accessibility", "flutter-responsive-layout", "flutter-testing", "flutter-visual-effects"],
+    "forbidden": ["flutter-app-workflow", "flutter-architecture", "flutter-ui-design"]
+  },
+  {
+    "name": "backdrop-blur-on-existing-card-without-redesign",
+    "prompt": "Add a frosted backdrop blur behind our existing Flutter bottom sheet header, with a reduced-transparency fallback. Keep the current colors, typography, spacing, and layout unchanged; there is no Figma source.",
+    "required": ["flutter-visual-effects"],
+    "optional": ["flutter-accessibility", "flutter-performance", "flutter-testing"],
+    "forbidden": ["flutter-app-workflow", "flutter-figma-workflow", "flutter-ui-design"]
   }
 ]
