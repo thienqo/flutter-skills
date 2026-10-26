@@ -1,6 +1,6 @@
 {
   "name": "@thiennc/flutter-skills",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Install the Flutter Skills collection with one command.",
   "type": "module",
   "bin": {
