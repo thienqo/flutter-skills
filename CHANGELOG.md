@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Require `flutter-product-analytics` to state the full event contract (identity, consent behavior, delivery semantics, retry and restart rule) with labeled conservative defaults instead of asking the user or deferring to the adapter. The `widget-rebuilds-do-not-own-business-events` case moved from 74, 72, and 62 across three runs to 96, 96, and 93.
 - Tell `flutter-ui-patterns` to split files by responsibility, keep small single-use private widgets in their screen's file, and give a widget its own file only when it is reused, holds isolated state, or is tested alone. The `cohesive-widget-composition` case moved from 70, 62, and 35 across three runs to 96, 92, and 88.
 
 ## 0.11.0 - 2026-10-26

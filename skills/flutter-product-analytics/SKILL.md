@@ -15,6 +15,8 @@ Read `pubspec.yaml`, SDK constraints, current analytics adapters and initializat
 
 Each event needs a semantic trigger, stable name, bounded typed properties, identity and consent policy, delivery expectation, and verification plan. Emit once for the domain occurrence—not from widget `build`, incidental rebuilds, route observers, and button callbacks simultaneously.
 
+When proposing or repairing an event, state the contract instead of asking or deferring to the adapter: which identity is attached (anonymous or authenticated, and what happens on login or account switch), whether consent off drops or queues the event, the delivery semantics (for example at-least-once with a dedupe key), and the rule for retries and process restarts. Where the project does not say, choose the conservative default, label it an assumption, and name who can change it.
+
 ## Load references conditionally
 
 - Read [event contracts and ownership](references/event-contracts-and-ownership.md) when defining names, properties, semantic triggers, funnels, revenue events, schema evolution, or duplicate prevention.
