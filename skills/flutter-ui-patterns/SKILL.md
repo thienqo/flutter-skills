@@ -12,6 +12,7 @@ Visual hierarchy, token selection, typography, color, surfaces, and aesthetic di
 ## Composition
 
 - Extract widgets around cohesive UI concepts, reuse, isolated state, or test value—not arbitrary file length.
+- Split files by responsibility, not one public widget per file. Keep small private (`_`-prefixed) widgets that only serve one screen or feature in that screen's file; give a widget its own file when it is reused, has isolated state, or is tested alone.
 - Prefer immutable widget configuration and `const` constructors where valid.
 - Keep side effects out of `build`; trigger them from lifecycle-safe controllers, state objects, or explicit callbacks.
 - Use the project theme and semantic design tokens instead of scattered literal styles.
