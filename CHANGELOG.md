@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Tell `flutter-ui-patterns` to split files by responsibility, keep small single-use private widgets in their screen's file, and give a widget its own file only when it is reused, holds isolated state, or is tested alone. The `cohesive-widget-composition` case moved from 70, 62, and 35 across three runs to 96, 92, and 88.
+
 ## 0.11.0 - 2026-10-26
 
 - Add a `flutter-device-testing` semantic UI inspection reference for driving a running app through the platform accessibility tree (`idb`, `uiautomator`) instead of repeated screenshots, re-reading after every action, preferring `Semantics(identifier:)` over coordinates, and diagnosing an empty Flutter semantics tree with a debug-only entrypoint. Approach adapted from conorluddy/ios-simulator-skill (MIT).
