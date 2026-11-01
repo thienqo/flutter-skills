@@ -45,4 +45,4 @@ When authorized provider or dashboard access is unavailable, explicitly record p
 - [Google Analytics events for Flutter](https://firebase.google.com/docs/analytics/flutter/events)
 - [Google Analytics DebugView](https://firebase.google.com/docs/analytics/debugview)
 - [Apple user privacy and data use](https://developer.apple.com/app-store/user-privacy-and-data-use/)
-- [Google Play user data policy](https://play.google.com/about/privacy-security-deception/user-data/)
+- [Google Play user data policy](https://support.google.com/googleplay/android-developer/answer/10144311)

@@ -34,6 +34,9 @@ def collect_source_urls(paths: Iterable[Path]) -> dict[str, list[str]]:
     return {url: sorted(set(files)) for url, files in sorted(locations.items())}
 
 
+GET_FALLBACK_STATUSES = {404, 405}
+
+
 def classify_status(status: int | None, error: str | None = None) -> str:
     if status is not None and 200 <= status < 400:
         return "ok"
@@ -62,7 +65,9 @@ def check_url(url: str, timeout: float) -> dict[str, Any]:
                 "error": None,
             }
     except urllib.error.HTTPError as error:
-        if error.code == 405:
+        # Some servers (support.google.com) answer HEAD with 404 or 405 while
+        # GET succeeds, so confirm those codes with a one-byte GET.
+        if error.code in GET_FALLBACK_STATUSES:
             get_request = urllib.request.Request(
                 url,
                 method="GET",
