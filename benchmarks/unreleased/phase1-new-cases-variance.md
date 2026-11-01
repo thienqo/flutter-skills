@@ -12,7 +12,7 @@ Solver and judge: `claude` CLI, default model at run time (Sonnet 5.5), one judg
 | flutter-product-analytics:provider-ingestion-visible-but-attribution-unverified | 52 | 62 | 55 | 52 / 55 / 62 | 0 |
 | flutter-ui-patterns:list-item-state-follows-identity | 85 | 88 | 72 | 72 / 85 / 88 | 0 |
 
-Flaky by the 20-point rule: ci-cd (60), figma (20), observability (18 is below the rule), ui-patterns (16 is below the rule). Only ci-cd exceeds it.
+Spread (max minus min): ci-cd 60, figma 20, observability 18, ui-patterns 16, analytics 10, others 0. Only ci-cd is above the 20-point flaky threshold.
 
 Expectations missed every run (stable, so a property of the case or the skill, not noise):
 
