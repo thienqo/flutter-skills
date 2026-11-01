@@ -37,7 +37,7 @@
     ],
     "expectations": [
       {
-        "text": "keeps the repository's pinned Flutter version source instead of switching to latest stable",
+        "text": "keeps the repository's pinned Flutter version source for the new job unless the user confirms floating after the mismatch with that pin is surfaced",
         "mandatory": true
       },
       "reuses the existing cache, script, and job conventions",

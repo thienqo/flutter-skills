@@ -56,12 +56,12 @@
       "references/verification-and-experiments.md"
     ],
     "expectations": [
-      "records client dispatch and provider ingestion as separately observed boundaries",
+      "distinguishes what staging DebugView shows from client dispatch and from downstream processing instead of treating one observation as proof of the others",
       {
         "text": "reports warehouse revenue and experiment attribution as unverified instead of inferring them from provider ingestion",
         "mandatory": true
       },
-      "gives a per-boundary evidence ledger naming the exact query, export, or dashboard view and expected count that would close each gap",
+      "gives a per-boundary ledger of what was observed, what is unverified, and which observation, such as a warehouse row count for the transaction or the experiment report, would close each gap",
       "does not send test events to production or request broader access without authorization"
     ]
   }

@@ -31,12 +31,12 @@
     ],
     "expectations": [
       {
-        "text": "reports the token differences between the Figma dark mode and the existing dark theme instead of silently overwriting either",
+        "text": "does not invent token differences or silently overwrite either source: states that the Figma dark-mode values and the existing dark theme must be compared from inspected or supplied values before changing either",
         "mandatory": true
       },
       "maps to existing ThemeExtension tokens and adds a token only for a missing stable concept",
       "records which source wins and why, or asks when no repository rule decides it",
-      "renders the Disabled variant in dark mode as a parity fixture without claiming parity that was not rendered"
+      "plans a dark-mode Disabled parity fixture and states that parity was not rendered or verified"
     ]
   }
 ]

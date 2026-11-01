@@ -24,7 +24,7 @@ Read SDK constraints, flavors/schemes, bundle/application IDs, version source, s
 
 ## Verification
 
-Run formatting, analysis, tests, and a clean release build for each intended target/flavor. Install or serve the built artifact and smoke-test startup plus a critical flow. Record artifact path, version, flavor, target, and remaining store-side work.
+Run formatting, analysis, tests, and a clean release build for each intended target/flavor. Verify the produced artifact's signature without uploading it: `apksigner verify --print-certs` for an APK, `jarsigner -verify -certs` for an AAB, and `codesign --verify --deep --strict` for an iOS app bundle, then compare the certificate or signing identity with the intended release key. Install or serve the built artifact and smoke-test startup plus a critical flow. Record artifact path, version, flavor, target, and remaining store-side work.
 
 ## References
 
@@ -36,3 +36,4 @@ Run formatting, analysis, tests, and a clean release build for each intended tar
 - [Flutter deployment](https://docs.flutter.dev/deployment)
 - [Build and release an Android app](https://docs.flutter.dev/deployment/android)
 - [Build and release an iOS app](https://docs.flutter.dev/deployment/ios)
+- [apksigner](https://developer.android.com/tools/apksigner)
