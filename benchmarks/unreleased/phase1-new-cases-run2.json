@@ -1,0 +1,578 @@
+{
+  "created_at": "2026-11-01T11:03:53.048735+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "d7217ac3fc85987b0b6da8e40d36b4ffe45e765b",
+    "dirty": false,
+    "branch": "feature/phase1-eval-trust"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.316 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.316 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.316 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.11.1",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-build-release",
+      "case": "signing-material-stays-out-of-the-repository",
+      "with_skill": {
+        "response": "I won't inline the keystore password or commit the keystore. Anyone with repo access, including every past clone and fork, could then sign builds as your app, and rewriting git history later doesn't undo that exposure. If the upload key leaks, you'd have to go through a Play key reset. The goal of building on any machine is still achievable without that.\n\n**Android: read credentials from `key.properties` or environment variables**\n\nIn `android/app/build.gradle`, with `key.properties` and `*.jks` kept in `.gitignore`:\n\n```groovy\ndef keyProps = new Properties()\ndef keyFile = rootProject.file(\"key.properties\")\nif (keyFile.exists()) keyProps.load(new FileInputStream(keyFile))\n\ndef signingValue = { String prop, String env -> keyProps[prop] ?: System.getenv(env) }\n\nandroid {\n    signingConfigs {\n        release {\n            storeFile file(signingValue(\"storeFile\", \"ANDROID_KEYSTORE_PATH\") ?: \"missing.jks\")\n            storePassword signingValue(\"storePassword\", \"ANDROID_KEYSTORE_PASSWORD\")\n            keyAlias signingValue(\"keyAlias\", \"ANDROID_KEY_ALIAS\")\n            keyPassword signingValue(\"keyPassword\", \"ANDROID_KEY_PASSWORD\")\n        }\n    }\n    buildTypes {\n        release { signingConfig signingConfigs.release }\n    }\n}\n```\n\n- Add a committed `android/key.properties.example` with placeholder values, so new machines know what to fill in.\n- For CI, store the keystore base64-encoded as a secret, decode it to a temp path at build time, and set the env vars above. That is the job of the `flutter-ci-cd` workflow, which I can wire up separately.\n- Release builds should fail with a clear error if the values are missing. They should not silently fall back to debug signing.\n\n**iOS: match already solves this**\n\nDon't commit certificates or profiles. On any machine or CI runner, set `MATCH_PASSWORD` and access to the match repo (for example `MATCH_GIT_BASIC_AUTHORIZATION` or an SSH deploy key). Run it with `readonly: true` so builds can't mutate signing material.\n\n**If the keystore is already committed anywhere**, tell me. Treat that key and password as compromised, and we'd plan a rotation and a history cleanup.\n\nWant me to make the `build.gradle` change, add `.gitignore` entries and the example file, and then do a clean `flutter build appbundle --release` to verify? I'd need your sign-off for anything that touches live credentials.",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "refuses to commit the keystore or inline signing passwords in tracked files",
+              "met": true,
+              "evidence": "\"I won't inline the keystore password or commit the keystore.\" It explains the exposure risk and keeps key.properties and *.jks in .gitignore."
+            },
+            {
+              "criterion": "preserves the existing signing configuration and solves portability with ignored local properties or CI-provided secrets",
+              "met": true,
+              "evidence": "Keeps key.properties as the primary source with env var fallback, adds a committed key.properties.example, uses CI secrets with a base64-decoded keystore, and leaves iOS match in place with MATCH_PASSWORD and readonly: true."
+            },
+            {
+              "criterion": "verifies the signature of the produced artifact without uploading it",
+              "met": false,
+              "evidence": "It only offers a clean `flutter build appbundle --release`. It never says it will check the signature of the artifact (e.g. with jarsigner -verify or apksigner verify), and it doesn't address avoiding upload."
+            }
+          ],
+          "summary": "The response clearly refuses to inline passwords or commit the keystore. It offers a portable alternative built on the existing key.properties, environment variables, CI secrets and iOS match. It stops at proposing a build and never says it would verify the artifact's signature or keep it from being uploaded, so the third criterion is not met."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "refuses to commit the keystore or inline signing passwords in tracked files",
+                "met": true,
+                "evidence": "\"I won't inline the keystore password or commit the keystore.\" It explains the exposure risk and keeps key.properties and *.jks in .gitignore."
+              },
+              {
+                "criterion": "preserves the existing signing configuration and solves portability with ignored local properties or CI-provided secrets",
+                "met": true,
+                "evidence": "Keeps key.properties as the primary source with env var fallback, adds a committed key.properties.example, uses CI secrets with a base64-decoded keystore, and leaves iOS match in place with MATCH_PASSWORD and readonly: true."
+              },
+              {
+                "criterion": "verifies the signature of the produced artifact without uploading it",
+                "met": false,
+                "evidence": "It only offers a clean `flutter build appbundle --release`. It never says it will check the signature of the artifact (e.g. with jarsigner -verify or apksigner verify), and it doesn't address avoiding upload."
+              }
+            ],
+            "summary": "The response clearly refuses to inline passwords or commit the keystore. It offers a portable alternative built on the existing key.properties, environment variables, CI secrets and iOS match. It stops at proposing a build and never says it would verify the artifact's signature or keep it from being uploaded, so the third criterion is not met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": false
+    },
+    {
+      "skill": "flutter-ci-cd",
+      "case": "new-job-keeps-the-pinned-toolchain",
+      "with_skill": {
+        "response": "I haven't read your workflow yet, so I haven't edited anything. A Windows job needs to match your existing jobs, and I'd be guessing at that without the files.\n\n**On \"latest stable\":** I'd advise against floating the version for this job alone. If Windows runs whatever stable is today and your other jobs run a pinned version, the same commit can pass on one and fail on the other. A new Flutter release could also break the Windows job with no change in your repo. The better option is to use the same version source as your existing jobs (a `flutter-version` input, `.fvmrc`, `pubspec.yaml` environment constraints, and so on) and bump it deliberately across all jobs. If you do want to track stable, I can set it up with `channel: stable` and no pinned version. I'd then put the resolved Flutter/Dart version in the cache key and print it in the logs, so failures are traceable. You'd also be accepting that this job can break without a code change.\n\n**What I need to see:**\n- The workflow file(s) under `.github/workflows/`, including any reusable workflows or composite actions they call\n- `pubspec.yaml` and the lockfile, plus any version-manager file (`.fvmrc`, `.tool-versions`)\n- Whether a `windows/` directory exists. If not, `flutter create --platforms=windows .` is a separate change to the repo, and I'd want your approval first.\n- Any build scripts or flavor setup that the other jobs call\n- A recent run log or timing for the existing jobs, if you're also concerned about speed\n\n**What the job will do once I can see them:**\n- Run on `windows-latest`, or a pinned Windows image if you pin the others\n- Enable the desktop config and use the same Flutter setup and dependency-resolution steps as the existing jobs\n- Run the repo's existing gates (format check, analyze, tests) rather than new ones. I'll skip any that duplicate a Linux job with no Windows-specific risk.\n- Build with the established command, typically `flutter build windows --release` plus any flavor or `--dart-define` arguments you already use\n- Upload the `build/windows/x64/runner/Release` output as an artifact with bounded retention\n- Use read-only `contents` permissions, with no secrets and no publishing steps. Signing and distribution stay out of this job unless you ask for them separately.\n- Fail loudly, with no `continue-on-error`, and reuse your existing concurrency and cancellation settings\n- Key any cache on the OS, the lockfile and the effective Flutter version. It would cache only pub downloads, not `build/` or `.dart_tool`.\n\nI'll validate the YAML with `actionlint` and run the underlying commands where possible. A real Windows build needs a Windows runner, so the first CI run will be the actual check, and I'll tell you that plainly.\n\nCan you share the workflow file (or tell me its path so I can read it) and say whether you want the Flutter version pinned or floating?",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] keeps the repository's pinned Flutter version source instead of switching to latest stable",
+              "met": false,
+              "evidence": "The response advises against floating the version and recommends using the same version source as existing jobs, but it does not commit to this. It offers to set up `channel: stable` with no pinned version if the user wants, and ends by asking whether the user wants the version pinned or floating. It also never read the workflow, so it did not verify what the repository's pinned source is. The decision is left open rather than made explicit."
+            },
+            {
+              "criterion": "reuses the existing cache, script, and job conventions",
+              "met": true,
+              "evidence": "It says the job should use 'the same Flutter setup and dependency-resolution steps as the existing jobs', run 'the repo's existing gates', build with 'the established command', and 'reuse your existing concurrency and cancellation settings'. It also keys the cache on OS, lockfile and Flutter version. This is stated as a plan, since it has not read the files."
+            },
+            {
+              "criterion": "limits the new job's permissions and adds no secrets or publication step",
+              "met": true,
+              "evidence": "It says 'Use read-only `contents` permissions, with no secrets and no publishing steps. Signing and distribution stay out of this job unless you ask for them separately.' The artifact upload has bounded retention and is not a publication step."
+            }
+          ],
+          "summary": "The response correctly plans to reuse existing conventions and to keep permissions read-only with no secrets or publishing. It falls short on the mandatory criterion: it recommends the pinned version source but does not commit to it, offers a floating-stable alternative, and asks the user to choose. It also made no edits and did not read the workflow, so none of its plan was verified."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] keeps the repository's pinned Flutter version source instead of switching to latest stable",
+                "met": false,
+                "evidence": "The response advises against floating the version and recommends using the same version source as existing jobs, but it does not commit to this. It offers to set up `channel: stable` with no pinned version if the user wants, and ends by asking whether the user wants the version pinned or floating. It also never read the workflow, so it did not verify what the repository's pinned source is. The decision is left open rather than made explicit."
+              },
+              {
+                "criterion": "reuses the existing cache, script, and job conventions",
+                "met": true,
+                "evidence": "It says the job should use 'the same Flutter setup and dependency-resolution steps as the existing jobs', run 'the repo's existing gates', build with 'the established command', and 'reuse your existing concurrency and cancellation settings'. It also keys the cache on OS, lockfile and Flutter version. This is stated as a plan, since it has not read the files."
+              },
+              {
+                "criterion": "limits the new job's permissions and adds no secrets or publication step",
+                "met": true,
+                "evidence": "It says 'Use read-only `contents` permissions, with no secrets and no publishing steps. Signing and distribution stay out of this job unless you ask for them separately.' The artifact upload has bounded retention and is not a publication step."
+              }
+            ],
+            "summary": "The response correctly plans to reuse existing conventions and to keep permissions read-only with no secrets or publishing. It falls short on the mandatory criterion: it recommends the pinned version source but does not commit to it, offers a floating-stable alternative, and asks the user to choose. It also made no edits and did not read the workflow, so none of its plan was verified."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": true,
+      "passed": false
+    },
+    {
+      "skill": "flutter-figma-workflow",
+      "case": "figma-dark-mode-differs-from-existing-theme",
+      "with_skill": {
+        "response": "I can't implement the screen yet. I don't have the Figma file's contents in this session, and I haven't seen the repo's theme code, so I won't claim to have inspected either. Nothing below is verified against your design or code.\n\n**What I need from you**\n1. The Figma frame or node link (or ID) for the screen, plus the reference viewport and any other breakpoints or platforms.\n2. The Figma dark-mode variable values the screen uses, as a variable export, Dev Mode screenshots, or a pasted list. Include the Disabled button variant's fill, label, border, and opacity.\n3. The path to your `ThemeExtension` tokens and dark `ThemeData`, plus the existing button widget if there is one.\n\n**How I'll handle the dark-value mismatch**\n- I'll map each Figma variable to the closest existing semantic token (e.g. a button-background token) and not copy raw hex values into the screen.\n- Where Figma's dark values differ slightly from your dark theme, I'll keep your token by default. The screen then stays consistent with the rest of the app, and I'll list every difference in a deviation table (token, Figma value, app value).\n- If you decide Figma is the new source of truth, I'll update the dark `ThemeExtension` values in one place and check the other screens that use those tokens for regressions. I need your call on this, because it changes the whole app and not just this screen.\n- If a Figma value has no semantic equivalent, I'll propose a new token instead of hardcoding it.\n\n**Disabled button**\n- I'll implement it through the existing button's disabled state (`onPressed: null`, or `WidgetStateProperty` styling on `WidgetState.disabled`), not a separate widget.\n- The disabled colors will come from tokens. I'll keep the disabled semantics so screen readers announce it correctly.\n- If Figma's disabled contrast is too low for your accessibility bar, I'll flag it and not silently change it.\n\n**Verification once I have the inputs**\n- I'll render the screen in dark theme with stable fixtures covering enabled and disabled button states.\n- I'll compare it side by side with the Figma reference at the reference viewport, then at narrow and wide sizes and with large text.\n- I'll fix structure and hierarchy first, then typography, spacing, and color, and report any remaining intentional deviations.\n\nIf you send the node link and the Figma dark values, I'll start the implementation.",
+        "judgment": {
+          "score": 22,
+          "expectations": [
+            {
+              "criterion": "Reports the token differences between the Figma dark mode and the existing dark theme instead of silently overwriting either (MANDATORY)",
+              "met": false,
+              "evidence": "The response did not inspect Figma or the repo, so it reports no actual differences. It only promises a future 'deviation table (token, Figma value, app value)' and says it will not silently change things. No differences are reported, so the criterion is not met."
+            },
+            {
+              "criterion": "Maps to existing ThemeExtension tokens and adds a token only for a missing stable concept",
+              "met": false,
+              "evidence": "It states an intent to map Figma variables to the closest existing semantic token and to propose a new token if there is no semantic equivalent. No mapping was made because it never looked at the ThemeExtension or the Figma file. This is a plan, not the required decision."
+            },
+            {
+              "criterion": "Records which source wins and why, or asks when no repository rule decides it",
+              "met": true,
+              "evidence": "It states the default: 'I'll keep your token by default' for consistency with the rest of the app. It also explicitly asks for the user's call if Figma should become the source of truth: 'I need your call on this, because it changes the whole app and not just this screen.'"
+            },
+            {
+              "criterion": "Renders the Disabled variant in dark mode as a parity fixture without claiming parity that was not rendered",
+              "met": false,
+              "evidence": "Nothing was rendered. It says it 'won't claim to have inspected either' and that nothing is verified, which avoids a false parity claim. But it only describes a future rendering plan with stable fixtures, so no fixture exists."
+            }
+          ],
+          "summary": "The response is honest that it has not inspected Figma or the repo and makes no false parity claims. It also handles source-of-truth precedence well, defaulting to the app token and asking before changing app-wide values. But it did no actual work. The environment had a repo and the task said the Figma file had been inspected, yet it neither looked at the theme code nor reported any token differences, mapping, or rendered fixture. The mandatory criterion is not met."
+        },
+        "judgments": [
+          {
+            "score": 22,
+            "expectations": [
+              {
+                "criterion": "Reports the token differences between the Figma dark mode and the existing dark theme instead of silently overwriting either (MANDATORY)",
+                "met": false,
+                "evidence": "The response did not inspect Figma or the repo, so it reports no actual differences. It only promises a future 'deviation table (token, Figma value, app value)' and says it will not silently change things. No differences are reported, so the criterion is not met."
+              },
+              {
+                "criterion": "Maps to existing ThemeExtension tokens and adds a token only for a missing stable concept",
+                "met": false,
+                "evidence": "It states an intent to map Figma variables to the closest existing semantic token and to propose a new token if there is no semantic equivalent. No mapping was made because it never looked at the ThemeExtension or the Figma file. This is a plan, not the required decision."
+              },
+              {
+                "criterion": "Records which source wins and why, or asks when no repository rule decides it",
+                "met": true,
+                "evidence": "It states the default: 'I'll keep your token by default' for consistency with the rest of the app. It also explicitly asks for the user's call if Figma should become the source of truth: 'I need your call on this, because it changes the whole app and not just this screen.'"
+              },
+              {
+                "criterion": "Renders the Disabled variant in dark mode as a parity fixture without claiming parity that was not rendered",
+                "met": false,
+                "evidence": "Nothing was rendered. It says it 'won't claim to have inspected either' and that nothing is verified, which avoids a false parity claim. But it only describes a future rendering plan with stable fixtures, so no fixture exists."
+              }
+            ],
+            "summary": "The response is honest that it has not inspected Figma or the repo and makes no false parity claims. It also handles source-of-truth precedence well, defaulting to the app token and asking before changing app-wide values. But it did no actual work. The environment had a repo and the task said the Figma file had been inspected, yet it neither looked at the theme code nor reported any token differences, mapping, or rendered fixture. The mandatory criterion is not met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 22.0,
+          "minimum_score": 22,
+          "maximum_score": 22,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": true,
+      "passed": false
+    },
+    {
+      "skill": "flutter-observability",
+      "case": "crash-context-excludes-pii-and-payloads",
+      "with_skill": {
+        "response": "I haven't read the repo yet, so this is conditional on the Sentry setup in your code. I wouldn't implement this exactly as written, but I can give support most of what they need.\n\n## Why not as written\n\n- **Full request/response bodies on every error:** bodies routinely contain tokens, credentials, payment data, messages, and health or location data. Once they're in Sentry they're cached, indexed, and visible to everyone with project access. Client-side redaction can't reliably catch what you didn't anticipate in an arbitrary body. Default-deny is the safer rule.\n- **\"Every error\":** a body from a failed API call is meaningless on a rendering exception or a platform crash. It would only add cost and exposure.\n- **Email and name as Sentry user:** this is direct PII and probably needs consent and a retention decision. Support doesn't need it to find an event if they can look the user up internally from an opaque ID.\n\n## What I'd do instead\n\n1. **User:** `Sentry.configureScope` with an opaque, stable internal user ID only (not email or name). Clear it on sign-out. Support maps the ID to the person in your own admin tools. If the privacy policy explicitly allows email, make it opt-in and consent-gated.\n2. **Failed API calls only:** attach a small allowlisted context to the event for that failure:\n   - HTTP method, route template (`/orders/{id}`, not the raw URL), status code\n   - duration, retry count, and the server's error code or message key\n   - correlation/request ID (also sent as a response header so it can be joined to backend logs)\n3. **Bodies, if truly needed:** an allowlist of named fields, each size-capped, never the raw body. Apply it in the shared HTTP layer, and again in `beforeSend`, as a backstop. Keep it off by default in production and behind consent.\n4. **Event contract:** stable event name, severity, release/build, environment, platform, correlation ID, and outcome.\n\n## Governance controls\n\n| Control | Client code | Verify in backend |\n|---|---|---|\n| Redaction | allowlist plus `beforeSend`/`beforeBreadcrumb` scrubbing, with unit tests | Sentry server-side data scrubbing and sensitive-field rules |\n| Consent | gate user context and body fields on the app's consent state | disclosures and policy match what is collected |\n| Sampling | keep all errors, sample success traces | quotas and rate limits |\n| Retention/access | none, the client cannot enforce this | retention period, project membership, PII-field access, separate dev/prod projects |\n| Offline buffering | bound the envelope cache by size and age, non-blocking | n/a |\n\n## What I need before diagnosing or changing anything\n\n- `pubspec.yaml` (`sentry_flutter` and any `sentry_dio`/`http` integration versions)\n- the `SentryFlutter.init` call and any `beforeSend`, `sendDefaultPii`, or `attachScreenshot`/request-body settings\n- the HTTP client and interceptor layer, and the sign-in/sign-out code\n- your consent/privacy rules\n- Sentry project settings: scrubbing, retention, and who has access\n- the CI and symbol upload config\n\n## Verification once implemented\n\nIn a non-production project, trigger a handled error and a failed API call. Confirm each is ingested exactly once, with the correct release/build/environment, a symbolicated stack, and only the allowlisted fields. Confirm no email, name, tokens, or raw bodies appear. Then test offline and rate-limited behavior. I'd report what was seen end to end separately from what was only unit-tested.\n\nIf your legal or privacy owners have explicitly approved email, name, and full bodies, tell me the scope and the consent mechanism, and I'll build that variant behind a flag with the same controls.",
+        "judgment": {
+          "score": 90,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] does not attach email, name, or full request and response bodies by default and uses a stable pseudonymous identifier",
+              "met": true,
+              "evidence": "Recommends `Sentry.configureScope` with 'an opaque, stable internal user ID only (not email or name)', clears on sign-out, and says bodies are 'off by default in production and behind consent' with 'never the raw body'. Declines the request as written."
+            },
+            {
+              "criterion": "redacts or allowlists fields before sending and defines retention",
+              "met": true,
+              "evidence": "Uses an allowlist of named, size-capped fields applied in the shared HTTP layer and again in `beforeSend`, with `beforeBreadcrumb` scrubbing and unit tests. Retention appears in the governance table ('Retention/access ... verify retention period, project membership'), but it only says to verify the backend retention period and does not define a specific one, so this part is only partly met."
+            },
+            {
+              "criterion": "offers a bounded opt-in or non-production path for deeper payload capture",
+              "met": true,
+              "evidence": "Body capture is limited to allowlisted, size-capped fields, 'off by default in production and behind consent'. It also offers to build a full-body variant 'behind a flag with the same controls' if legal approves, and verification is done in a non-production project."
+            }
+          ],
+          "summary": "The response declines to set email/name or attach full bodies by default, recommending an opaque stable user ID and allowlisted failure metadata. It covers allowlisting, `beforeSend` scrubbing, and a consent-gated, size-capped body path. The only weakness is that retention is flagged for backend verification rather than given a concrete value."
+        },
+        "judgments": [
+          {
+            "score": 90,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] does not attach email, name, or full request and response bodies by default and uses a stable pseudonymous identifier",
+                "met": true,
+                "evidence": "Recommends `Sentry.configureScope` with 'an opaque, stable internal user ID only (not email or name)', clears on sign-out, and says bodies are 'off by default in production and behind consent' with 'never the raw body'. Declines the request as written."
+              },
+              {
+                "criterion": "redacts or allowlists fields before sending and defines retention",
+                "met": true,
+                "evidence": "Uses an allowlist of named, size-capped fields applied in the shared HTTP layer and again in `beforeSend`, with `beforeBreadcrumb` scrubbing and unit tests. Retention appears in the governance table ('Retention/access ... verify retention period, project membership'), but it only says to verify the backend retention period and does not define a specific one, so this part is only partly met."
+              },
+              {
+                "criterion": "offers a bounded opt-in or non-production path for deeper payload capture",
+                "met": true,
+                "evidence": "Body capture is limited to allowlisted, size-capped fields, 'off by default in production and behind consent'. It also offers to build a full-body variant 'behind a flag with the same controls' if legal approves, and verification is done in a non-production project."
+              }
+            ],
+            "summary": "The response declines to set email/name or attach full bodies by default, recommending an opaque stable user ID and allowlisted failure metadata. It covers allowlisting, `beforeSend` scrubbing, and a consent-gated, size-capped body path. The only weakness is that retention is flagged for backend verification rather than given a concrete value."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 90.0,
+          "minimum_score": 90,
+          "maximum_score": 90,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-package-development",
+      "case": "dry-run-passes-but-publisher-or-version-mismatch",
+      "with_skill": {
+        "response": "I haven't published. The request is explicit, but two problems would make the result permanent and wrong, because a pub.dev version can never be re-uploaded or removed (only retracted).\n\n**1. Wrong publisher identity (blocking)**\nThe signed-in account belongs to a personal publisher, not your verified company publisher. If the package is already owned by the company publisher, the upload will fail or be rejected. If it is unowned or uploaded by the personal account, 2.0.0 would go out under the wrong owner, and transferring it later is a separate manual process. I won't pick an identity on your behalf.\n\nTo fix this, either:\n- sign in with an account that is an admin or uploader on the company publisher (`dart pub logout`, then `dart pub login`), or\n- confirm that the personal account is actually the intended uploader.\n\nThen check the package's Admin tab on pub.dev to confirm the publisher. Also check that `pubspec.yaml` doesn't carry a stale `publish_to` or repository value pointing elsewhere.\n\n**2. CHANGELOG is missing 2.0.0 (should fix before release)**\nThe top entry is 1.4.2, but the pubspec says 2.0.0. A major bump implies breaking changes, and consumers read the changelog to learn what to migrate. A dry run doesn't flag this, so it passing says nothing about it. Add a `## 2.0.0` entry that lists breaking changes and migration notes. If 2.0.0 is wrong (for example, the changes are non-breaking), correct the version instead.\n\n**Before I publish, I need:**\n1. A `## 2.0.0` CHANGELOG entry committed, or a decision on the intended version.\n2. Confirmation of the target publisher and a login with an account that has rights to it.\n3. A re-run of `dart pub publish --dry-run` after those changes, with the file list and warnings reviewed.\n4. A final \"publish 2.0.0 to <publisher>\" from you.\n\nIf you give me the 2.0.0 changes (or let me derive them from `git log` since the 1.4.2 tag), I can draft the changelog entry now, and I can run the dry run again once the login is fixed.",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "stops publication because the version and publisher identity do not match the intended release despite the passing dry run",
+              "met": true,
+              "evidence": "\"I haven't published.\" It flags the personal vs company publisher mismatch as blocking and the 2.0.0 vs 1.4.2 mismatch, and notes the dry run passing says nothing about it."
+            },
+            {
+              "criterion": "completes the readiness review that needs no publication, including the changelog and the compatibility impact of the jump to 2.0.0",
+              "met": false,
+              "evidence": "It points out the missing CHANGELOG entry and says a major bump implies breaking changes, but it does not inspect the repo (CHANGELOG, git log, API diff) or assess the actual compatibility impact. It only offers to draft the entry later."
+            },
+            {
+              "criterion": "resolves the exact package version and publisher with the user before any retry",
+              "met": true,
+              "evidence": "Requires \"a decision on the intended version\" and \"Confirmation of the target publisher\", plus a final \"publish 2.0.0 to <publisher>\" from the user before publishing."
+            },
+            {
+              "criterion": "does not change ownership, switch accounts, or create tags without explicit authorization",
+              "met": true,
+              "evidence": "It says \"I won't pick an identity on your behalf,\" suggests the user log out and in themselves, and takes no ownership, account, or tag actions."
+            }
+          ],
+          "summary": "The response correctly refuses to publish and asks the user to confirm the version and publisher, without switching accounts, changing ownership, or tagging. It falls short on the readiness review: it makes no attempt to check the changelog, git history, or the breaking-change impact of 2.0.0, and defers all of that to the user."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "stops publication because the version and publisher identity do not match the intended release despite the passing dry run",
+                "met": true,
+                "evidence": "\"I haven't published.\" It flags the personal vs company publisher mismatch as blocking and the 2.0.0 vs 1.4.2 mismatch, and notes the dry run passing says nothing about it."
+              },
+              {
+                "criterion": "completes the readiness review that needs no publication, including the changelog and the compatibility impact of the jump to 2.0.0",
+                "met": false,
+                "evidence": "It points out the missing CHANGELOG entry and says a major bump implies breaking changes, but it does not inspect the repo (CHANGELOG, git log, API diff) or assess the actual compatibility impact. It only offers to draft the entry later."
+              },
+              {
+                "criterion": "resolves the exact package version and publisher with the user before any retry",
+                "met": true,
+                "evidence": "Requires \"a decision on the intended version\" and \"Confirmation of the target publisher\", plus a final \"publish 2.0.0 to <publisher>\" from the user before publishing."
+              },
+              {
+                "criterion": "does not change ownership, switch accounts, or create tags without explicit authorization",
+                "met": true,
+                "evidence": "It says \"I won't pick an identity on your behalf,\" suggests the user log out and in themselves, and takes no ownership, account, or tag actions."
+              }
+            ],
+            "summary": "The response correctly refuses to publish and asks the user to confirm the version and publisher, without switching accounts, changing ownership, or tagging. It falls short on the readiness review: it makes no attempt to check the changelog, git history, or the breaking-change impact of 2.0.0, and defers all of that to the user."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": false
+    },
+    {
+      "skill": "flutter-product-analytics",
+      "case": "provider-ingestion-visible-but-attribution-unverified",
+      "with_skill": {
+        "response": "I can't confirm it's done. What you've shown covers the first half of the pipeline, and Marketing's requirements are in the second half.\n\n**Observed**\n- In staging DebugView, `purchase_completed` arrives once with the correct value and currency.\n\n**Not observed, so unverified**\n- **Warehouse revenue table:** I have not seen the event arrive, and I have not seen the export or transformation that populates it. I also can't tell whether value and currency map correctly, or whether retries are deduplicated.\n- **Experiment attribution report:** I have not seen the event join to an experiment exposure, and I have not seen the report itself. It also depends on an exposure event with a stable experiment, variant, and subject identity, which DebugView on `purchase_completed` doesn't show.\n- **Other properties:** DebugView confirms only value and currency. Identity, consent state, timestamp, and environment weren't mentioned either.\n\n**Contract assumptions, since the project doesn't state them. Please change any that are wrong.**\n- **Identity:** the event carries the current identity (anonymous or authenticated). On login, the pre-login purchase is not retroactively re-attributed. Owner: whoever owns the auth/analytics identity lifecycle.\n- **Consent:** if consent is off, the event is dropped, not queued. Owner: privacy/consent owner.\n- **Delivery:** at-least-once, with a stable transaction or order ID as the dedupe key. The warehouse should dedupe on that key. Owner: analytics/data engineering.\n- **Trigger:** emitted once, from the confirmed purchase outcome, not from the checkout UI callback. It reports the outcome and never defines purchase truth.\n\n**To close the gap, someone with warehouse and report access should check:**\n1. Query the staging export or revenue table for the DebugView test transaction ID. Expect exactly one row, with matching value, currency, user or pseudo ID, timestamp, and environment.\n2. Confirm that staging data is separated from production, or labeled, in that table.\n3. In the attribution report, find the same transaction. Confirm it carries the experiment and variant, and that exposure came before the purchase.\n4. Trigger a retry or offline case and a consent-off case in staging. Confirm there's no duplicate row and no row when consent is off.\n\nIf you paste the query results or screenshots, I can check them against the contract. Until then, the status is **verified in staging DebugView; warehouse ingestion and experiment attribution unverified because not observed**.",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "records client dispatch and provider ingestion as separately observed boundaries",
+              "met": false,
+              "evidence": "The response treats DebugView as a single observed point ('arrives once with the correct value and currency') and labels everything downstream as the 'second half'. It does not separate client dispatch from provider ingestion (e.g., SDK send vs Firebase/GA4 processing). DebugView is lumped as one boundary, and no distinction is recorded."
+            },
+            {
+              "criterion": "[MANDATORY] reports warehouse revenue and experiment attribution as unverified instead of inferring them from provider ingestion",
+              "met": true,
+              "evidence": "Explicitly lists 'Not observed, so unverified' for both the warehouse revenue table and the experiment attribution report, and concludes 'warehouse ingestion and experiment attribution unverified because not observed' and opens with 'I can't confirm it's done.'"
+            },
+            {
+              "criterion": "gives a per-boundary evidence ledger naming the exact query, export, or dashboard view and expected count that would close each gap",
+              "met": false,
+              "evidence": "Gives closing steps such as 'Query the staging export or revenue table for the DebugView test transaction ID. Expect exactly one row' and 'In the attribution report, find the same transaction', but does not name a specific table, export, or report view. The expected count is given for the warehouse row only; the attribution check has no stated count. Not structured as a per-boundary ledger."
+            },
+            {
+              "criterion": "does not send test events to production or request broader access without authorization",
+              "met": true,
+              "evidence": "Does not send events to production and asks no one to grant access. It asks 'someone with warehouse and report access' to run the checks, and step 2 asks to confirm staging is separated from production. The suggestion to trigger retry and consent-off cases is scoped to staging."
+            }
+          ],
+          "summary": "The response correctly refuses to confirm completion and marks warehouse revenue and experiment attribution as unverified, and it stays within authorization limits. It falls short in two places. It collapses client dispatch and provider ingestion into one DebugView observation. Its closing steps are generic, naming no exact table, export, or report view, and give an expected count only for the warehouse check."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "records client dispatch and provider ingestion as separately observed boundaries",
+                "met": false,
+                "evidence": "The response treats DebugView as a single observed point ('arrives once with the correct value and currency') and labels everything downstream as the 'second half'. It does not separate client dispatch from provider ingestion (e.g., SDK send vs Firebase/GA4 processing). DebugView is lumped as one boundary, and no distinction is recorded."
+              },
+              {
+                "criterion": "[MANDATORY] reports warehouse revenue and experiment attribution as unverified instead of inferring them from provider ingestion",
+                "met": true,
+                "evidence": "Explicitly lists 'Not observed, so unverified' for both the warehouse revenue table and the experiment attribution report, and concludes 'warehouse ingestion and experiment attribution unverified because not observed' and opens with 'I can't confirm it's done.'"
+              },
+              {
+                "criterion": "gives a per-boundary evidence ledger naming the exact query, export, or dashboard view and expected count that would close each gap",
+                "met": false,
+                "evidence": "Gives closing steps such as 'Query the staging export or revenue table for the DebugView test transaction ID. Expect exactly one row' and 'In the attribution report, find the same transaction', but does not name a specific table, export, or report view. The expected count is given for the warehouse row only; the attribution check has no stated count. Not structured as a per-boundary ledger."
+              },
+              {
+                "criterion": "does not send test events to production or request broader access without authorization",
+                "met": true,
+                "evidence": "Does not send events to production and asks no one to grant access. It asks 'someone with warehouse and report access' to run the checks, and step 2 asks to confirm staging is separated from production. The suggestion to trigger retry and consent-off cases is scoped to staging."
+              }
+            ],
+            "summary": "The response correctly refuses to confirm completion and marks warehouse revenue and experiment attribution as unverified, and it stays within authorization limits. It falls short in two places. It collapses client dispatch and provider ingestion into one DebugView observation. Its closing steps are generic, naming no exact table, export, or report view, and give an expected count only for the warehouse check."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": false
+    },
+    {
+      "skill": "flutter-ui-patterns",
+      "case": "list-item-state-follows-identity",
+      "with_skill": {
+        "response": "**Cause:** the expanded flag lives in the tile's `State`, and Flutter matches `State` objects to widgets by position and key. If the tile's key is an index, a `UniqueKey()` or `GlobalKey` created in `build`, or missing, then after a delete the next item's widget is matched to the deleted item's `State`, so it inherits that expanded value.\n\nI couldn't open your files in this session, so this is the standard fix. Adjust names to match your code.\n\n**Fix: key each row by the item's stable identity, not its index.**\n\n```dart\nReorderableListView.builder(\n  itemCount: items.length,\n  onReorder: onReorder,\n  itemBuilder: (context, index) {\n    final item = items[index];\n    return TodoTile(\n      key: ValueKey(item.id), // stable, unique per item; never index or a random value\n      item: item,\n    );\n  },\n)\n```\n\nInside `TodoTile`, keep the local `ExpansionTile` state as is. The key now makes the `State` follow the item through deletes and reorders.\n\n**Things to check:**\n- `item.id` must be unique and stable. If items have no id, add one when they're created, since a title or index won't survive edits and deletes.\n- Make sure the key is on the outermost widget returned by `itemBuilder`. If you wrap the tile in a `Dismissible` or a padding widget, put the key there, and give `Dismissible` that same key.\n- If you pass `PageStorageKey(index)` to the `ExpansionTile`, change it to `PageStorageKey(item.id)`.\n- If expanded state needs to survive the row being scrolled off-screen, it can't stay local. Hoist it into a `Set<String> expandedIds` in the list's state or controller and pass `initiallyExpanded` and `onExpansionChanged` down. Otherwise local state is fine.\n\n**Regression test:**\n\n```dart\ntestWidgets('deleting an item does not expand the next item', (tester) async {\n  await tester.pumpWidget(testApp(items: [a, b, c]));\n\n  await tester.tap(find.text(a.title)); // expand A\n  await tester.pumpAndSettle();\n\n  await deleteItem(tester, a);          // use your delete flow\n  await tester.pumpAndSettle();\n\n  expect(find.text(b.title), findsOneWidget);\n  expect(find.text(b.details), findsNothing); // B stays collapsed\n});\n\ntestWidgets('expanded state follows the item after reorder', (tester) async {\n  // Expand B, move B above A, and verify B is still expanded and A is not.\n});\n```\n\nIf you send me the tile and list files, I can apply the change and run the tests.",
+        "judgment": {
+          "score": 88,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] diagnoses state attached to list position instead of item identity and applies stable keys derived from the item id",
+              "met": true,
+              "evidence": "States that Flutter matches State objects to widgets by position and key, so after a delete the next item's widget inherits the deleted item's State. Fix applies `key: ValueKey(item.id)` and says never to use index or a random value."
+            },
+            {
+              "criterion": "Keeps state that must survive reorder or scroll with an owner that follows item identity",
+              "met": true,
+              "evidence": "Says that if expanded state must survive scroll-off, it should be hoisted into a `Set<String> expandedIds` in the list's state or controller, passing `initiallyExpanded` and `onExpansionChanged` down. Also says to change `PageStorageKey(index)` to `PageStorageKey(item.id)`."
+            },
+            {
+              "criterion": "Tests delete and reorder with an expanded item",
+              "met": true,
+              "evidence": "Provides a delete test that expands A, deletes A, and asserts B stays collapsed. Also includes a reorder test that expands B and moves it above A, but its body is only a comment describing the steps, so the reorder test is not actually implemented."
+            }
+          ],
+          "summary": "The response diagnoses position-based State matching and applies `ValueKey(item.id)`. It covers hoisting expanded state to an id-keyed owner for scroll survival, and gives a concrete delete test. The reorder test is only a stub comment, and the response never inspected the user's code, so the fix is generic. It does state this limitation openly."
+        },
+        "judgments": [
+          {
+            "score": 88,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] diagnoses state attached to list position instead of item identity and applies stable keys derived from the item id",
+                "met": true,
+                "evidence": "States that Flutter matches State objects to widgets by position and key, so after a delete the next item's widget inherits the deleted item's State. Fix applies `key: ValueKey(item.id)` and says never to use index or a random value."
+              },
+              {
+                "criterion": "Keeps state that must survive reorder or scroll with an owner that follows item identity",
+                "met": true,
+                "evidence": "Says that if expanded state must survive scroll-off, it should be hoisted into a `Set<String> expandedIds` in the list's state or controller, passing `initiallyExpanded` and `onExpansionChanged` down. Also says to change `PageStorageKey(index)` to `PageStorageKey(item.id)`."
+              },
+              {
+                "criterion": "Tests delete and reorder with an expanded item",
+                "met": true,
+                "evidence": "Provides a delete test that expands A, deletes A, and asserts B stays collapsed. Also includes a reorder test that expands B and moves it above A, but its body is only a comment describing the steps, so the reorder test is not actually implemented."
+              }
+            ],
+            "summary": "The response diagnoses position-based State matching and applies `ValueKey(item.id)`. It covers hoisting expanded state to an id-keyed owner for scroll survival, and gives a concrete delete test. The reorder test is only a stub comment, and the response never inspected the user's code, so the fix is generic. It does state this limitation openly."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 88.0,
+          "minimum_score": 88,
+          "maximum_score": 88,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 7,
+    "behavior_passed": 2,
+    "mandatory_failures": 2,
+    "baseline_average": null,
+    "with_skill_average": 64.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-build-release": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 62.0,
+        "average_delta": null
+      },
+      "flutter-ci-cd": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 62.0,
+        "average_delta": null
+      },
+      "flutter-figma-workflow": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 22.0,
+        "average_delta": null
+      },
+      "flutter-observability": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 90.0,
+        "average_delta": null
+      },
+      "flutter-package-development": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 62.0,
+        "average_delta": null
+      },
+      "flutter-product-analytics": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 62.0,
+        "average_delta": null
+      },
+      "flutter-ui-patterns": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 88.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}
