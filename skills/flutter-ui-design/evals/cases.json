@@ -26,7 +26,7 @@
     "expectations": [
       "makes inspection and preservation of the established brand and component vocabulary the first implementation constraint",
       "reuses existing semantic tokens and extends them only where a stable product concept is missing",
-      "rules out a second theme system, font, icon pack, or UI dependency without evidence",
+      {"text": "rules out a second theme system, font, icon pack, or UI dependency without evidence", "mandatory": true},
       "defines an equivalent stable before-and-after fixture comparison without fabricating rendered results"
     ]
   },
@@ -51,7 +51,7 @@
     "expectations": [
       "keeps widget extraction and state ownership changes structural and behavior-preserving",
       "preserves the current visual system and rendered output",
-      "does not expand a structural refactor into an unauthorized redesign"
+      {"text": "does not expand a structural refactor into an unauthorized redesign", "mandatory": true}
     ]
   },
   {

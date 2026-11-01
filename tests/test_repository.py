@@ -250,7 +250,10 @@ class RepositoryTests(unittest.TestCase):
             for item in cases
             if item["name"] == "attributes-ui-versus-raster-jank"
         )
-        expectations = " ".join(case["expectations"])
+        expectations = " ".join(
+            item if isinstance(item, str) else item["text"]
+            for item in case["expectations"]
+        )
         self.assertIn("requires a reproducible profile-mode trace", expectations)
         self.assertIn("defines a repeat of the same flow", expectations)
         self.assertNotIn("captures a reproducible", expectations)
@@ -270,7 +273,10 @@ class RepositoryTests(unittest.TestCase):
             for item in cases
             if item["name"] == "runtime-fix-repeats-original-flow"
         )
-        expectations = " ".join(case["expectations"])
+        expectations = " ".join(
+            item if isinstance(item, str) else item["text"]
+            for item in case["expectations"]
+        )
         self.assertIn("requires tracing", expectations)
         self.assertIn("requires repeating", expectations)
         self.assertNotIn("traces the lifecycle", expectations)
@@ -313,7 +319,10 @@ class RepositoryTests(unittest.TestCase):
             for item in cases
             if item["name"] == "dry-run-does-not-authorize-publish"
         )
-        expectations = " ".join(case["expectations"])
+        expectations = " ".join(
+            item if isinstance(item, str) else item["text"]
+            for item in case["expectations"]
+        )
         self.assertIn("executable review with pass-fail criteria", expectations)
         self.assertIn("without fabricating repository access", expectations)
 

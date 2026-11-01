@@ -3,13 +3,13 @@
     "name": "stages-production-major-upgrades",
     "prompt": "Our production Flutter app targets Android and iOS, pins Flutter through a checked-in version-manager file and CI, commits pubspec.lock, and uses code generation. Run flutter pub upgrade --major-versions and fix whatever breaks in one change.",
     "resources": ["references/sdk-and-package-upgrades.md"],
-    "expectations": ["captures the pinned SDK dependency generation test and build baseline", "uses outdated output and publisher migration guides to choose a coherent upgrade cohort", "rejects an undifferentiated collection-wide major upgrade", "reviews lockfile generated source and Android/iOS verification before expanding scope"]
+    "expectations": ["captures the pinned SDK dependency generation test and build baseline", "uses outdated output and publisher migration guides to choose a coherent upgrade cohort", {"text": "rejects an undifferentiated collection-wide major upgrade", "mandatory": true}, "reviews lockfile generated source and Android/iOS verification before expanding scope"]
   },
   {
     "name": "does-not-hide-solver-conflict-with-any",
     "prompt": "Pub reports that our direct dev dependency lint_runner ^2.0.0 requires analyzer >=6.0.0 <7.0.0 while direct dev dependency test_support ^4.0.0 requires analyzer >=7.0.0 <8.0.0. Publisher metadata confirms lint_runner 3.0.0 supports analyzer >=7.0.0 <8.0.0 and its migration guide requires no rule API changes used by this repository. Add dependency_overrides with analyzer: any permanently so CI goes green; the final repository must ultimately work without an override.",
     "resources": ["references/resolution-conflicts-and-overrides.md"],
-    "expectations": ["uses the supplied ranges to identify lint_runner as the direct constraint that must move while preserving compatible test_support", "rejects a permanent any override as proof of compatibility", "chooses lint_runner 3.0.0 as the compatible coordinated version change without override debt", "defines an override-free verification sequence covering resolution lockfile review analysis tests and relevant generation or builds"]
+    "expectations": ["uses the supplied ranges to identify lint_runner as the direct constraint that must move while preserving compatible test_support", {"text": "rejects a permanent any override as proof of compatibility", "mandatory": true}, "chooses lint_runner 3.0.0 as the compatible coordinated version change without override debt", "defines an override-free verification sequence covering resolution lockfile review analysis tests and relevant generation or builds"]
   },
   {
     "name": "keeps-sdk-and-ci-pins-consistent",
@@ -21,7 +21,7 @@
     "name": "investigates-unexpected-lockfile-churn",
     "prompt": "A targeted patch upgrade changed sixty transitive packages in our committed application pubspec.lock. Manually restore the unrelated lockfile entries while keeping the direct package update.",
     "resources": ["references/sdk-and-package-upgrades.md", "references/resolution-conflicts-and-overrides.md"],
-    "expectations": ["does not manually edit the generated lockfile", "identifies why the chosen Pub command unlocked the wider graph", "re-resolves with a targeted command or justified coherent cohort", "reviews source content-hash and transitive changes before running regression checks"]
+    "expectations": [{"text": "does not manually edit the generated lockfile", "mandatory": true}, "identifies why the chosen Pub command unlocked the wider graph", "re-resolves with a targeted command or justified coherent cohort", "reviews source content-hash and transitive changes before running regression checks"]
   },
   {
     "name": "migrates-native-toolchain-as-a-compatible-set",

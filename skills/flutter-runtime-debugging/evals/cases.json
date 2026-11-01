@@ -14,7 +14,7 @@
     "prompt": "I added a native plugin and its Dart call works after several hot reloads. Confirm plugin startup is fixed.",
     "resources": ["references/reproduction-and-attachment.md"],
     "expectations": [
-      "rejects hot reload as proof of native registration or startup behavior",
+      {"text": "rejects hot reload as proof of native registration or startup behavior", "mandatory": true},
       "uses a full rebuild and clean launch on each affected target",
       "checks registration startup errors and unsupported-platform behavior"
     ]
@@ -34,7 +34,7 @@
     "prompt": "DevTools shows a large heap after opening a chart once. Prove there is a leak and clear every image and Flutter cache when the route closes.",
     "resources": ["references/devtools-diagnosis.md"],
     "expectations": [
-      "does not infer a leak from one large heap snapshot",
+      {"text": "does not infer a leak from one large heap snapshot", "mandatory": true},
       "uses repeated enter-exit cycles snapshots and retained ownership evidence",
       "fixes the owning listener controller subscription or platform handle instead of globally clearing caches"
     ]
@@ -46,7 +46,7 @@
     "expectations": [
       "captures the Android permission and background-foreground reproduction contract",
       "requires tracing the lifecycle and error mapping boundary instead of relying on a defensive null check",
-      "requires repeating the original runtime flow and adding a focused regression before claiming verification"
+      {"text": "requires repeating the original runtime flow and adding a focused regression before claiming verification", "mandatory": true}
     ]
   }
 ]

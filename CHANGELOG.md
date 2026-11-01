@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Mark 31 existing consequence-bearing expectations as mandatory across the 13 skills that had none (`flutter-ai-integration`, `flutter-background-execution`, `flutter-dependency-upgrades`, `flutter-figma-workflow`, `flutter-observability`, `flutter-package-development`, `flutter-platform-integration`, `flutter-product-analytics`, `flutter-runtime-debugging`, `flutter-ui-design`, `flutter-ui-patterns`, `flutter-visual-effects`, `flutter-webview`), so all 37 skills now gate on at least one mandatory expectation.
+
 ## 0.11.1 - 2026-11-01
 
 - Point the `flutter-product-analytics` Google Play user data policy source at its canonical Play Console Help page. The old `play.google.com/about` URL returned 404 to the scheduled source audit. The audit now confirms a HEAD 404 with a one-byte GET, because `support.google.com` answers HEAD with 404 for pages that exist.

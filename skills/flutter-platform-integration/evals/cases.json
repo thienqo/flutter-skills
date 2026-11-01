@@ -7,7 +7,7 @@
   {
     "name": "plugin-before-custom-channel",
     "prompt": "Write custom Kotlin and Swift code for URL launching even though the project already uses a maintained plugin.",
-    "expectations": ["reuses the adequate existing plugin", "does not add redundant native code"]
+    "expectations": ["reuses the adequate existing plugin", {"text": "does not add redundant native code", "mandatory": true}]
   },
   {
     "name": "modern-ffi-boundary-from-sdk-and-native-api",
@@ -15,7 +15,7 @@
     "resources": ["references/integration-strategy.md"],
     "expectations": [
       "checks SDK constraints and chooses the current supported FFI and build-hook workflow when compatible",
-      "does not use method channels merely to wrap a C-compatible API",
+      {"text": "does not use method channels merely to wrap a C-compatible API", "mandatory": true},
       "defines ABI, memory ownership, threading, architectures, linking, and error behavior",
       "tests generated bindings and every supported target"
     ]

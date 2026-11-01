@@ -5,7 +5,7 @@
     "resources": ["references/public-api-and-quality.md"],
     "expectations": [
       "inspects consumers versioning and existing deprecation policy before changing the contract",
-      "does not silently ship a breaking removal in a patch release",
+      {"text": "does not silently ship a breaking removal in a patch release", "mandatory": true},
       "provides a compatible migration path and consumer-facing regression coverage"
     ]
   },
@@ -46,7 +46,7 @@
     "expectations": [
       "reviews metadata documentation included files credentials and release compatibility when evidence is available, or provides an executable review with pass-fail criteria without fabricating repository access",
       "runs or proposes the publication dry run and inspects its output",
-      "does not publish change ownership or create release tags without explicit publication authorization"
+      {"text": "does not publish change ownership or create release tags without explicit publication authorization", "mandatory": true}
     ]
   }
 ]

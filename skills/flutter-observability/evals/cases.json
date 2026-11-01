@@ -8,13 +8,13 @@
   {
     "name": "trace-checkout-without-pii",
     "prompt": "Add production observability to an asynchronous checkout flow so we can diagnose latency and failures without collecting customer or payment data.",
-    "expectations": ["defines bounded operational logs errors breadcrumbs and meaningful traces", "propagates safe correlation across owned layers without coupling domain models to a vendor", "redacts by default and addresses consent sampling retention and offline buffering", "distinguishes operational telemetry from product analytics and performance optimization"],
+    "expectations": ["defines bounded operational logs errors breadcrumbs and meaningful traces", "propagates safe correlation across owned layers without coupling domain models to a vendor", {"text": "redacts by default and addresses consent sampling retention and offline buffering", "mandatory": true}, "distinguishes operational telemetry from product analytics and performance optimization"],
     "resources": ["references/logging-tracing-privacy.md"]
   },
   {
     "name": "incident-missing-release-context",
     "prompt": "Production crashes are visible in our dashboard but cannot be tied to an app version and their stacks are unreadable. Diagnose and fix the observability gap.",
-    "expectations": ["inspects the existing vendor build and release pipeline before proposing replacement", "aligns release build environment and symbol upload identity", "coordinates symbol retention with build release behavior", "does not claim success until a controlled event has a readable stack or clearly states the blocked backend evidence"],
+    "expectations": ["inspects the existing vendor build and release pipeline before proposing replacement", "aligns release build environment and symbol upload identity", "coordinates symbol retention with build release behavior", {"text": "does not claim success until a controlled event has a readable stack or clearly states the blocked backend evidence", "mandatory": true}],
     "resources": ["references/vendor-and-verification.md", "references/error-and-crash-capture.md"]
   },
   {

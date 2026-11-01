@@ -3,19 +3,19 @@
     "name": "uses-os-scheduler-for-terminated-sync",
     "prompt": "Project inspection confirms Android and iOS targets and an established maintained scheduler package that already bridges WorkManager and BGTaskScheduler. Keep a Flutter catalog sync running every 15 minutes with a Timer and Isolate even after the user swipes the app away or the phone reboots.",
     "resources": ["references/android-scheduling-and-services.md", "references/apple-background-tasks.md", "references/headless-execution-and-reliability.md"],
-    "expectations": ["rejects a Dart Timer or helper isolate as a process-survival mechanism", "preserves the established OS-backed scheduler after checking its required capabilities", "does not promise an exact 15-minute cadence", "defines durable idempotent work and an explicit reboot or process-death verification matrix"]
+    "expectations": [{"text": "rejects a Dart Timer or helper isolate as a process-survival mechanism", "mandatory": true}, "preserves the established OS-backed scheduler after checking its required capabilities", "does not promise an exact 15-minute cadence", "defines durable idempotent work and an explicit reboot or process-death verification matrix"]
   },
   {
     "name": "respects-android-foreground-service-restrictions",
     "prompt": "Start a silent Android location foreground service from the background whenever our server requests it, without showing a notification.",
     "resources": ["references/android-scheduling-and-services.md"],
-    "expectations": ["rejects a silent foreground service and checks whether the use case is permitted", "accounts for background-start and while-in-use permission restrictions", "requires the correct service type permissions and visible notification when a foreground service is justified", "verifies the start path and lifecycle on a representative Android target"]
+    "expectations": [{"text": "rejects a silent foreground service and checks whether the use case is permitted", "mandatory": true}, "accounts for background-start and while-in-use permission restrictions", "requires the correct service type permissions and visible notification when a foreground service is justified", "verifies the start path and lifecycle on a representative Android target"]
   },
   {
     "name": "does-not-promise-exact-ios-daily-run",
     "prompt": "Schedule an iOS background database cleanup that is guaranteed to run at exactly 09:00 every day, even after the user force-quits the app.",
     "resources": ["references/apple-background-tasks.md"],
-    "expectations": ["rejects an exact daily BGTaskScheduler guarantee", "chooses a supported deferrable task class and minimal capability configuration", "defines resubmission expiration and completion handling", "states the force-quit and device-verification boundary honestly"]
+    "expectations": [{"text": "rejects an exact daily BGTaskScheduler guarantee", "mandatory": true}, "chooses a supported deferrable task class and minimal capability configuration", "defines resubmission expiration and completion handling", "states the force-quit and device-verification boundary honestly"]
   },
   {
     "name": "initializes-the-correct-headless-runtime",

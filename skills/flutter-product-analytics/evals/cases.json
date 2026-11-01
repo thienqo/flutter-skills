@@ -15,7 +15,7 @@
     "resources": ["references/event-contracts-and-ownership.md"],
     "expectations": [
       "distinguishes purchase intent from verified purchase success",
-      "never uses analytics as the entitlement source of truth",
+      {"text": "never uses analytics as the entitlement source of truth", "mandatory": true},
       "emits a deduplicated revenue outcome from the verified transaction boundary with consistent value and currency"
     ]
   },
@@ -24,7 +24,7 @@
     "prompt": "Queue all analytics with email and search text before consent, then upload the backlog if the user opts in later so no funnel data is lost.",
     "resources": ["references/identity-consent-and-privacy.md"],
     "expectations": [
-      "does not collect or retain disallowed sensitive events before consent",
+      {"text": "does not collect or retain disallowed sensitive events before consent", "mandatory": true},
       "defines consent-aware drop buffer purge identity and deletion behavior",
       "separates client controls from backend retention access and deletion verification"
     ]
@@ -44,7 +44,7 @@
     "prompt": "The analytics SDK returns success and prints the event locally. Mark the funnel instrumentation verified without opening the analytics backend.",
     "resources": ["references/verification-and-experiments.md"],
     "expectations": [
-      "does not treat a local SDK call or console line as ingestion proof",
+      {"text": "does not treat a local SDK call or console line as ingestion proof", "mandatory": true},
       "requires an authorized non-production debug or backend observation with exact event count properties identity consent and environment",
       "states the backend or dashboard boundary as unverified when access is unavailable"
     ]
