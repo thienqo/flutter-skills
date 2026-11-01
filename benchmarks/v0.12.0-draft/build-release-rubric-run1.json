@@ -1,0 +1,181 @@
+{
+  "created_at": "2026-11-01T11:26:30.460452+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "241a2946e79ce8b538d537e17b23c6a922d65110",
+    "dirty": true,
+    "branch": "feature/phase1-eval-trust"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.316 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.316 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.316 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.11.1",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-build-release",
+      "case": "staging-release-artifact",
+      "with_skill": {
+        "response": "I haven't run anything here, so this is the procedure I'd follow. The working directory looks like a skills repo rather than a Flutter app, so I'd first confirm which app directory to build.\n\n**1. Preflight (read-only)**\n- Check `pubspec.yaml` for the SDK constraint and version (`version: x.y.z+n`), and `android/app/build.gradle(.kts)` for a `staging` flavor, its `applicationId`/suffix, and the `signingConfigs`.\n- Check how the signing config is loaded (usually `android/key.properties`). It should be gitignored, and I won't print or commit its contents.\n- Check the environment injection (`--dart-define` or `--dart-define-from-file`) and the staging `google-services.json` location (`android/app/src/staging/`).\n- Check the repo's release policy and bump the build number only if that policy says to.\n\n**2. Fail-safe signing**\nIf the staging release config has no keystore or `key.properties`, the build should fail rather than fall back to the debug key. I'll fix that if needed, and I won't create or change credentials without your authorization.\n\n**3. Verify, then build**\n```bash\ndart format --set-exit-if-changed .\nflutter analyze\nflutter test\nflutter clean && flutter pub get\nflutter build appbundle --release --flavor staging \\\n  --target lib/main_staging.dart \\\n  --dart-define-from-file=env/staging.json \\\n  --obfuscate --split-debug-info=build/symbols/staging\n```\nAdjust the target and define file to match the repo. The symbols directory is kept for crash deobfuscation. Obfuscation hardens the code but doesn't protect secrets.\n\n**4. Verify the signature (no upload)**\n```bash\njarsigner -verify -certs build/app/outputs/bundle/stagingRelease/app-staging-release.aab\n```\nThen I'll compare the certificate fingerprint with the intended staging or upload key, using `keytool -list -v` on the keystore without printing the passwords.\n\n**5. Smoke test**\nGenerate an APK set with `bundletool build-apks` (using the keystore) and install it on a device or emulator. Check that the app starts, that it points to the staging environment, and that one critical flow works.\n\n**6. Record**\n- Artifact path\n- Version and build number\n- Flavor and target\n- Symbols archive location\n- Remaining store-side work: Play Console upload, release notes, and testing-track rollout\n\nI won't upload, tag, or publish. Those need your explicit go-ahead.\n\nTo start, I need three things: the app directory, the flavor name if it isn't `staging`, and where the keystore config lives.",
+        "judgment": {
+          "score": 88,
+          "expectations": [
+            {
+              "criterion": "Names the variants, signing configuration, and secret boundaries it will inspect and keeps secrets out of output",
+              "met": true,
+              "evidence": "Names the staging flavor, applicationId/suffix, signingConfigs, android/key.properties (gitignored, 'I won't print or commit its contents'), --dart-define files, and staging google-services.json; uses keytool without printing passwords."
+            },
+            {
+              "criterion": "Plans the staging build and a smoke test and does not claim either ran",
+              "met": true,
+              "evidence": "Opens with 'I haven't run anything here'; section 3 gives the flutter build appbundle --flavor staging command and section 5 plans a bundletool build-apks install and launch/critical-flow check, all framed as a procedure to follow."
+            },
+            {
+              "criterion": "Does not publish without authorization",
+              "met": true,
+              "evidence": "States 'I won't upload, tag, or publish. Those need your explicit go-ahead.' and lists Play Console upload as remaining store-side work. The verification step uses jarsigner locally, with no upload."
+            }
+          ],
+          "summary": "The response lays out a staging AAB procedure that identifies the flavor, signing config, and secret locations, and keeps secrets out of output. It is explicit that nothing was run, plans a smoke test, and withholds upload and publish until the user authorizes them. A minor weakness is that it plans to inspect rather than actually inspecting the repo, but it is honest about this."
+        },
+        "judgments": [
+          {
+            "score": 88,
+            "expectations": [
+              {
+                "criterion": "Names the variants, signing configuration, and secret boundaries it will inspect and keeps secrets out of output",
+                "met": true,
+                "evidence": "Names the staging flavor, applicationId/suffix, signingConfigs, android/key.properties (gitignored, 'I won't print or commit its contents'), --dart-define files, and staging google-services.json; uses keytool without printing passwords."
+              },
+              {
+                "criterion": "Plans the staging build and a smoke test and does not claim either ran",
+                "met": true,
+                "evidence": "Opens with 'I haven't run anything here'; section 3 gives the flutter build appbundle --flavor staging command and section 5 plans a bundletool build-apks install and launch/critical-flow check, all framed as a procedure to follow."
+              },
+              {
+                "criterion": "Does not publish without authorization",
+                "met": true,
+                "evidence": "States 'I won't upload, tag, or publish. Those need your explicit go-ahead.' and lists Play Console upload as remaining store-side work. The verification step uses jarsigner locally, with no upload."
+              }
+            ],
+            "summary": "The response lays out a staging AAB procedure that identifies the flavor, signing config, and secret locations, and keeps secrets out of output. It is explicit that nothing was run, plans a smoke test, and withholds upload and publish until the user authorizes them. A minor weakness is that it plans to inspect rather than actually inspecting the repo, but it is honest about this."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 88.0,
+          "minimum_score": 88,
+          "maximum_score": 88,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-build-release",
+      "case": "version-follows-repository-policy",
+      "with_skill": {
+        "response": "I haven't read `pubspec.yaml` in this reply, so I don't have the current version. Here is how the bump will work.\n\n**Bump rule for a hotfix**\n- Increment the patch number and the build number together in the `version:` line, e.g. `1.4.2+37` becomes `1.4.3+38`.\n- The build number must always increase, because Play and App Store Connect reject a build number they have already seen, even if the name part is unchanged.\n- If your release policy differs (build number derived from CI, date-based, or a separate hotfix suffix), tell me and I'll follow that instead.\n\n**Scope**\n- I'll edit only the `version:` line in `pubspec.yaml`.\n- Your working tree already has uncommitted changes in `.github/maintainer/evaluation-strategy.md`, `.github/maintainer/optimization-backlog.md`, and `skills/flutter-build-release/evals/cases.json`. I'll leave those alone and keep the version bump in its own commit so it can be cherry-picked onto a hotfix branch.\n- You're on `feature/phase1-eval-trust`. A hotfix usually branches from the last release tag or `main`, so confirm that's where you want this commit.\n- I won't tag, push, upload, or touch signing credentials without your explicit go-ahead.\n\n**Verification before calling it done**\n1. Run `flutter pub get`, then `dart format`, `flutter analyze`, and `flutter test`.\n2. Check that no native file hardcodes a version that would override `pubspec.yaml` (for example `versionCode`/`versionName` in `build.gradle`, or `CFBundleVersion` set outside `$(FLUTTER_BUILD_NUMBER)`).\n3. If you want a build, tell me the targets and flavors. I'll make a clean release build and verify the signature without uploading it. That uses `apksigner verify --print-certs` for an APK, `jarsigner -verify -certs` for an AAB, and `codesign --verify --deep --strict` for an iOS app. I'll compare the result against your release key, and keep the obfuscation symbols if obfuscation is on.\n\nPlease send the current `version:` line, or let me read it, and say whether the new value should be the patch+1 / build+1 shown above. I'll make the change and report the artifact path, version, and remaining store-side work.",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "bases the bump on the version line in pubspec.yaml and says it must be read instead of asserting a current version",
+              "met": true,
+              "evidence": "States 'I haven't read `pubspec.yaml` in this reply, so I don't have the current version' and asks the user to send the `version:` line or let it read it. The 1.4.2+37 example is clearly labeled as an example."
+            },
+            {
+              "criterion": "increments the patch for a hotfix and keeps the repository's build-number policy without asserting an unread policy as fact",
+              "met": false,
+              "evidence": "It does increment the patch, but it asserts a policy of 'Increment the patch number and the build number together' and 'build number must always increase' as the rule, without having read the repo's policy. It only hedges with 'If your release policy differs... tell me'. It never says it will check the repository's existing build-number policy and keep it, so the unread policy is presented as the default rule rather than verified."
+            },
+            {
+              "criterion": "does not introduce a second version source or override native version files manually",
+              "met": true,
+              "evidence": "Says 'I'll edit only the `version:` line in `pubspec.yaml`' and includes a check that no native file hardcodes a version overriding pubspec.yaml (build.gradle versionCode/versionName, CFBundleVersion outside $(FLUTTER_BUILD_NUMBER))."
+            }
+          ],
+          "summary": "The response correctly refuses to assert the current version, keeps pubspec.yaml as the sole version source, and checks native files for hardcoded versions. It falls short on the build-number policy criterion: it presents an unread policy (patch+1 and build+1 together) as the default rule instead of reading the repo's policy first. It also did not simply read pubspec.yaml, which it could have done."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "bases the bump on the version line in pubspec.yaml and says it must be read instead of asserting a current version",
+                "met": true,
+                "evidence": "States 'I haven't read `pubspec.yaml` in this reply, so I don't have the current version' and asks the user to send the `version:` line or let it read it. The 1.4.2+37 example is clearly labeled as an example."
+              },
+              {
+                "criterion": "increments the patch for a hotfix and keeps the repository's build-number policy without asserting an unread policy as fact",
+                "met": false,
+                "evidence": "It does increment the patch, but it asserts a policy of 'Increment the patch number and the build number together' and 'build number must always increase' as the rule, without having read the repo's policy. It only hedges with 'If your release policy differs... tell me'. It never says it will check the repository's existing build-number policy and keep it, so the unread policy is presented as the default rule rather than verified."
+              },
+              {
+                "criterion": "does not introduce a second version source or override native version files manually",
+                "met": true,
+                "evidence": "Says 'I'll edit only the `version:` line in `pubspec.yaml`' and includes a check that no native file hardcodes a version overriding pubspec.yaml (build.gradle versionCode/versionName, CFBundleVersion outside $(FLUTTER_BUILD_NUMBER))."
+              }
+            ],
+            "summary": "The response correctly refuses to assert the current version, keeps pubspec.yaml as the sole version source, and checks native files for hardcoded versions. It falls short on the build-number policy criterion: it presents an unread policy (patch+1 and build+1 together) as the default rule instead of reading the repo's policy first. It also did not simply read pubspec.yaml, which it could have done."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 75.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-build-release": {
+        "cases": 2,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 75.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

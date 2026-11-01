@@ -2,7 +2,7 @@
   {
     "name": "staging-release-artifact",
     "prompt": "Create a signed staging Android App Bundle without uploading it.",
-    "expectations": ["inspects variants signing and secret boundaries", "builds and smoke-tests the staging artifact", "does not publish without authorization"]
+    "expectations": ["names the variants, signing configuration, and secret boundaries it will inspect and keeps secrets out of output", "plans the staging build and a smoke test and does not claim either ran", "does not publish without authorization"]
   },
   {
     "name": "obfuscation-preserves-symbols",
@@ -31,8 +31,8 @@
     "name": "version-follows-repository-policy",
     "prompt": "Bump the version for a hotfix release. The app uses pubspec.yaml as the version source.",
     "expectations": [
-      "reads and follows the existing versioning convention from pubspec.yaml",
-      "increments patch without changing the build number policy",
+      "bases the bump on the version line in pubspec.yaml and says it must be read instead of asserting a current version",
+      "increments the patch for a hotfix and keeps the repository's build-number policy without asserting an unread policy as fact",
       "does not introduce a second version source or override native version files manually"
     ]
   },

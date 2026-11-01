@@ -8,6 +8,9 @@
 - Add an optional `capabilities` case field (`device`, `design-tool`, `provider-console`, `registry`). The repository check rejects unknown names and warns when an expectation asks for that evidence without declaring it.
 - Tell `flutter-build-release` to verify the produced artifact's signature without uploading it (`apksigner verify`, `jarsigner -verify`, `codesign --verify`). The `signing-material-stays-out-of-the-repository` case moved from 62, 62, and 62 across three runs to 88, 93, and 95. The four other `flutter-build-release` cases scored the same before and after the edit in one run each; three of them were already below 80.
 - Reword expectations in four of the seven new cases (`flutter-ci-cd`, `flutter-figma-workflow`, `flutter-package-development`, `flutter-product-analytics`) so they ask a response-only solver for a plan and an explicit unverified boundary instead of evidence it cannot produce. Those cases now score a median of 62, 58, 82, and 88; the change is to the rubric, not to a skill.
+- Reword four expectations in `flutter-build-release` (`staging-release-artifact`, `version-follows-repository-policy`) that asked a response-only solver to inspect, build, or read files. `staging-release-artifact` moved from 55 to 88, 88, and 82; `version-follows-repository-policy` from 22 to 62, 62, and 72, and stays below 80.
+- Correct the model-call estimates in the evaluation strategy: two calls per behavior case plus one per routing case gives 150 for the nightly profile and 530 for the release profile, replacing 139 and 443.
+- Move the two P1 backlog items and the capability-validator item to closed, and record the remaining weak cases as open.
 - Record variance reports in `benchmarks/v0.12.0-draft/` (`pr-smoke`, three runs, largest spread 16 points) and `benchmarks/unreleased/` (the seven new cases, three runs, before the rubric rewrites).
 
 ## 0.11.1 - 2026-11-01
