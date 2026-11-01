@@ -4,6 +4,8 @@
 
 - Mark 32 existing consequence-bearing expectations as mandatory across the 13 skills that had none (`flutter-ai-integration`, `flutter-background-execution`, `flutter-dependency-upgrades`, `flutter-figma-workflow`, `flutter-observability`, `flutter-package-development`, `flutter-platform-integration`, `flutter-product-analytics`, `flutter-runtime-debugging`, `flutter-ui-design`, `flutter-ui-patterns`, `flutter-visual-effects`, `flutter-webview`), so all 37 skills now gate on at least one mandatory expectation.
 - Add seven behavior cases (220 to 227): analytics evidence per boundary, package publisher and version mismatch behind a passing dry run, signing material kept out of the repository, a new CI job that keeps the pinned toolchain, Figma dark mode that differs from the app theme, PII and payloads kept out of crash context, and list state that follows item identity. These also close the open P1 analytics and package-development backlog items. The cases are defined but not yet run against a forward evaluator.
+- Add a holdout manifest (`.github/evals/holdout/holdout.json`, 23 cases across 17 high-risk skills) and a repository check that fails when a holdout case is unknown, repeated, or listed in the `pr-smoke` or `nightly-representative` tuning profiles.
+- Add an optional `capabilities` case field (`device`, `design-tool`, `provider-console`, `registry`). The repository check rejects unknown names and warns when an expectation asks for that evidence without declaring it.
 
 ## 0.11.1 - 2026-11-01
 

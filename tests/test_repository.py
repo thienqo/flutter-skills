@@ -24,6 +24,38 @@ BEHAVIOR_SPEC.loader.exec_module(BEHAVIOR_EVAL)
 
 
 class RepositoryTests(unittest.TestCase):
+    def test_case_capabilities_flag_undeclared_runtime_evidence(self):
+        case = {
+            "expectations": [
+                "runs the flow on a physical device and records the result",
+                "defines a plan to run the flow on a device",
+            ]
+        }
+        errors, warnings = VALIDATOR.capability_issues("case", case)
+        self.assertEqual(errors, [])
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("device", warnings[0])
+
+        declared = dict(case, capabilities=["device"])
+        self.assertEqual(VALIDATOR.capability_issues("case", declared), ([], []))
+
+        errors, _ = VALIDATOR.capability_issues("case", {"capabilities": ["telepathy"]})
+        self.assertEqual(len(errors), 1)
+
+    def test_holdout_is_resolved_and_kept_out_of_tuning_profiles(self):
+        self.assertEqual(VALIDATOR.validate_holdout(), [])
+        manifest = json.loads(
+            (ROOT / ".github" / "evals" / "holdout" / "holdout.json").read_text(encoding="utf-8")
+        )
+        held = {(item["skill"], item["case"]) for item in manifest["cases"]}
+        self.assertGreaterEqual(len(held), 20)
+        for name in manifest["tuning_profiles"]:
+            profile = json.loads(
+                (ROOT / ".github" / "evals" / "profiles" / name).read_text(encoding="utf-8")
+            )
+            tuning = {(item["skill"], item["case"]) for item in profile["behavior"]}
+            self.assertFalse(held & tuning, name)
+
     def test_repository_validator_passes(self):
         errors, _, counts = VALIDATOR.validate_repository()
         self.assertEqual(errors, [])

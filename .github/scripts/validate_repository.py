@@ -169,6 +169,59 @@ def repository_markdown_paths() -> list[Path]:
     ]
 
 
+CASE_CAPABILITIES = {"device", "design-tool", "provider-console", "registry"}
+# A response-only case cannot perform these actions. An expectation that asks
+# the solver to carry one out needs the case to declare the capability.
+RUNTIME_EVIDENCE_PATTERNS = {
+    "device": re.compile(
+        r"\b(runs?|launch(es)?|installs?|observes?|measures?|profiles?|captures?|records?)\b"
+        r"[^;]*\bon (a |the )?(real |physical |representative )?(device|emulator|simulator)s?\b",
+        re.I,
+    ),
+    "design-tool": re.compile(
+        r"\b(inspects?|reads?|opens?|resolves?)\b[^;]*\bfigma\b[^;]*\b(frame|node|file|variables?)\b",
+        re.I,
+    ),
+    "provider-console": re.compile(
+        r"\b(observes?|confirms?)\b[^;]*\b(dashboard|console|debugview|ingestion|backend)\b", re.I
+    ),
+    "registry": re.compile(r"\b(publishes?|uploads?)\b[^;]*\b(pub\.dev|registry|store)\b", re.I),
+}
+PLAN_ONLY_WORDS = re.compile(
+    r"\b(plan|defines?|requires?|states?|specif(y|ies)|propos(e|es)|without|not|no|"
+    r"unverified|boundary|verification|fixture|if|when|unless)\b",
+    re.I,
+)
+
+
+def expectation_text(item: Any) -> str:
+    return item if isinstance(item, str) else str(item.get("text", ""))
+
+
+def capability_issues(label: str, case: dict[str, Any]) -> tuple[list[str], list[str]]:
+    """Return (errors, warnings) for a case's declared and implied capabilities."""
+    errors: list[str] = []
+    warnings: list[str] = []
+    declared = case.get("capabilities", [])
+    if not isinstance(declared, list) or not all(isinstance(item, str) for item in declared):
+        return [f"{label}: 'capabilities' must be a list of strings"], warnings
+    unknown = sorted(set(declared) - CASE_CAPABILITIES)
+    if unknown:
+        errors.append(f"{label}: unknown capabilities {unknown}; allowed {sorted(CASE_CAPABILITIES)}")
+    for item in case.get("expectations", []):
+        text = expectation_text(item)
+        if PLAN_ONLY_WORDS.search(text):
+            continue
+        for capability, pattern in RUNTIME_EVIDENCE_PATTERNS.items():
+            if capability not in declared and pattern.search(text):
+                warnings.append(
+                    f"{label}: expectation '{text[:70]}' asks for {capability} evidence "
+                    f"but the case does not declare capabilities: [\"{capability}\"]"
+                )
+    return errors, warnings
+
+
+
 def validate_skill(skill_dir: Path) -> tuple[list[str], list[str], int, int]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -263,6 +316,9 @@ def validate_skill(skill_dir: Path) -> tuple[list[str], list[str], int, int]:
                         errors.append(f"{label} expectation {exp_idx + 1}: unknown keys {sorted(unknown_keys)}")
                 else:
                     errors.append(f"{label} expectation {exp_idx + 1}: must be a string or object")
+        capability_errors, capability_warnings = capability_issues(label, case)
+        errors.extend(capability_errors)
+        warnings.extend(capability_warnings)
 
     return errors, warnings, len(description), len(cases)
 
@@ -474,6 +530,47 @@ def validate_documentation(
     return errors
 
 
+def validate_holdout() -> list[str]:
+    """Check the holdout manifest exists, resolves, and never leaks into a tuning profile."""
+    errors: list[str] = []
+    holdout_dir = ROOT / ".github" / "evals" / "holdout"
+    try:
+        manifest = load_json(holdout_dir / "holdout.json")
+    except (FileNotFoundError, json.JSONDecodeError) as error:
+        return [f"invalid holdout manifest: {error}"]
+
+    known: set[tuple[str, str]] = set()
+    for cases_path in sorted(SKILLS_DIR.glob("*/evals/cases.json")):
+        for case in load_json(cases_path):
+            known.add((cases_path.parent.parent.name, case.get("name")))
+
+    held: set[tuple[str, str]] = set()
+    for index, item in enumerate(manifest.get("cases", [])):
+        identity = (item.get("skill"), item.get("case"))
+        if identity not in known:
+            errors.append(f"holdout case {index + 1} is unknown: {identity[0]}:{identity[1]}")
+        elif identity in held:
+            errors.append(f"holdout repeats {identity[0]}:{identity[1]}")
+        held.add(identity)
+    if not held:
+        errors.append("holdout manifest lists no cases")
+
+    profiles = manifest.get("tuning_profiles", [])
+    if not profiles:
+        errors.append("holdout manifest must name its tuning profiles")
+    for profile_name in profiles:
+        profile = load_json(ROOT / ".github" / "evals" / "profiles" / profile_name)
+        behavior = profile.get("behavior")
+        if behavior == "all":
+            errors.append(f"tuning profile {profile_name} selects all behavior cases, including the holdout")
+            continue
+        for item in behavior or []:
+            identity = (item.get("skill"), item.get("case"))
+            if identity in held:
+                errors.append(f"holdout case {identity[0]}:{identity[1]} appears in tuning profile {profile_name}")
+    return errors
+
+
 def validate_repository(
     release: bool = False,
 ) -> tuple[list[str], list[str], dict[str, int]]:
@@ -501,6 +598,7 @@ def validate_repository(
     except (FileNotFoundError, json.JSONDecodeError) as error:
         errors.append(f"invalid package metadata: {error}")
 
+    errors.extend(validate_holdout())
     routing_errors, routing_eval_total = validate_routing_cases(skill_names)
     errors.extend(routing_errors)
     if eval_total != EXPECTED_EVAL_COUNT:
