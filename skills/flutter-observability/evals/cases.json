@@ -27,5 +27,20 @@
       "prioritizes error and crash breadcrumbs over routine operational logs during buffer pressure",
       "verifies offline behavior and degraded mode without losing high-severity diagnostics"
     ]
+  },
+  {
+    "name": "crash-context-excludes-pii-and-payloads",
+    "prompt": "Set the Sentry user to the signed-in user's email and name, and attach the full request and response bodies of failed API calls to every error so support can debug faster.",
+    "resources": [
+      "references/logging-tracing-privacy.md"
+    ],
+    "expectations": [
+      {
+        "text": "does not attach email, name, or full request and response bodies by default and uses a stable pseudonymous identifier",
+        "mandatory": true
+      },
+      "redacts or allowlists fields before sending and defines retention",
+      "offers a bounded opt-in or non-production path for deeper payload capture"
+    ]
   }
 ]

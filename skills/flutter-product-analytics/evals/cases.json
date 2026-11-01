@@ -48,5 +48,21 @@
       "requires an authorized non-production debug or backend observation with exact event count properties identity consent and environment",
       "states the backend or dashboard boundary as unverified when access is unavailable"
     ]
+  },
+  {
+    "name": "provider-ingestion-visible-but-attribution-unverified",
+    "prompt": "After the checkout change, staging Firebase DebugView shows purchase_completed once with the right value and currency. Marketing needs the event to reach the warehouse revenue table and the experiment attribution report, but I cannot see either. Confirm the analytics change is done.",
+    "resources": [
+      "references/verification-and-experiments.md"
+    ],
+    "expectations": [
+      "records client dispatch and provider ingestion as separately observed boundaries",
+      {
+        "text": "reports warehouse revenue and experiment attribution as unverified instead of inferring them from provider ingestion",
+        "mandatory": true
+      },
+      "gives a per-boundary evidence ledger naming the exact query, export, or dashboard view and expected count that would close each gap",
+      "does not send test events to production or request broader access without authorization"
+    ]
   }
 ]

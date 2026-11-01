@@ -21,5 +21,22 @@
     "prompt": "Port an iOS Figma settings screen to Flutter for iOS and Android with large text, including toggles, disabled rows, and error feedback.",
     "resources": ["references/flutter-implementation-and-parity.md"],
     "expectations": ["preserves semantic controls and accessible hit targets", "adapts platform behavior without blindly copying pixels", "renders the specified states and large-text fixture", "documents intentional deviations from the Figma reference"]
+  },
+  {
+    "name": "figma-dark-mode-differs-from-existing-theme",
+    "prompt": "The inspected Figma file has a dark-mode variable collection and a Disabled variant for this button. Implement the screen. Our app already has ThemeExtension tokens, but the Figma dark values differ slightly from our dark theme.",
+    "resources": [
+      "references/design-extraction-and-mapping.md",
+      "references/flutter-implementation-and-parity.md"
+    ],
+    "expectations": [
+      {
+        "text": "reports the token differences between the Figma dark mode and the existing dark theme instead of silently overwriting either",
+        "mandatory": true
+      },
+      "maps to existing ThemeExtension tokens and adds a token only for a missing stable concept",
+      "records which source wins and why, or asks when no repository rule decides it",
+      "renders the Disabled variant in dark mode as a parity fixture without claiming parity that was not rendered"
+    ]
   }
 ]

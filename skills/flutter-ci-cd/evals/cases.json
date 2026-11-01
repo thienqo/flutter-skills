@@ -27,5 +27,21 @@
       {"text": "restricts deployment secrets to protected environments and blocks fork access", "mandatory": true},
       {"text": "does not trigger publication, tagging, or release actions", "mandatory": true}
     ]
+  },
+  {
+    "name": "new-job-keeps-the-pinned-toolchain",
+    "prompt": "Add a Windows desktop build job to our existing GitHub Actions workflow. Use the latest stable Flutter so it is always current.",
+    "resources": [
+      "references/quality-gates.md",
+      "references/provider-and-monorepo.md"
+    ],
+    "expectations": [
+      {
+        "text": "keeps the repository's pinned Flutter version source instead of switching to latest stable",
+        "mandatory": true
+      },
+      "reuses the existing cache, script, and job conventions",
+      "limits the new job's permissions and adds no secrets or publication step"
+    ]
   }
 ]
