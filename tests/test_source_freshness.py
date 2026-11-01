@@ -33,6 +33,31 @@ class SourceFreshnessTests(unittest.TestCase):
         self.assertEqual(AUDIT.classify_status(404, "missing"), "broken")
         self.assertEqual(AUDIT.classify_status(None, "timeout"), "error")
 
+    def test_head_404_is_confirmed_with_get(self):
+        from unittest import mock
+        import urllib.error
+
+        class Response:
+            status = 200
+
+            def geturl(self):
+                return "https://example.test/page"
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+        def fake_urlopen(request, timeout):
+            if request.get_method() == "HEAD":
+                raise urllib.error.HTTPError(request.full_url, 404, "Not Found", {}, None)
+            return Response()
+
+        with mock.patch.object(AUDIT.urllib.request, "urlopen", fake_urlopen):
+            result = AUDIT.check_url("https://example.test/page", 5)
+        self.assertEqual(result["state"], "ok")
+
     def test_verification_policy_becomes_stale_after_limit(self):
         policy = {"verified_at": "2026-08-24", "max_age_days": 90}
         self.assertEqual(
