@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Mark 31 existing consequence-bearing expectations as mandatory across the 13 skills that had none (`flutter-ai-integration`, `flutter-background-execution`, `flutter-dependency-upgrades`, `flutter-figma-workflow`, `flutter-observability`, `flutter-package-development`, `flutter-platform-integration`, `flutter-product-analytics`, `flutter-runtime-debugging`, `flutter-ui-design`, `flutter-ui-patterns`, `flutter-visual-effects`, `flutter-webview`), so all 37 skills now gate on at least one mandatory expectation.
+- Mark 32 existing consequence-bearing expectations as mandatory across the 13 skills that had none (`flutter-ai-integration`, `flutter-background-execution`, `flutter-dependency-upgrades`, `flutter-figma-workflow`, `flutter-observability`, `flutter-package-development`, `flutter-platform-integration`, `flutter-product-analytics`, `flutter-runtime-debugging`, `flutter-ui-design`, `flutter-ui-patterns`, `flutter-visual-effects`, `flutter-webview`), so all 37 skills now gate on at least one mandatory expectation.
 
 ## 0.11.1 - 2026-11-01
 
