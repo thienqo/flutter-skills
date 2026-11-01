@@ -34,7 +34,7 @@
     ],
     "expectations": [
       "requires inspecting pubspec, current package metadata, SDK, platform and renderer support, maintenance, license, and documented limitations before adoption",
-      "does not treat an experimental effect renderer as a universal dependency or claim unsupported web and device behavior",
+      {"text": "does not treat an experimental effect renderer as a universal dependency or claim unsupported web and device behavior", "mandatory": true},
       "defines core or opaque fallbacks before integration and preserves layout and interaction semantics across fidelity tiers",
       "requires profile-mode scrolling and interaction evidence on representative hardware plus first-use shader or texture checks before default enablement"
     ]
@@ -49,7 +49,7 @@
       "inspects and reuses the existing package, widgets, theme contract, and fallback instead of hand-rolling a parallel renderer",
       "checks the current implementation and project constraints before deciding whether any package change is necessary",
       "keeps interaction semantics, accessibility fallback, and platform behavior consistent with the existing effect system",
-      "defines a before-and-after fixture comparison and reports only rendered or profiled evidence that actually exists"
+      {"text": "defines a before-and-after fixture comparison and reports only rendered or profiled evidence that actually exists", "mandatory": true}
     ]
   },
   {

@@ -24,11 +24,43 @@ BEHAVIOR_SPEC.loader.exec_module(BEHAVIOR_EVAL)
 
 
 class RepositoryTests(unittest.TestCase):
+    def test_case_capabilities_flag_undeclared_runtime_evidence(self):
+        case = {
+            "expectations": [
+                "runs the flow on a physical device and records the result",
+                "defines a plan to run the flow on a device",
+            ]
+        }
+        errors, warnings = VALIDATOR.capability_issues("case", case)
+        self.assertEqual(errors, [])
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("device", warnings[0])
+
+        declared = dict(case, capabilities=["device"])
+        self.assertEqual(VALIDATOR.capability_issues("case", declared), ([], []))
+
+        errors, _ = VALIDATOR.capability_issues("case", {"capabilities": ["telepathy"]})
+        self.assertEqual(len(errors), 1)
+
+    def test_holdout_is_resolved_and_kept_out_of_tuning_profiles(self):
+        self.assertEqual(VALIDATOR.validate_holdout(), [])
+        manifest = json.loads(
+            (ROOT / ".github" / "evals" / "holdout" / "holdout.json").read_text(encoding="utf-8")
+        )
+        held = {(item["skill"], item["case"]) for item in manifest["cases"]}
+        self.assertGreaterEqual(len(held), 20)
+        for name in manifest["tuning_profiles"]:
+            profile = json.loads(
+                (ROOT / ".github" / "evals" / "profiles" / name).read_text(encoding="utf-8")
+            )
+            tuning = {(item["skill"], item["case"]) for item in profile["behavior"]}
+            self.assertFalse(held & tuning, name)
+
     def test_repository_validator_passes(self):
         errors, _, counts = VALIDATOR.validate_repository()
         self.assertEqual(errors, [])
         self.assertEqual(counts["skills"], 37)
-        self.assertEqual(counts["evals"], 220)
+        self.assertEqual(counts["evals"], 227)
         self.assertEqual(counts["routing_evals"], 76)
 
     def test_codex_plugin_and_marketplace_resolve_the_full_catalog(self):
@@ -250,7 +282,10 @@ class RepositoryTests(unittest.TestCase):
             for item in cases
             if item["name"] == "attributes-ui-versus-raster-jank"
         )
-        expectations = " ".join(case["expectations"])
+        expectations = " ".join(
+            item if isinstance(item, str) else item["text"]
+            for item in case["expectations"]
+        )
         self.assertIn("requires a reproducible profile-mode trace", expectations)
         self.assertIn("defines a repeat of the same flow", expectations)
         self.assertNotIn("captures a reproducible", expectations)
@@ -270,7 +305,10 @@ class RepositoryTests(unittest.TestCase):
             for item in cases
             if item["name"] == "runtime-fix-repeats-original-flow"
         )
-        expectations = " ".join(case["expectations"])
+        expectations = " ".join(
+            item if isinstance(item, str) else item["text"]
+            for item in case["expectations"]
+        )
         self.assertIn("requires tracing", expectations)
         self.assertIn("requires repeating", expectations)
         self.assertNotIn("traces the lifecycle", expectations)
@@ -313,7 +351,10 @@ class RepositoryTests(unittest.TestCase):
             for item in cases
             if item["name"] == "dry-run-does-not-authorize-publish"
         )
-        expectations = " ".join(case["expectations"])
+        expectations = " ".join(
+            item if isinstance(item, str) else item["text"]
+            for item in case["expectations"]
+        )
         self.assertIn("executable review with pass-fail criteria", expectations)
         self.assertIn("without fabricating repository access", expectations)
 
@@ -343,7 +384,7 @@ class RepositoryTests(unittest.TestCase):
         expectations = {
             "pr-smoke.json": (6, 7),
             "nightly-representative.json": (37, 76),
-            "release-full.json": (220, 76),
+            "release-full.json": (227, 76),
         }
         for filename, counts in expectations.items():
             profile = BEHAVIOR_EVAL.load_json(BEHAVIOR_EVAL.PROFILES_DIR / filename)

@@ -1,0 +1,106 @@
+{
+  "description": "Behavior cases reserved to detect overfitting. Never use them to tune a skill, and never list them in a tuning profile.",
+  "policy": [
+    "Read holdout results only at release review, after tuning is finished.",
+    "Do not rewrite a skill so that it matches a holdout prompt or expectation. Fix the underlying behavior with a separate tuning case, then re-measure the holdout.",
+    "If a holdout case must change or leaks into a tuning profile, replace it with another case from the same skill and record why in CHANGELOG.md."
+  ],
+  "tuning_profiles": [
+    "pr-smoke.json",
+    "nightly-representative.json"
+  ],
+  "cases": [
+    {
+      "skill": "flutter-security",
+      "case": "token-storage-has-a-lifecycle"
+    },
+    {
+      "skill": "flutter-security",
+      "case": "public-api-key-is-classified-before-remediation"
+    },
+    {
+      "skill": "flutter-authentication",
+      "case": "concurrent-refresh-is-single-flight-and-account-safe"
+    },
+    {
+      "skill": "flutter-authentication",
+      "case": "biometric-success-is-not-server-identity"
+    },
+    {
+      "skill": "flutter-in-app-purchases",
+      "case": "duplicate-updates-do-not-redeliver-consumable"
+    },
+    {
+      "skill": "flutter-in-app-purchases",
+      "case": "cancelled-subscription-retains-valid-access"
+    },
+    {
+      "skill": "flutter-persistence",
+      "case": "migration-failure-preserves-prior-user-data"
+    },
+    {
+      "skill": "flutter-persistence",
+      "case": "cache-is-isolated-by-account"
+    },
+    {
+      "skill": "flutter-build-release",
+      "case": "flavor-alignment-across-platforms"
+    },
+    {
+      "skill": "flutter-ci-cd",
+      "case": "repair-gitlab-flutter-pipeline"
+    },
+    {
+      "skill": "flutter-ci-cd",
+      "case": "matrix-build-caching-and-secret-isolation"
+    },
+    {
+      "skill": "flutter-background-execution",
+      "case": "does-not-promise-exact-ios-daily-run"
+    },
+    {
+      "skill": "flutter-webview",
+      "case": "javascript-channel-is-not-an-authorization-boundary"
+    },
+    {
+      "skill": "flutter-webview",
+      "case": "oauth-uses-an-external-user-agent"
+    },
+    {
+      "skill": "flutter-ai-integration",
+      "case": "tool-call-is-not-authorization"
+    },
+    {
+      "skill": "flutter-dependency-upgrades",
+      "case": "does-not-hide-solver-conflict-with-any"
+    },
+    {
+      "skill": "flutter-package-development",
+      "case": "federated-plugin-contract-is-compatible"
+    },
+    {
+      "skill": "flutter-observability",
+      "case": "incident-missing-release-context"
+    },
+    {
+      "skill": "flutter-product-analytics",
+      "case": "consent-denial-controls-buffering-and-upload"
+    },
+    {
+      "skill": "flutter-platform-integration",
+      "case": "modern-ffi-boundary-from-sdk-and-native-api"
+    },
+    {
+      "skill": "flutter-runtime-debugging",
+      "case": "hot-reload-does-not-prove-plugin-registration"
+    },
+    {
+      "skill": "flutter-testing",
+      "case": "native-permission-dialog-boundary"
+    },
+    {
+      "skill": "flutter-navigation",
+      "case": "deep-link-lifecycle-matrix-catches-duplicate-navigation"
+    }
+  ]
+}

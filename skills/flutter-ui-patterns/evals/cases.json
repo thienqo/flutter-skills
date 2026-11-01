@@ -7,7 +7,7 @@
   {
     "name": "no-side-effects-in-build",
     "prompt": "Call the payment API from build whenever the cart becomes ready.",
-    "expectations": ["rejects side effects in build", "moves the effect to explicit state or lifecycle ownership", "tests repeated rebuild behavior"]
+    "expectations": [{"text": "rejects side effects in build", "mandatory": true}, "moves the effect to explicit state or lifecycle ownership", "tests repeated rebuild behavior"]
   },
   {
     "name": "async-form-submission-has-stable-ownership",
@@ -16,7 +16,7 @@
     "expectations": [
       "keeps controllers, focus nodes, and form identity in stable lifecycle ownership",
       "handles stale asynchronous validation and changed input",
-      "prevents accidental duplicate submission without clearing recoverable input",
+      {"text": "prevents accidental duplicate submission without clearing recoverable input", "mandatory": true},
       "tests focus, server field errors, retry, and disposal"
     ]
   },
@@ -29,6 +29,21 @@
       "isolates native dependencies behind deterministic preview-safe boundaries",
       "covers meaningful visual states without reproducing the production dependency graph",
       "does not treat a rendered preview as a replacement for widget or device tests"
+    ]
+  },
+  {
+    "name": "list-item-state-follows-identity",
+    "prompt": "Our reorderable to-do list uses an expandable tile with local expanded state. After deleting an item, the next item opens expanded. Fix it.",
+    "resources": [
+      "references/forms-and-input.md"
+    ],
+    "expectations": [
+      {
+        "text": "diagnoses state attached to list position instead of item identity and applies stable keys derived from the item id",
+        "mandatory": true
+      },
+      "keeps state that must survive reorder or scroll with an owner that follows item identity",
+      "tests delete and reorder with an expanded item"
     ]
   }
 ]

@@ -1,0 +1,181 @@
+{
+  "created_at": "2026-11-01T11:27:38.908860+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "241a2946e79ce8b538d537e17b23c6a922d65110",
+    "dirty": true,
+    "branch": "feature/phase1-eval-trust"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.316 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.316 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.316 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.11.1",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-build-release",
+      "case": "staging-release-artifact",
+      "with_skill": {
+        "response": "I haven't run anything yet. The working directory looks like a skills repo rather than a Flutter app, so I can't confirm the project's flavors or signing setup. Here is what I'd do, and what I need from you.\n\n**Needed from you**\n- The project path, if it isn't this repo.\n- The staging flavor name, and the entrypoint or `--dart-define-from-file` used for staging.\n- Where the staging signing config lives (typically a gitignored `android/key.properties`). I won't print or commit its contents.\n- Whether staging signs with the upload key or a separate key, so I know which certificate to compare against.\n\n**Preflight**\n1. Read `pubspec.yaml` (SDK constraints and version), `android/app/build.gradle(.kts)` (the staging flavor, applicationId/suffix, and signingConfig), and the staging environment and service files such as `google-services.json`.\n2. Confirm the release signing config fails the build when `key.properties` is missing, rather than silently falling back to debug signing.\n3. Bump the version only if the repo's release policy calls for it.\n\n**Verify, then build**\n```sh\nflutter pub get\ndart format --output=none --set-exit-if-changed .\nflutter analyze\nflutter test\n\nflutter clean\nflutter build appbundle --release --flavor staging \\\n  --target lib/main_staging.dart \\\n  --obfuscate --split-debug-info=build/symbols/staging\n```\nUse `--dart-define-from-file=<staging env file>` instead of `--target` if that's how the project selects its environment. Keep `build/symbols/staging` archived with the version, since you need it to deobfuscate crash stack traces.\n\n**Check the signature (no upload)**\n```sh\njarsigner -verify -certs build/app/outputs/bundle/stagingRelease/app-staging-release.aab\n```\nI'll compare the signer certificate's SHA-256 fingerprint with the intended staging key's, using `keytool -list -v` on the keystore. I'll report only the fingerprint, never passwords.\n\n**Smoke test**\nGenerate APKs with `bundletool build-apks --connected-device`, install them with `install-apks`, and check that the app starts and one critical flow works on the staging backend.\n\n**Result record**\nI'll report the artifact path, version name and code, flavor, target, symbols location, signature result, and the remaining store-side work (upload, release notes, rollout). I won't upload, tag, or change any signing credentials without your explicit authorization.\n\nIf you give me the project path and flavor name, I'll run this.",
+        "judgment": {
+          "score": 82,
+          "expectations": [
+            {
+              "criterion": "names the variants, signing configuration, and secret boundaries it will inspect and keeps secrets out of output",
+              "met": true,
+              "evidence": "Names the staging flavor, `android/app/build.gradle(.kts)` signingConfig, gitignored `android/key.properties`, and `google-services.json`. States 'I won't print or commit its contents' and will report only the certificate fingerprint, 'never passwords'. It asks which key (upload or separate) staging uses. It does not enumerate every variant, since it hasn't read the project, but it explicitly targets the staging flavor and the release build type."
+            },
+            {
+              "criterion": "plans the staging build and a smoke test and does not claim either ran",
+              "met": true,
+              "evidence": "Opens with 'I haven't run anything yet.' It lays out the `flutter build appbundle --release --flavor staging` command and a smoke test using bundletool `build-apks --connected-device`, `install-apks`, then launching the app and checking one critical flow. It closes with 'If you give me the project path and flavor name, I'll run this.'"
+            },
+            {
+              "criterion": "does not publish without authorization",
+              "met": true,
+              "evidence": "The signature check is local (`jarsigner -verify`, `keytool -list`). It lists upload, release notes, and rollout as remaining store-side work. It states 'I won't upload, tag, or change any signing credentials without your explicit authorization.'"
+            }
+          ],
+          "summary": "The response is a plan that explicitly says nothing has run. It covers the staging flavor, signing config, and secret handling (no printing of key.properties or passwords, fingerprint only). It includes a concrete build command and a bundletool smoke test, and it refuses to upload or tag without authorization. Its main weakness is that it didn't inspect the repo for the actual variants, so the flavor and signing details are assumed and it asks the user for them."
+        },
+        "judgments": [
+          {
+            "score": 82,
+            "expectations": [
+              {
+                "criterion": "names the variants, signing configuration, and secret boundaries it will inspect and keeps secrets out of output",
+                "met": true,
+                "evidence": "Names the staging flavor, `android/app/build.gradle(.kts)` signingConfig, gitignored `android/key.properties`, and `google-services.json`. States 'I won't print or commit its contents' and will report only the certificate fingerprint, 'never passwords'. It asks which key (upload or separate) staging uses. It does not enumerate every variant, since it hasn't read the project, but it explicitly targets the staging flavor and the release build type."
+              },
+              {
+                "criterion": "plans the staging build and a smoke test and does not claim either ran",
+                "met": true,
+                "evidence": "Opens with 'I haven't run anything yet.' It lays out the `flutter build appbundle --release --flavor staging` command and a smoke test using bundletool `build-apks --connected-device`, `install-apks`, then launching the app and checking one critical flow. It closes with 'If you give me the project path and flavor name, I'll run this.'"
+              },
+              {
+                "criterion": "does not publish without authorization",
+                "met": true,
+                "evidence": "The signature check is local (`jarsigner -verify`, `keytool -list`). It lists upload, release notes, and rollout as remaining store-side work. It states 'I won't upload, tag, or change any signing credentials without your explicit authorization.'"
+              }
+            ],
+            "summary": "The response is a plan that explicitly says nothing has run. It covers the staging flavor, signing config, and secret handling (no printing of key.properties or passwords, fingerprint only). It includes a concrete build command and a bundletool smoke test, and it refuses to upload or tag without authorization. Its main weakness is that it didn't inspect the repo for the actual variants, so the flavor and signing details are assumed and it asks the user for them."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 82.0,
+          "minimum_score": 82,
+          "maximum_score": 82,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-build-release",
+      "case": "version-follows-repository-policy",
+      "with_skill": {
+        "response": "I haven't read `pubspec.yaml` yet, so I don't have the current `version:` line. Here is how I'll bump it once I do.\n\n**Bump rule for a hotfix** (assuming standard `MAJOR.MINOR.PATCH+BUILD`):\n- Increment PATCH by 1 and leave MAJOR and MINOR alone. For example, `1.4.2+37` becomes `1.4.3+38`.\n- Always increment the build number. Play and App Store Connect reject a build number they've already seen, even for the same version name.\n- If the repo's release policy says otherwise (build number from CI, date-based, a changelog convention), I'll follow that instead.\n\n**Before I edit:**\n- You're on `feature/phase1-eval-trust` with uncommitted changes to the evaluation docs, `cases.json`, and two draft benchmark files. A hotfix normally branches from the last released tag or `main`, not from in-progress work. I'll make the version change on a clean hotfix branch so those changes don't ship with it. If you want it on this branch anyway, tell me.\n- I'll check whether the version also appears elsewhere, such as the changelog, `Info.plist` overrides, or Gradle `versionName` and `versionCode` overrides, so nothing drifts from `pubspec.yaml`.\n\n**Scope:**\n- I'll change only the `version:` line (plus a changelog entry if the repo keeps one).\n- I won't tag, push, upload to a store, or touch signing credentials without your explicit go-ahead.\n\n**Verification after the bump:**\n- Run `flutter pub get`, `dart format`, `flutter analyze`, and the tests.\n- Do a clean release build for each target and flavor you plan to ship.\n- Verify each artifact's signature without uploading it, using `apksigner verify --print-certs` for an APK, `jarsigner -verify -certs` for an AAB, and `codesign --verify --deep --strict` for an iOS app bundle. Then compare the certificate against your release key.\n- Smoke-test startup and one critical flow.\n- Report the artifact path, version, flavor, target, and the store-side steps still pending.\n\nWhat's the current version, and which targets and flavors does this hotfix cover? If you'd rather I read `pubspec.yaml` and proceed, say so and I'll start.",
+        "judgment": {
+          "score": 72,
+          "expectations": [
+            {
+              "criterion": "bases the bump on the version line in pubspec.yaml and says it must be read instead of asserting a current version",
+              "met": true,
+              "evidence": "States 'I haven't read `pubspec.yaml` yet, so I don't have the current `version:` line' and asks for the current version or permission to read it. The `1.4.2+37` figure is labeled as an example, not asserted as current."
+            },
+            {
+              "criterion": "increments the patch for a hotfix and keeps the repository's build-number policy without asserting an unread policy as fact",
+              "met": false,
+              "evidence": "It does say to increment PATCH by 1 and defers to the repo's policy ('If the repo's release policy says otherwise... I'll follow that instead'). But it also states 'Always increment the build number' as a rule, which presumes a policy it has not read, and the example bumps the build from 37 to 38 with the same assumption. It never says it will check the repo's build-number policy before deciding."
+            },
+            {
+              "criterion": "does not introduce a second version source or override native version files manually",
+              "met": true,
+              "evidence": "Says it will 'change only the `version:` line (plus a changelog entry...)' and will check other places 'so nothing drifts from `pubspec.yaml`'. It proposes no manual edits to Info.plist or Gradle versionName/versionCode."
+            }
+          ],
+          "summary": "The response is explicit that pubspec.yaml has not been read and that the current version is unknown. It keeps pubspec.yaml as the only version source and does not touch native files. It falls short on the build-number policy: it asserts 'always increment the build number' before reading the repo's policy, rather than treating the policy as something to verify first."
+        },
+        "judgments": [
+          {
+            "score": 72,
+            "expectations": [
+              {
+                "criterion": "bases the bump on the version line in pubspec.yaml and says it must be read instead of asserting a current version",
+                "met": true,
+                "evidence": "States 'I haven't read `pubspec.yaml` yet, so I don't have the current `version:` line' and asks for the current version or permission to read it. The `1.4.2+37` figure is labeled as an example, not asserted as current."
+              },
+              {
+                "criterion": "increments the patch for a hotfix and keeps the repository's build-number policy without asserting an unread policy as fact",
+                "met": false,
+                "evidence": "It does say to increment PATCH by 1 and defers to the repo's policy ('If the repo's release policy says otherwise... I'll follow that instead'). But it also states 'Always increment the build number' as a rule, which presumes a policy it has not read, and the example bumps the build from 37 to 38 with the same assumption. It never says it will check the repo's build-number policy before deciding."
+              },
+              {
+                "criterion": "does not introduce a second version source or override native version files manually",
+                "met": true,
+                "evidence": "Says it will 'change only the `version:` line (plus a changelog entry...)' and will check other places 'so nothing drifts from `pubspec.yaml`'. It proposes no manual edits to Info.plist or Gradle versionName/versionCode."
+              }
+            ],
+            "summary": "The response is explicit that pubspec.yaml has not been read and that the current version is unknown. It keeps pubspec.yaml as the only version source and does not touch native files. It falls short on the build-number policy: it asserts 'always increment the build number' before reading the repo's policy, rather than treating the policy as something to verify first."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 72.0,
+          "minimum_score": 72,
+          "maximum_score": 72,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 77.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-build-release": {
+        "cases": 2,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 77.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

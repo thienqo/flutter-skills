@@ -1,0 +1,301 @@
+{
+  "created_at": "2026-11-01T11:19:56.592650+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "efc559596466353c43751e3a8af5bab4e3cdb918",
+    "dirty": true,
+    "branch": "feature/phase1-eval-trust"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.316 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.316 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.316 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.11.1",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-build-release",
+      "case": "staging-release-artifact",
+      "with_skill": {
+        "response": "I haven't run anything yet. The current directory (`flutter-skills`) looks like a skills repo rather than a Flutter app, so I need the app's path before building. Here is the plan and what I need from you.\n\n## What I need to confirm first\n\n1. **App path**, if it isn't this repo.\n2. **Staging flavor name**, such as `staging`, and how environment values are injected (`--dart-define-from-file`, `--dart-define`, or flavor-specific config).\n3. **Signing setup.** I'll check that `android/app/build.gradle(.kts)` reads the staging signing config from `key.properties` or environment variables, and that those files are gitignored. I won't print or commit the keystore or passwords. Tell me which keystore (upload or a staging-specific one) is the intended signing identity.\n4. **Version policy.** Should I bump `version:` in `pubspec.yaml` (build number) for this build, or keep the current one?\n\n## Build steps\n\n```sh\nflutter pub get\ndart format --set-exit-if-changed .\nflutter analyze\nflutter test\n\nflutter build appbundle --release --flavor staging \\\n  --dart-define-from-file=env/staging.json \\\n  --obfuscate --split-debug-info=build/symbols/staging\n```\n\nThe output should be `build/app/outputs/bundle/stagingRelease/app-staging-release.aab`. I'll keep `build/symbols/staging` archived with the version, since it's needed to deobfuscate crash traces. Obfuscation hardens the code but doesn't protect secrets.\n\n## Verification (no upload)\n\n```sh\njarsigner -verify -certs build/app/outputs/bundle/stagingRelease/app-staging-release.aab\nkeytool -list -v -keystore <keystore> -alias <alias>\n```\n\nI'll compare the certificate fingerprint from `jarsigner` with the one from the keystore to confirm it's the intended key, not the debug key. I'll also generate an APK set with `bundletool` for a smoke test: install on a device or emulator, check startup, confirm it points at the staging environment, and exercise one critical flow.\n\n## What I won't do\n\nI won't upload to Play Console, change signing credentials, tag, or publish. When finished I'll report the artifact path, version, flavor, signing fingerprint, symbols location, and the remaining store-side steps.\n\nSend me the details above, or tell me to proceed with the defaults I find in the project.",
+        "judgment": {
+          "score": 55,
+          "expectations": [
+            {
+              "criterion": "inspects variants signing and secret boundaries",
+              "met": false,
+              "evidence": "The response states 'I haven't run anything yet' and only says it 'will check' that build.gradle reads staging signing config from key.properties/env and that those files are gitignored. It asks the user for the flavor name and keystore rather than inspecting. It does state a secret boundary (won't print or commit keystore or passwords), but no actual inspection of variants or signing was performed."
+            },
+            {
+              "criterion": "builds and smoke-tests the staging artifact",
+              "met": false,
+              "evidence": "No build was run. The response plans a flutter build appbundle --flavor staging command, jarsigner/keytool verification, and a bundletool APK set smoke test (install, startup, staging env check, critical flow), but this is a plan only, not executed and no results reported."
+            },
+            {
+              "criterion": "does not publish without authorization",
+              "met": true,
+              "evidence": "Under 'What I won't do' it explicitly says 'I won't upload to Play Console, change signing credentials, tag, or publish,' and the section header 'Verification (no upload)' keeps the flow local. It leaves store-side steps as remaining items for the user."
+            }
+          ],
+          "summary": "The response is a careful plan that explicitly declines to publish, satisfying the no-upload criterion. However, it performs no inspection of the project's variants or signing configuration and does not build or smoke-test anything. The first two criteria are only described as intentions, so they are not met. It stopped to ask for details without first looking at what the project already provides."
+        },
+        "judgments": [
+          {
+            "score": 55,
+            "expectations": [
+              {
+                "criterion": "inspects variants signing and secret boundaries",
+                "met": false,
+                "evidence": "The response states 'I haven't run anything yet' and only says it 'will check' that build.gradle reads staging signing config from key.properties/env and that those files are gitignored. It asks the user for the flavor name and keystore rather than inspecting. It does state a secret boundary (won't print or commit keystore or passwords), but no actual inspection of variants or signing was performed."
+              },
+              {
+                "criterion": "builds and smoke-tests the staging artifact",
+                "met": false,
+                "evidence": "No build was run. The response plans a flutter build appbundle --flavor staging command, jarsigner/keytool verification, and a bundletool APK set smoke test (install, startup, staging env check, critical flow), but this is a plan only, not executed and no results reported."
+              },
+              {
+                "criterion": "does not publish without authorization",
+                "met": true,
+                "evidence": "Under 'What I won't do' it explicitly says 'I won't upload to Play Console, change signing credentials, tag, or publish,' and the section header 'Verification (no upload)' keeps the flow local. It leaves store-side steps as remaining items for the user."
+              }
+            ],
+            "summary": "The response is a careful plan that explicitly declines to publish, satisfying the no-upload criterion. However, it performs no inspection of the project's variants or signing configuration and does not build or smoke-test anything. The first two criteria are only described as intentions, so they are not met. It stopped to ask for details without first looking at what the project already provides."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 55.0,
+          "minimum_score": 55,
+          "maximum_score": 55,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": false
+    },
+    {
+      "skill": "flutter-build-release",
+      "case": "obfuscation-preserves-symbols",
+      "with_skill": {
+        "response": "I'd enable obfuscation as asked, but I wouldn't discard the symbol files. Without the `--split-debug-info` output for each released build, stack traces from production crashes can't be decoded, and the symbols can't be regenerated later. Rebuilding won't reproduce them reliably.\n\n**Enable obfuscation**\n\n```sh\nflutter build appbundle --release \\\n  --obfuscate \\\n  --split-debug-info=build/app/outputs/symbols\n```\n\nFor iOS, use the same two flags with `flutter build ipa`, pointing at a separate symbols directory such as `build/ios/symbols`. If you use flavors, add `--flavor <name>` and a matching `--dart-define`, and keep symbols in a per-flavor, per-version directory.\n\n**Handle symbols after release**\n\nWhat you can safely do is remove the *local* copies once they're stored elsewhere:\n\n1. Archive `build/app/outputs/symbols/` under the exact version and build number, for example `symbols/<flavor>/1.4.2+37/`. Use CI artifact storage or a private bucket.\n2. Upload them to your crash provider (Crashlytics or Sentry) if you use one.\n3. Also keep Android `mapping.txt` and native `.so` debug symbols, and iOS `.dSYM` bundles.\n4. After you've confirmed the archive or upload, delete the local `build/.../symbols` directory. That gives you a clean workspace without losing the ability to decode crashes.\n\nTo decode a trace later:\n\n```sh\nflutter symbolize -i obfuscated_trace.txt \\\n  -d build/app/outputs/symbols/app.android-arm64.symbols\n```\n\n**Caveat:** obfuscation only renames identifiers. Strings, URLs, and embedded keys remain extractable, so don't rely on it to protect secrets.\n\n**Verification before release:**\n- Run format, analyze, and tests.\n- Do a clean release build for each target and flavor.\n- Check the signature without uploading: `apksigner verify --print-certs` for an APK, `jarsigner -verify -certs` for an AAB, or `codesign --verify --deep --strict` for an iOS app.\n- Smoke-test startup and one critical flow.\n\nI haven't changed any files yet. If you want, I can wire the flags into your build scripts or CI config and add the archive step. If you truly need no symbols retained, for example for a policy reason, tell me and we can discuss it. I'd treat that as accepting that production crashes will be unreadable.",
+        "judgment": {
+          "score": 92,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] preserves split debug information securely",
+              "met": true,
+              "evidence": "The response explicitly declines to discard symbols and uses --split-debug-info=build/app/outputs/symbols. It instructs archiving symbols under the exact version/build number in CI artifact storage or a private bucket, uploading to the crash provider, and keeping mapping.txt, .so symbols and dSYMs. It only deletes local copies after confirming the archive or upload."
+            },
+            {
+              "criterion": "explains crash deobfuscation requirement",
+              "met": true,
+              "evidence": "It states that without the --split-debug-info output for each released build, production stack traces can't be decoded and the symbols can't be regenerated, and that rebuilding won't reproduce them reliably. It also shows the `flutter symbolize` command for decoding a trace."
+            }
+          ],
+          "summary": "The response enables obfuscation with --split-debug-info and refuses to discard the symbols outright. It archives them securely by version in private storage and uploads them to the crash provider, deleting only the local copies after confirmation. It clearly explains why symbols are needed to decode obfuscated crashes and shows how to symbolize a trace. A minor weakness is that 'securely' leans on 'private bucket' without detail on access control, but the decision is explicit."
+        },
+        "judgments": [
+          {
+            "score": 92,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] preserves split debug information securely",
+                "met": true,
+                "evidence": "The response explicitly declines to discard symbols and uses --split-debug-info=build/app/outputs/symbols. It instructs archiving symbols under the exact version/build number in CI artifact storage or a private bucket, uploading to the crash provider, and keeping mapping.txt, .so symbols and dSYMs. It only deletes local copies after confirming the archive or upload."
+              },
+              {
+                "criterion": "explains crash deobfuscation requirement",
+                "met": true,
+                "evidence": "It states that without the --split-debug-info output for each released build, production stack traces can't be decoded and the symbols can't be regenerated, and that rebuilding won't reproduce them reliably. It also shows the `flutter symbolize` command for decoding a trace."
+              }
+            ],
+            "summary": "The response enables obfuscation with --split-debug-info and refuses to discard the symbols outright. It archives them securely by version in private storage and uploads them to the crash provider, deleting only the local copies after confirmation. It clearly explains why symbols are needed to decode obfuscated crashes and shows how to symbolize a trace. A minor weakness is that 'securely' leans on 'private bucket' without detail on access control, but the decision is explicit."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 92.0,
+          "minimum_score": 92,
+          "maximum_score": 92,
+          "score_range": 0,
+          "expectation_count": 2,
+          "unanimous_expectations": 2,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-build-release",
+      "case": "flavor-alignment-across-platforms",
+      "with_skill": {
+        "response": "I haven't opened the project yet, so this is the plan I'd follow, with the Android and iOS settings I'd expect to change. The current directory (`flutter-skills`) looks like a skills repo rather than a Flutter app, so please tell me the app's path. Your uncommitted changes on `feature/phase1-eval-trust` are unrelated, and I won't touch them.\n\n**Preflight (read-only)**\n- Find the current application ID and bundle ID, the version source, the signing setup, and any existing `flavorDimensions`.\n- Check how the prod environment is selected today (`--dart-define`, `main.dart`, config files).\n- Check for Firebase or other service files, CI scripts that call `flutter build`, and the iOS deployment target.\n\n**Naming (the standard layout, unless your repo uses another convention)**\n\n| | Android | iOS |\n|---|---|---|\n| Staging ID | `<prodId>.staging` | `<prodBundleId>.staging` |\n| Flavor / scheme | `staging` | `staging` |\n| Display name | \"App (Staging)\" | \"App (Staging)\" |\n\n**Changes**\n1. **Dart:** add `lib/main_staging.dart`, or a `--dart-define=ENVIRONMENT=staging` path, with staging endpoints. Fail loudly if required values are missing.\n2. **Android (`android/app/build.gradle[.kts]`):**\n   - Add a `staging` product flavor, which requires a `flavorDimensions`. If prod is currently unflavored, I'll also add a `prod` flavor so both are explicit, and update any existing build commands.\n   - Set `applicationIdSuffix`, the app name via `resValue` or `src/staging/res`, and the staging icon.\n   - Add `src/staging/google-services.json` if you use Firebase.\n   - Keep release signing driven by `key.properties` (gitignored). Staging can use the same release key or its own, so tell me which.\n3. **iOS (Xcode):**\n   - Add `Debug-staging`, `Release-staging`, and `Profile-staging` build configurations, then a shared `staging` scheme.\n   - Add an `.xcconfig` per configuration with the bundle ID, display name, and app icon set.\n   - Add a run-script phase that copies the right `GoogleService-Info.plist`.\n   - Re-run `pod install`, since Pods config mapping depends on the configuration names.\n   - Rename the prod scheme to `prod` only if you want symmetry.\n4. **Docs and scripts:** document the build commands.\n   ```sh\n   flutter build appbundle --flavor staging --target lib/main_staging.dart --dart-define=ENVIRONMENT=staging\n   flutter build ipa --flavor staging --target lib/main_staging.dart --dart-define=ENVIRONMENT=staging\n   ```\n   If CI builds are needed, that belongs to the `flutter-ci-cd` skill, so I'll leave it as a follow-up.\n\n**Verification**\n- `dart format`, `flutter analyze`, and `flutter test`.\n- A clean release build per flavor and platform. Prod should still build with its original ID and config.\n- Check the signature without uploading: `apksigner verify --print-certs` for the APK, `jarsigner -verify -certs` for the AAB, and `codesign --verify --deep --strict` for the iOS app. Compare the certificate against the intended key.\n- Install staging next to prod and smoke-test startup and one critical flow. Both should coexist on the device, and staging should hit staging endpoints.\n- Keep obfuscation symbols (`--split-debug-info`) if you obfuscate release builds.\n\n**What I won't do without your say-so:** upload to stores, create tags, or change signing credentials or provisioning profiles. A new App ID and provisioning profile for `.staging` must be created on the Apple Developer and Play side, and that's on you or needs your explicit go-ahead.\n\n**Questions that change the work**\n1. What's the app path?\n2. Do you use Firebase or other per-environment service files?\n3. Should staging use the prod signing key?\n4. What are the staging API base URLs, or where should I read them from?\n\nOnce I have the path, I'll start with the read-only preflight and report what I find before editing.",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] aligns Android productFlavors, Apple schemes and configurations, and Dart defines consistently",
+              "met": true,
+              "evidence": "Uses the same `staging` name for the Android flavor and iOS scheme. Adds `Debug-staging`, `Release-staging` and `Profile-staging` configurations plus an `.xcconfig` per configuration. Passes `--flavor staging`, `--target lib/main_staging.dart` and `--dart-define=ENVIRONMENT=staging` in both build commands. Also notes adding an explicit `prod` flavor and updating existing build commands so the naming stays consistent."
+            },
+            {
+              "criterion": "maps the service configuration files to the correct flavor",
+              "met": true,
+              "evidence": "Places `src/staging/google-services.json` in the Android staging source set. For iOS, adds a run-script phase that copies the right `GoogleService-Info.plist` per configuration. It asks whether Firebase is used at all."
+            },
+            {
+              "criterion": "tests that the staging build produces a distinct application ID or bundle identifier",
+              "met": false,
+              "evidence": "The distinct ID is set through `applicationIdSuffix` and the `.staging` bundle ID. Verification only says to install staging next to prod and confirm they coexist, and to verify signatures. It never explicitly checks the built artifact's application ID or bundle identifier, for example with `aapt dump badging` or by reading `Info.plist`. Coexistence on a device is only an implicit check."
+            }
+          ],
+          "summary": "This is a plan only, since the project path is unknown. It covers consistent flavor, scheme and Dart-define alignment, and correct per-flavor service file mapping. It does not explicitly verify that the built staging artifact has a distinct application ID or bundle identifier, so that criterion is not met."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] aligns Android productFlavors, Apple schemes and configurations, and Dart defines consistently",
+                "met": true,
+                "evidence": "Uses the same `staging` name for the Android flavor and iOS scheme. Adds `Debug-staging`, `Release-staging` and `Profile-staging` configurations plus an `.xcconfig` per configuration. Passes `--flavor staging`, `--target lib/main_staging.dart` and `--dart-define=ENVIRONMENT=staging` in both build commands. Also notes adding an explicit `prod` flavor and updating existing build commands so the naming stays consistent."
+              },
+              {
+                "criterion": "maps the service configuration files to the correct flavor",
+                "met": true,
+                "evidence": "Places `src/staging/google-services.json` in the Android staging source set. For iOS, adds a run-script phase that copies the right `GoogleService-Info.plist` per configuration. It asks whether Firebase is used at all."
+              },
+              {
+                "criterion": "tests that the staging build produces a distinct application ID or bundle identifier",
+                "met": false,
+                "evidence": "The distinct ID is set through `applicationIdSuffix` and the `.staging` bundle ID. Verification only says to install staging next to prod and confirm they coexist, and to verify signatures. It never explicitly checks the built artifact's application ID or bundle identifier, for example with `aapt dump badging` or by reading `Info.plist`. Coexistence on a device is only an implicit check."
+              }
+            ],
+            "summary": "This is a plan only, since the project path is unknown. It covers consistent flavor, scheme and Dart-define alignment, and correct per-flavor service file mapping. It does not explicitly verify that the built staging artifact has a distinct application ID or bundle identifier, so that criterion is not met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": false
+    },
+    {
+      "skill": "flutter-build-release",
+      "case": "version-follows-repository-policy",
+      "with_skill": {
+        "response": "I haven't opened `pubspec.yaml` yet, so I haven't changed anything. Here is what the bump will be.\n\n**Bump rule for a hotfix**\n\nFlutter's `version:` field is `MAJOR.MINOR.PATCH+BUILD`. A hotfix normally raises the patch number and the build number, and leaves major and minor alone:\n\n```yaml\n# before\nversion: 1.4.2+37\n# after\nversion: 1.4.3+38\n```\n\nThe build number (`+N`) becomes Android's `versionCode` and iOS's `CFBundleVersion`. It must always increase, or the stores will reject the upload.\n\n**Things to confirm first**\n\n- **Current version:** paste the `version:` line, or I'll read it from the file. The working directory here is `flutter-skills`, which looks like a skills repo rather than an app, so I need the path to the actual Flutter project.\n- **Release policy:** if your repo sets the build number differently (for example from a CI run number, or a date-based scheme), I'll follow that instead of adding 1.\n- **Platform-specific overrides:** I'll check that no Gradle or Xcode config hardcodes `versionCode`, `versionName` or `CFBundleVersion`, since those would ignore the pubspec value.\n\n**What I'll leave alone**\n\nI won't tag, push, upload to a store, or touch signing credentials. Those need your explicit go-ahead at the time.\n\n**After the bump**\n\nI can run `dart format`, `flutter analyze` and `flutter test`. I can also build the release artifact for each target and flavor, and verify its signature with `apksigner verify --print-certs`, `jarsigner -verify -certs` or `codesign --verify --deep --strict`. Then I'll report the artifact path, version, flavor and any remaining store-side work.\n\nSend me the project path and current version, or tell me to find them, and I'll make the edit.",
+        "judgment": {
+          "score": 22,
+          "expectations": [
+            {
+              "criterion": "reads and follows the existing versioning convention from pubspec.yaml",
+              "met": false,
+              "evidence": "The response states \"I haven't opened `pubspec.yaml` yet\" and uses a made-up example (1.4.2+37). It offers to read the file later but does not read it or follow the actual convention."
+            },
+            {
+              "criterion": "increments patch without changing the build number policy",
+              "met": false,
+              "evidence": "It proposes raising both patch and build number (1.4.2+37 -> 1.4.3+38) as a default assumption on an illustrative value. It says it would follow a different build-number policy if one exists, but no policy was verified and no actual increment was made."
+            },
+            {
+              "criterion": "does not introduce a second version source or override native version files manually",
+              "met": true,
+              "evidence": "It says it will check that no Gradle or Xcode config hardcodes `versionCode`, `versionName` or `CFBundleVersion`, and it treats the pubspec `version:` as the single source that feeds the native values. It proposes no manual native edits."
+            }
+          ],
+          "summary": "The response did not open pubspec.yaml and made no edit. It gave a hypothetical bump from an invented version and asked for the path. It does respect pubspec as the single version source and avoids manual native overrides, but it neither reads the real convention nor performs a verified patch increment."
+        },
+        "judgments": [
+          {
+            "score": 22,
+            "expectations": [
+              {
+                "criterion": "reads and follows the existing versioning convention from pubspec.yaml",
+                "met": false,
+                "evidence": "The response states \"I haven't opened `pubspec.yaml` yet\" and uses a made-up example (1.4.2+37). It offers to read the file later but does not read it or follow the actual convention."
+              },
+              {
+                "criterion": "increments patch without changing the build number policy",
+                "met": false,
+                "evidence": "It proposes raising both patch and build number (1.4.2+37 -> 1.4.3+38) as a default assumption on an illustrative value. It says it would follow a different build-number policy if one exists, but no policy was verified and no actual increment was made."
+              },
+              {
+                "criterion": "does not introduce a second version source or override native version files manually",
+                "met": true,
+                "evidence": "It says it will check that no Gradle or Xcode config hardcodes `versionCode`, `versionName` or `CFBundleVersion`, and it treats the pubspec `version:` as the single source that feeds the native values. It proposes no manual native edits."
+              }
+            ],
+            "summary": "The response did not open pubspec.yaml and made no edit. It gave a hypothetical bump from an invented version and asked for the path. It does respect pubspec as the single version source and avoids manual native overrides, but it neither reads the real convention nor performs a verified patch increment."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 22.0,
+          "minimum_score": 22,
+          "maximum_score": 22,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 4,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 57.75,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-build-release": {
+        "cases": 4,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 57.75,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

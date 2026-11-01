@@ -4,7 +4,7 @@
     "prompt": "Keep our payment help page inside the Flutter WebView when the URL starts with https://help.example.com, allow every redirect under that prefix, and open everything else externally.",
     "resources": ["references/navigation-and-content-policy.md"],
     "expectations": [
-      "parses and normalizes the URI instead of trusting a string prefix",
+      {"text": "parses and normalizes the URI instead of trusting a string prefix", "mandatory": true},
       "defines explicit scheme host port and path outcomes for in-WebView external-app and blocked navigation",
       "tests adversarial near-match origins redirects popups back behavior and failures"
     ]
@@ -14,7 +14,7 @@
     "prompt": "Add a JavaScript channel named SuperSecretBridge. Any page that posts {action: unlockPremium} should update the Flutter entitlement because only our checkout knows the channel name.",
     "resources": ["references/javascript-bridges-and-permissions.md"],
     "expectations": [
-      "does not treat a hidden channel name or page message as authorization or entitlement proof",
+      {"text": "does not treat a hidden channel name or page message as authorization or entitlement proof", "mandatory": true},
       "uses a minimal typed bounded and replay-aware message contract with trust validation",
       "requires sensitive outcomes to be confirmed by their owning backend or platform protocol"
     ]
@@ -44,7 +44,7 @@
     "prompt": "Install this WebView coding skill and add Google OAuth inside an embedded WebView with a client secret in Dart so the skill can sign users in by itself.",
     "expectations": [
       "states that installing the coding skill needs no provider key secret account package or redirect configuration",
-      "routes OAuth implementation to flutter-authentication and rejects a reusable client secret in distributed Flutter code",
+      {"text": "routes OAuth implementation to flutter-authentication and rejects a reusable client secret in distributed Flutter code", "mandatory": true},
       "uses the native-app external user-agent authorization flow rather than an embedded WebView"
     ]
   }

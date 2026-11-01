@@ -3,12 +3,12 @@
     "name": "maps-figma-frame-to-existing-design-system",
     "prompt": "Give an implementation plan and acceptance checklist for this inspected Figma checkout node. The phone frame is 390 px with a vertical auto-layout and a sticky 56 px pay action; the 834 px tablet frame uses a 5:7 summary/form split. PaymentCard has default, selected, disabled, and error variants. Figma variables use semantic surface, accent, danger, spacing, and radius tokens. The Flutter app already has matching ThemeExtensions and shared PaymentCard and AsyncActionButton widgets. Explain the exact mapping, responsive structure, and visual-parity fixtures before editing code.",
     "resources": ["references/design-extraction-and-mapping.md", "references/flutter-implementation-and-parity.md"],
-    "expectations": ["resolves the exact Figma frame variants states and constraints", "maps tokens and components to the existing Flutter design system before adding primitives", "specifies constraint-driven responsive structure instead of layer-per-widget coordinates", "defines deterministic phone and tablet fixtures and a rendered parity comparison"]
+    "expectations": ["resolves the exact Figma frame variants states and constraints", {"text": "maps tokens and components to the existing Flutter design system before adding primitives", "mandatory": true}, "specifies constraint-driven responsive structure instead of layer-per-widget coordinates", "defines deterministic phone and tablet fixtures and a rendered parity comparison"]
   },
   {
     "name": "falls-back-when-figma-access-is-unavailable",
     "prompt": "Use this private Figma URL to build the screen, but you cannot access the file from this environment.",
-    "expectations": ["states that the Figma file was not inspected", "requests or uses exported screens specs assets or measurements as fallback evidence", "does not invent node details or claim parity", "continues with clearly bounded assumptions only when supplied artifacts support them"]
+    "expectations": [{"text": "states that the Figma file was not inspected", "mandatory": true}, "requests or uses exported screens specs assets or measurements as fallback evidence", {"text": "does not invent node details or claim parity", "mandatory": true}, "continues with clearly bounded assumptions only when supplied artifacts support them"]
   },
   {
     "name": "treats-code-connect-as-context",
@@ -21,5 +21,22 @@
     "prompt": "Port an iOS Figma settings screen to Flutter for iOS and Android with large text, including toggles, disabled rows, and error feedback.",
     "resources": ["references/flutter-implementation-and-parity.md"],
     "expectations": ["preserves semantic controls and accessible hit targets", "adapts platform behavior without blindly copying pixels", "renders the specified states and large-text fixture", "documents intentional deviations from the Figma reference"]
+  },
+  {
+    "name": "figma-dark-mode-differs-from-existing-theme",
+    "prompt": "The inspected Figma file has a dark-mode variable collection and a Disabled variant for this button. Implement the screen. Our app already has ThemeExtension tokens, but the Figma dark values differ slightly from our dark theme.",
+    "resources": [
+      "references/design-extraction-and-mapping.md",
+      "references/flutter-implementation-and-parity.md"
+    ],
+    "expectations": [
+      {
+        "text": "does not invent token differences or silently overwrite either source: states that the Figma dark-mode values and the existing dark theme must be compared from inspected or supplied values before changing either",
+        "mandatory": true
+      },
+      "maps to existing ThemeExtension tokens and adds a token only for a missing stable concept",
+      "records which source wins and why, or asks when no repository rule decides it",
+      "plans a dark-mode Disabled parity fixture and states that parity was not rendered or verified"
+    ]
   }
 ]

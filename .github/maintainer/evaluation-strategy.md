@@ -27,11 +27,24 @@ The default [Codex matrix](../evals/codex-matrix.json) skips baselines and needs
 
 ### Nightly or periodic audit
 
-The [nightly representative profile](../evals/profiles/nightly-representative.json) contains one behavior case for every skill and all routing cases. The Codex-only matrix with skipped baselines needs 139 model invocations. Refresh baselines only when measuring skill lift.
+The [nightly representative profile](../evals/profiles/nightly-representative.json) contains one behavior case for every skill and all routing cases. The Codex-only matrix with skipped baselines needs 150 model invocations (two per behavior case plus one per routing case). Refresh baselines only when measuring skill lift.
 
 ### Release
 
-The [release profile](../evals/profiles/release-full.json) resolves all behavior and routing cases. The default Codex-only run with skipped baselines needs 443 model invocations before retries. Run it only with an explicit budget and retained output.
+The [release profile](../evals/profiles/release-full.json) resolves all behavior and routing cases. The default Codex-only run with skipped baselines needs 530 model invocations before retries (two per behavior case plus one per routing case). Run it only with an explicit budget and retained output.
+
+## Holdout cases
+
+[`holdout.json`](../evals/holdout/holdout.json) reserves 23 behavior cases, at least one for each high-risk skill, to detect overfitting. `validate_repository.py` fails when a holdout case is unknown, repeated, or listed in a tuning profile (`pr-smoke` and `nightly-representative`).
+
+- Read holdout results only at release review, after tuning is finished.
+- Do not reword a skill to match a holdout prompt or expectation. Fix the behavior with a separate tuning case, then re-measure the holdout.
+- When a holdout case must change, replace it with another case from the same skill and record the reason in `CHANGELOG.md`.
+- The `release-full` profile selects every case and is a release audit, not a tuning run.
+
+## Response-only capabilities
+
+A behavior case runs against a response-only solver by default. A case whose expectations ask the solver to carry out device, design-tool, provider-console, or registry work declares it with `"capabilities": ["device"]`. `validate_repository.py` rejects unknown capability names and warns when an expectation asks for that evidence without the declaration. Expectations that ask for a plan or an explicit unverified boundary are not flagged.
 
 ## Optional cross-agent matrix
 
