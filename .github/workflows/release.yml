@@ -112,8 +112,16 @@ jobs:
             exit 1
           fi
 
-          smoke_directory="$(mktemp -d)"
-          installed_version="$(npm exec --yes --prefix "$smoke_directory" --package="${package_name}@${package_version}" -- flutter-skills --version)"
+          installed_version=""
+          for attempt in {1..12}; do
+            smoke_directory="$(mktemp -d)"
+            if installed_version="$(npm exec --yes --prefix "$smoke_directory" --package="${package_name}@${package_version}" -- flutter-skills --version 2>/dev/null)"; then
+              break
+            fi
+            installed_version=""
+            echo "Registry has not served the tarball for ${package_name}@${package_version} yet (install attempt ${attempt}/12)."
+            sleep 10
+          done
           if [[ "$installed_version" != "$package_version" ]]; then
             echo "Installed CLI version mismatch: expected=$package_version actual=$installed_version" >&2
             exit 1
@@ -136,19 +144,27 @@ jobs:
           token: ${{ secrets.TESSL_TOKEN }}
       - name: Publish Tessl plugin
         run: |
-          set +e
-          publish_output="$(tessl plugin publish . 2>&1)"
-          publish_status=$?
-          set -e
-          printf '%s\n' "$publish_output"
+          publish_status=1
+          for attempt in 1 2 3; do
+            set +e
+            publish_output="$(tessl plugin publish . 2>&1)"
+            publish_status=$?
+            set -e
+            printf '%s\n' "$publish_output"
 
-          if [[ $publish_status -eq 0 ]]; then
-            exit 0
-          fi
-          if grep -Fq "already exists" <<<"$publish_output"; then
-            echo "Tessl version already exists; treating the immutable release as verified."
-            exit 0
-          fi
+            if [[ $publish_status -eq 0 ]]; then
+              exit 0
+            fi
+            if grep -Fq "already exists" <<<"$publish_output"; then
+              echo "Tessl version already exists; treating the immutable release as verified."
+              exit 0
+            fi
+            if ! grep -Fiq "timed out" <<<"$publish_output"; then
+              exit "$publish_status"
+            fi
+            echo "Tessl publish timed out (attempt ${attempt}/3); retrying."
+            sleep 15
+          done
           exit "$publish_status"
 
   github-release:
