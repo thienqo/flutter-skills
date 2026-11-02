@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.11.1 - 2026-11-01
+## 0.12.0 - 2026-11-02
 
 - Mark 31 existing consequence-bearing expectations as mandatory across the 13 skills that had none (`flutter-ai-integration`, `flutter-background-execution`, `flutter-dependency-upgrades`, `flutter-figma-workflow`, `flutter-observability`, `flutter-package-development`, `flutter-platform-integration`, `flutter-product-analytics`, `flutter-runtime-debugging`, `flutter-ui-design`, `flutter-ui-patterns`, `flutter-visual-effects`, `flutter-webview`), so all 37 skills now gate on at least one mandatory expectation.
 - Add seven behavior cases (220 to 227): analytics evidence per boundary, package publisher and version mismatch behind a passing dry run, signing material kept out of the repository, a new CI job that keeps the pinned toolchain, Figma dark mode that differs from the app theme, PII and payloads kept out of crash context, and list state that follows item identity. These also close the open P1 analytics and package-development backlog items. The cases are defined but not yet run against a forward evaluator.
