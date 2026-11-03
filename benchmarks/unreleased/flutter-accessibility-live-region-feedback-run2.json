@@ -1,0 +1,126 @@
+{
+  "created_at": "2026-11-03T10:27:21.485425+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "dad34ddd6f214d29df374e35ed3631b270eb1688",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-accessibility",
+      "case": "announcements-use-the-owning-view",
+      "with_skill": {
+        "response": "# Fixing the `SemanticsService.announce` assert in a multi-window app\n\n## Why it asserts\n\nThe deprecated `SemanticsService.announce` relies on the **implicit view**. When an app has multiple windows, there is no single implicit view, so the call fails its contract and asserts. Your pinned SDK already has the view-aware API. Remove the legacy path completely rather than keeping it as a fallback.\n\n## Step 1: Fix the call\n\nIf you keep an explicit announcement, target the window that triggered the save. Take its view, direction, and localized text from that window's own `BuildContext`:\n\n```dart\nvoid _announceSaved(BuildContext context) {\n  if (!MediaQuery.supportsAnnounceOf(context)) return;\n  SemanticsService.sendAnnouncement(\n    View.of(context),                          // the originating window, not an implicit view\n    AppLocalizations.of(context).changesSaved, // this window's locale override\n    Directionality.of(context),                // RTL-safe, not hardcoded LTR\n    assertiveness: Assertiveness.polite,       // currently affects web only\n  );\n}\n```\n\n- **Context:** Don't resolve the message through a global navigator key, root context, or global locale. Each window can have its own locale override.\n- **Async saves:** If the save is async, capture the context-derived values before the `await`, or check `context.mounted` after it.\n\n## Step 2: Use a live region instead of an announcement\n\nA \"saved\" confirmation is ordinary asynchronous feedback, so an explicit announcement is not the right mechanism. Show visible status text and let the semantics tree announce it:\n\n```dart\n// In the window's widget tree, e.g. near the Save button or in a status bar\nSemantics(\n  liveRegion: true,\n  child: Text(\n    _saveStatus ?? '', // set to AppLocalizations.of(context).changesSaved after a successful save\n  ),\n)\n```\n\n```dart\nFuture<void> _onSave() async {\n  final saved = AppLocalizations.of(context).changesSaved;\n  await repository.save(document);\n  if (!mounted) return;\n  setState(() => _saveStatus = saved);\n}\n```\n\nThis approach suits each of your targets:\n\n- **Android:** A live region gives a polite announcement without moving focus. Explicit announcement events can disrupt TalkBack's speech queue, so semantic updates are the preferred route there.\n- **Web:** Live regions map to ARIA live regions. The `assertiveness` argument only mattered on web anyway.\n- **Desktop multi-window:** The live region belongs to the window's own semantics tree, so there's no view to pick and no implicit-view assumption.\n- **Visual users:** They get the same confirmation, so the feedback doesn't depend on a screen reader.\n\n## Avoiding duplicate feedback\n\n- **Pick one mechanism per change.** If the status text is a live region, delete the `sendAnnouncement` call. Firing both makes screen readers speak \"Changes saved\" twice.\n- **Don't branch per platform.** Use the live region everywhere instead of announcing explicitly on some platforms.\n- **Keep `sendAnnouncement` (Step 1) only for changes with no visible semantic node.** For example, a background autosave that you deliberately don't show.\n- **Don't re-announce unchanged text.** Repeated saves that set the same text may not re-trigger announcements. Clear `_saveStatus` when the document becomes dirty again, or include a timestamp in the text. Avoid announcing on every autosave tick.\n- **Accept occasional skips.** The OS may skip a polite announcement if it's already speaking. That's acceptable for non-critical confirmations.\n\nSave **failures** that block the user should go through a proper error surface, such as inline field errors or a dialog. Don't rely on a polite live region for them.\n\n## Verification\n\nWidget test using the default semantics handle in `testWidgets`:\n\n```dart\ntestWidgets('save exposes a live-region confirmation', (tester) async {\n  await tester.pumpWidget(const TestEditorWindow());\n  await tester.tap(find.byKey(const Key('save')));\n  await tester.pumpAndSettle();\n\n  expect(\n    tester.getSemantics(find.text('Changes saved')),\n    matchesSemantics(label: 'Changes saved', isLiveRegion: true),\n  );\n});\n```\n\nAlso check that no `SemanticsService` announcement fires on the save path, so the live region is the only feedback. Then test manually on:\n\n- **Android:** TalkBack.\n- **Web:** A screen reader on the pinned SDK, since web live-region behavior varies by browser and screen reader.\n- **Desktop:** VoiceOver on macOS or Narrator on Windows. Save from a **secondary** window and confirm there's no assert, a single announcement, and that the window's locale and direction are respected.",
+        "judgment": {
+          "score": 92,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] uses the originating FlutterView for explicit announcements instead of the deprecated implicit-view announce API",
+              "met": true,
+              "evidence": "Replaces SemanticsService.announce with SemanticsService.sendAnnouncement(View.of(context), ...), comments that this is 'the originating window, not an implicit view', and says to remove the legacy path rather than keep it as a fallback."
+            },
+            {
+              "criterion": "checks announcement support and keeps direction and message localization consistent with the originating UI",
+              "met": true,
+              "evidence": "Gates the call with MediaQuery.supportsAnnounceOf(context). Takes direction from Directionality.of(context) and the message from AppLocalizations.of(context), both from the window's own context. Warns against global navigator keys, root contexts, or a global locale because each window can override its locale."
+            },
+            {
+              "criterion": "[MANDATORY] prefers semantic state updates for ordinary feedback and does not claim assertiveness controls Android speech priority",
+              "met": true,
+              "evidence": "Step 2 states that a 'saved' confirmation is ordinary feedback and should use visible status text in a Semantics(liveRegion: true) node. Notes that assertiveness 'currently affects web only' and 'only mattered on web anyway', so it makes no claim that it controls Android priority."
+            },
+            {
+              "criterion": "verifies the originating window and avoids duplicate feedback across semantic and explicit announcement paths",
+              "met": true,
+              "evidence": "Says to pick one mechanism per change and delete sendAnnouncement when the live region is used, since firing both makes the reader speak twice. Keeps explicit announcements only for changes with no visible node. Verification asks to confirm no SemanticsService announcement fires on the save path, and to save from a secondary window and confirm no assert, a single announcement, and the correct locale and direction."
+            }
+          ],
+          "summary": "The response meets all criteria. It uses View.of(context) with sendAnnouncement and gates it on supportsAnnounceOf. Direction and localization come from the originating window. It prefers a live region for ordinary save feedback, correctly limits assertiveness to web, and handles duplicate feedback and secondary-window verification explicitly. Minor weaknesses: Step 1 presents an explicit-announcement fix that Step 2 then mostly discourages, which is a little confusing. The automated widget test does not check the originating view; that check is left to manual testing."
+        },
+        "judgments": [
+          {
+            "score": 92,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] uses the originating FlutterView for explicit announcements instead of the deprecated implicit-view announce API",
+                "met": true,
+                "evidence": "Replaces SemanticsService.announce with SemanticsService.sendAnnouncement(View.of(context), ...), comments that this is 'the originating window, not an implicit view', and says to remove the legacy path rather than keep it as a fallback."
+              },
+              {
+                "criterion": "checks announcement support and keeps direction and message localization consistent with the originating UI",
+                "met": true,
+                "evidence": "Gates the call with MediaQuery.supportsAnnounceOf(context). Takes direction from Directionality.of(context) and the message from AppLocalizations.of(context), both from the window's own context. Warns against global navigator keys, root contexts, or a global locale because each window can override its locale."
+              },
+              {
+                "criterion": "[MANDATORY] prefers semantic state updates for ordinary feedback and does not claim assertiveness controls Android speech priority",
+                "met": true,
+                "evidence": "Step 2 states that a 'saved' confirmation is ordinary feedback and should use visible status text in a Semantics(liveRegion: true) node. Notes that assertiveness 'currently affects web only' and 'only mattered on web anyway', so it makes no claim that it controls Android priority."
+              },
+              {
+                "criterion": "verifies the originating window and avoids duplicate feedback across semantic and explicit announcement paths",
+                "met": true,
+                "evidence": "Says to pick one mechanism per change and delete sendAnnouncement when the live region is used, since firing both makes the reader speak twice. Keeps explicit announcements only for changes with no visible node. Verification asks to confirm no SemanticsService announcement fires on the save path, and to save from a secondary window and confirm no assert, a single announcement, and the correct locale and direction."
+              }
+            ],
+            "summary": "The response meets all criteria. It uses View.of(context) with sendAnnouncement and gates it on supportsAnnounceOf. Direction and localization come from the originating window. It prefers a live region for ordinary save feedback, correctly limits assertiveness to web, and handles duplicate feedback and secondary-window verification explicitly. Minor weaknesses: Step 1 presents an explicit-announcement fix that Step 2 then mostly discourages, which is a little confusing. The automated widget test does not check the originating view; that check is left to manual testing."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 92.0,
+          "minimum_score": 92,
+          "maximum_score": 92,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 92.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-accessibility": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 92.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

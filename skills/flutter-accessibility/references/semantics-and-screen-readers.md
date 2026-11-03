@@ -39,7 +39,9 @@ MergeSemantics(
 
 ## Dynamic Announcements
 
-Prefer semantic state changes, including a suitable live region, for ordinary asynchronous feedback. Use an explicit announcement only when the system does not already announce the change. On SDKs supporting the current view-aware API:
+Prefer semantic state changes, including a suitable live region, for ordinary asynchronous feedback. Use an explicit announcement only when the system does not already announce the change.
+
+A save confirmation, form result, or loading-finished message is ordinary feedback. Show it as visible status text inside `Semantics(liveRegion: true)`. On Android and iOS a live region produces a polite announcement without moving focus, though the OS may skip it while already speaking. Verify web behavior on the pinned SDK with a screen reader. Do not pick an explicit announcement for it per platform. Keep `sendAnnouncement` for changes that have no visible semantic node. A request to fix a failing `announce` call does not mean an announcement is the right mechanism: fix the call, then say whether the feedback should move to a semantic update. On SDKs supporting the current view-aware API:
 ```dart
 if (MediaQuery.supportsAnnounceOf(context)) {
   SemanticsService.sendAnnouncement(

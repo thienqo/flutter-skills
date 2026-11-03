@@ -7,6 +7,8 @@ description: Implement or review Flutter platform channels, Pigeon APIs, FFI and
 
 Prefer an existing maintained plugin when it meets the requirement. Write platform code when the capability is unavailable, product-specific, or requires a controlled native contract.
 
+When asked to replace an adequate plugin the project already uses with custom native code, do not write the native code yet. Name what the current plugin already covers, ask which concrete requirement it fails (missing API, platform, behavior, license, or size), and recommend keeping it until that gap is known. When the gap is real, close it with the smallest change: a Dart wrapper, an upstream fix, or a narrow channel for the missing part only.
+
 ## Choose the boundary
 
 - Use a package API for established cross-platform capabilities.

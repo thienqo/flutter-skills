@@ -1,0 +1,126 @@
+{
+  "created_at": "2026-11-03T10:27:14.767211+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "dad34ddd6f214d29df374e35ed3631b270eb1688",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-performance",
+      "case": "resizes-images-before-clearing-cache",
+      "with_skill": {
+        "response": "Before adding a \"clear when memory is high\" hook, confirm the cause. Clearing the cache would hide the symptom, but the likely real problem is that each thumbnail is **decoded at full resolution** and then drawn small. Clearing also throws away work, so scrolling back causes re-decodes and jank.\n\n## 1. Confirm the hypothesis (profile mode, real device)\n\nRun `flutter run --profile` on a representative device and use a fixed dataset. Scroll the grid top \u2192 bottom \u2192 top three to five times.\n\nMeasure in two ways:\n\n- **DevTools \u2192 Memory:** take a snapshot after a steady baseline and another after the repeated scrolls. Compare the decoded image sizes with the on-screen thumbnail size, and check what is retaining the images.\n- **Cache counters:** log these once per scroll pass.\n\n```dart\nfinal cache = PaintingBinding.instance.imageCache;\ndebugPrint('bytes=${cache.currentSizeBytes} '\n    'live=${cache.liveImageCount} count=${cache.currentSize}');\n```\n\nHow to read the results:\n\n- **Confirmed:** decoded images are much larger than display size (for example 4000\u00d73000 for a 120\u00d7120 tile), and `currentSizeBytes` sits at the cache limit while total memory is high.\n- **Rejected or incomplete:** memory keeps climbing past the cache limit on every pass, or `liveImageCount` keeps growing. That points to retention, such as undisposed controllers, listeners, or a custom cache holding `ImageProvider`s or `ui.Image`s. Clearing `imageCache` won't fix that, because live images aren't evictable.\n\nRecord the device, Flutter version, build mode, dataset, and peak and steady-state RSS. Use these as your baseline.\n\n## 2. Fix at the source: decode at display size\n\n```dart\nclass Thumbnail extends StatelessWidget {\n  const Thumbnail({super.key, required this.url});\n  final String url;\n\n  @override\n  Widget build(BuildContext context) {\n    return LayoutBuilder(builder: (context, constraints) {\n      final dpr = MediaQuery.devicePixelRatioOf(context);\n      final px = (constraints.maxWidth * dpr).round();\n      return Image.network(\n        url,\n        fit: BoxFit.cover,\n        cacheWidth: px, // decode at the displayed width only\n        // keep aspect ratio: set one dimension, not both\n        gaplessPlayback: true,\n      );\n    });\n  }\n}\n```\n\nA few notes on this change:\n\n- For `cached_network_image`, use `memCacheWidth` (and optionally `maxWidthDiskCache`). With a raw provider, wrap it as `ResizeImage(NetworkImage(url), width: px)`.\n- Use `GridView.builder` so off-screen tiles are actually disposed.\n- If your backend or CDN can serve thumbnail-sized URLs, that is better still, because it also cuts network and decode CPU.\n\nThis shrinks both cache memory and raster cost per image, often by 100\u00d7 or more for thumbnails.\n\n## 3. If you still want a pressure valve, keep it bounded\n\nUse this as a safety net in addition to the fix above, not as a replacement for it:\n\n```dart\n// Bound the cache instead of clearing it reactively.\nPaintingBinding.instance.imageCache\n  ..maximumSizeBytes = 64 << 20 // 64 MB; tune from measurements\n  ..maximumSize = 200;\n```\n\n```dart\nclass _AppState extends State<App> with WidgetsBindingObserver {\n  @override\n  void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); }\n  @override\n  void dispose() { WidgetsBinding.instance.removeObserver(this); super.dispose(); }\n\n  @override\n  void didHaveMemoryPressure() {\n    // OS-signaled pressure only; drops evictable entries, not live images.\n    PaintingBinding.instance.imageCache.clear();\n  }\n}\n```\n\nFlutter already does a version of this on memory pressure, so the explicit hook is mostly useful if you want logging. Avoid polling memory and calling `clear()` on a threshold. It causes decode storms and visible flicker while scrolling, and it does nothing for live, undisposed images.\n\n## 4. Verify\n\nRepeat the exact same scroll scenario three or more times, then report the following before and after the change, with run-to-run variance:\n\n- peak and steady-state memory\n- `currentSizeBytes`\n- frame raster times\n\nAlso check correctness:\n\n- Thumbnails are still sharp on high-DPR devices.\n- Placeholders and errors still render.\n- A detail view that opens the full image uses an *unresized* provider, so it isn't stuck with the thumbnail decode.",
+        "judgment": {
+          "score": 95,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] attributes the growth to decoded image size via the image cache or memory profiler before changing code",
+              "met": true,
+              "evidence": "Section 1, 'Confirm the hypothesis', comes before any code change. It uses DevTools Memory snapshots to compare decoded image sizes against the on-screen thumbnail size. It also logs imageCache.currentSizeBytes, liveImageCount and currentSize. It defines what confirms the hypothesis (e.g. 4000\u00d73000 decoded for a 120\u00d7120 tile, with currentSizeBytes at the cache limit) and what rejects it (memory climbing past the limit or liveImageCount growing, which points to retention). It records a baseline before the fix."
+            },
+            {
+              "criterion": "sets cacheWidth/cacheHeight (or an equivalent resize) to the display size instead of the source resolution",
+              "met": true,
+              "evidence": "Section 2 computes px = constraints.maxWidth * devicePixelRatio and passes cacheWidth: px to Image.network, setting only one dimension to keep the aspect ratio. It also gives equivalents: memCacheWidth for cached_network_image, ResizeImage(NetworkImage(url), width: px), and CDN thumbnail URLs."
+            },
+            {
+              "criterion": "rejects periodically clearing the whole image cache as the fix",
+              "met": true,
+              "evidence": "It says clearing 'would hide the symptom' and 'throws away work', causing re-decodes and jank. The pressure valve is framed as 'a safety net in addition to the fix above, not as a replacement for it'. It states: 'Avoid polling memory and calling clear() on a threshold. It causes decode storms and visible flicker... and it does nothing for live, undisposed images.' The only clear() shown is tied to the OS-signaled didHaveMemoryPressure, which is not periodic, and the response notes Flutter already does this."
+            },
+            {
+              "criterion": "verifies bounded memory after the resize with the same repeated scroll flow",
+              "met": true,
+              "evidence": "Section 4 says to 'Repeat the exact same scroll scenario three or more times', the same top\u2192bottom\u2192top flow used for the baseline. It asks for before/after peak and steady-state memory, currentSizeBytes and raster times, with run-to-run variance. Comparing steady state to peak across repeated passes is how a plateau shows up. It does not literally say 'confirm memory stops climbing', but the measurement design makes that check."
+            }
+          ],
+          "summary": "The response confirms the decoded-size hypothesis with DevTools and imageCache counters before changing code. It fixes the problem by decoding at display size using a DPR-aware cacheWidth, with equivalent options for other image providers. It explicitly rejects threshold-based or periodic cache clearing as the fix. It verifies the result with the same repeated scroll flow, comparing before/after peak and steady-state memory. The only minor gap is that 'bounded' memory is implied by the steady-state vs peak comparison rather than stated as an explicit plateau check."
+        },
+        "judgments": [
+          {
+            "score": 95,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] attributes the growth to decoded image size via the image cache or memory profiler before changing code",
+                "met": true,
+                "evidence": "Section 1, 'Confirm the hypothesis', comes before any code change. It uses DevTools Memory snapshots to compare decoded image sizes against the on-screen thumbnail size. It also logs imageCache.currentSizeBytes, liveImageCount and currentSize. It defines what confirms the hypothesis (e.g. 4000\u00d73000 decoded for a 120\u00d7120 tile, with currentSizeBytes at the cache limit) and what rejects it (memory climbing past the limit or liveImageCount growing, which points to retention). It records a baseline before the fix."
+              },
+              {
+                "criterion": "sets cacheWidth/cacheHeight (or an equivalent resize) to the display size instead of the source resolution",
+                "met": true,
+                "evidence": "Section 2 computes px = constraints.maxWidth * devicePixelRatio and passes cacheWidth: px to Image.network, setting only one dimension to keep the aspect ratio. It also gives equivalents: memCacheWidth for cached_network_image, ResizeImage(NetworkImage(url), width: px), and CDN thumbnail URLs."
+              },
+              {
+                "criterion": "rejects periodically clearing the whole image cache as the fix",
+                "met": true,
+                "evidence": "It says clearing 'would hide the symptom' and 'throws away work', causing re-decodes and jank. The pressure valve is framed as 'a safety net in addition to the fix above, not as a replacement for it'. It states: 'Avoid polling memory and calling clear() on a threshold. It causes decode storms and visible flicker... and it does nothing for live, undisposed images.' The only clear() shown is tied to the OS-signaled didHaveMemoryPressure, which is not periodic, and the response notes Flutter already does this."
+              },
+              {
+                "criterion": "verifies bounded memory after the resize with the same repeated scroll flow",
+                "met": true,
+                "evidence": "Section 4 says to 'Repeat the exact same scroll scenario three or more times', the same top\u2192bottom\u2192top flow used for the baseline. It asks for before/after peak and steady-state memory, currentSizeBytes and raster times, with run-to-run variance. Comparing steady state to peak across repeated passes is how a plateau shows up. It does not literally say 'confirm memory stops climbing', but the measurement design makes that check."
+              }
+            ],
+            "summary": "The response confirms the decoded-size hypothesis with DevTools and imageCache counters before changing code. It fixes the problem by decoding at display size using a DPR-aware cacheWidth, with equivalent options for other image providers. It explicitly rejects threshold-based or periodic cache clearing as the fix. It verifies the result with the same repeated scroll flow, comparing before/after peak and steady-state memory. The only minor gap is that 'bounded' memory is implied by the steady-state vs peak comparison rather than stated as an explicit plateau check."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 95.0,
+          "minimum_score": 95,
+          "maximum_score": 95,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 95.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-performance": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 95.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}
