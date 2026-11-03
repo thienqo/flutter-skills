@@ -1,0 +1,297 @@
+{
+  "created_at": "2026-11-03T13:33:22.134768+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "ca4c8d7baec044395d4da1480b2e20304734d948",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-architecture",
+      "case": "preserve-existing-bloc-architecture",
+      "baseline": {
+        "response": "I can't inspect the codebase from here, so this is a blueprint to adapt to your conventions. I've assumed `get_it` for DI, `go_router` for routing, `equatable`, and `bloc_test`/`mocktail` for tests. If you use something else (injectable, Riverpod for DI, auto_route), swap those pieces and keep the layering.\n\n## 1. Folder layout (feature-first)\n\n```\nlib/features/profile/\n  data/\n    datasources/profile_remote_data_source.dart\n    models/profile_model.dart            # JSON <-> entity\n    repositories/profile_repository_impl.dart\n  domain/\n    entities/profile.dart\n    repositories/profile_repository.dart  # abstract\n  presentation/\n    bloc/profile_bloc.dart, profile_event.dart, profile_state.dart\n    pages/profile_page.dart\n    widgets/...\n  profile.dart                            # barrel: public API only\n  profile_injection.dart                  # DI registration\ntest/features/profile/...                 # mirrors lib/\n```\n\n**Rules to enforce:**\n- Dependencies point inward: presentation \u2192 domain \u2190 data.\n- The domain layer has no Flutter or HTTP imports.\n- Other features import only the barrel file, never `profile/data/...`.\n- If the profile needs the current user id, take it from the existing auth feature through an abstraction (e.g. `AuthRepository.currentUserId` or a `CurrentUserProvider` interface). Don't import auth's Bloc.\n\n## 2. Domain\n\n```dart\n// domain/entities/profile.dart\nclass Profile extends Equatable {\n  const Profile({required this.id, required this.displayName, required this.email, this.avatarUrl});\n  final String id, displayName, email;\n  final String? avatarUrl;\n  Profile copyWith({String? displayName, String? avatarUrl}) => Profile(\n    id: id, email: email,\n    displayName: displayName ?? this.displayName,\n    avatarUrl: avatarUrl ?? this.avatarUrl,\n  );\n  @override\n  List<Object?> get props => [id, displayName, email, avatarUrl];\n}\n\n// domain/repositories/profile_repository.dart\nabstract interface class ProfileRepository {\n  Future<Profile> getProfile();\n  Future<Profile> updateProfile({String? displayName, String? avatarUrl});\n}\n```\n\nUse your app's existing error strategy here (exceptions mapped to a `Failure`, or `Result`/`Either`). Match what other features do rather than introducing a second one.\n\n## 3. Data\n\n- `ProfileModel` extends or maps to `Profile` with `fromJson`/`toJson`.\n- `ProfileRemoteDataSource` wraps the existing API client (Dio/http), the same one other features use.\n- `ProfileRepositoryImpl` calls the data source, maps models to entities, and translates transport exceptions into domain failures.\n- Add caching only if other features cache. Otherwise leave it out.\n\n## 4. Bloc\n\n```dart\n// events\nsealed class ProfileEvent { const ProfileEvent(); }\nfinal class ProfileRequested extends ProfileEvent { const ProfileRequested(); }\nfinal class ProfileNameChanged extends ProfileEvent {\n  const ProfileNameChanged(this.name); final String name;\n}\nfinal class ProfileSaved extends ProfileEvent { const ProfileSaved(); }\n\n// state: a single class with a status enum so the UI keeps showing data during save/error\nenum ProfileStatus { initial, loading, success, saving, failure }\n\nclass ProfileState extends Equatable {\n  const ProfileState({this.status = ProfileStatus.initial, this.profile, this.draftName = '', this.error});\n  final ProfileStatus status;\n  final Profile? profile;\n  final String draftName;\n  final String? error;\n  ProfileState copyWith({ProfileStatus? status, Profile? profile, String? draftName, String? error}) =>\n    ProfileState(status: status ?? this.status, profile: profile ?? this.profile,\n      draftName: draftName ?? this.draftName, error: error);\n  @override\n  List<Object?> get props => [status, profile, draftName, error];\n}\n\n// bloc\nclass ProfileBloc extends Bloc<ProfileEvent, ProfileState> {\n  ProfileBloc(this._repo) : super(const ProfileState()) {\n    on<ProfileRequested>(_onRequested);\n    on<ProfileNameChanged>((e, emit) => emit(state.copyWith(draftName: e.name)));\n    on<ProfileSaved>(_onSaved, transformer: droppable()); // bloc_concurrency\n  }\n  final ProfileRepository _repo;\n\n  Future<void> _onRequested(ProfileRequested _, Emitter<ProfileState> emit) async {\n    emit(state.copyWith(status: ProfileStatus.loading));\n    try {\n      final p = await _repo.getProfile();\n      emit(state.copyWith(status: ProfileStatus.success, profile: p, draftName: p.displayName));\n    } catch (e) {\n      emit(state.copyWith(status: ProfileStatus.failure, error: e.toString()));\n    }\n  }\n\n  Future<void> _onSaved(ProfileSaved _, Emitter<ProfileState> emit) async {\n    emit(state.copyWith(status: ProfileStatus.saving));\n    try {\n      final p = await _repo.updateProfile(displayName: state.draftName);\n      emit(state.copyWith(status: ProfileStatus.success, profile: p));\n    } catch (e) {\n      emit(state.copyWith(status: ProfileStatus.failure, error: e.toString()));\n    }\n  }\n}\n```\n\nIn production, map errors to user-facing messages instead of `e.toString()`.\n\n## 5. Presentation\n\n- `ProfilePage` creates the Bloc with `BlocProvider(create: (_) => getIt<ProfileBloc>()..add(const ProfileRequested()))`, and the page body is a separate `ProfileView`. That split makes the view testable with a mock Bloc.\n- Use `BlocBuilder` with `buildWhen` for rendering, and `BlocListener` for one-off effects (snackbar on failure or save success).\n- Handle loading, error with retry, and content states. Use `const` widgets and theme tokens/l10n strings, not hardcoded values.\n\n## 6. Wiring\n\n- **DI:** `profile_injection.dart` registers the data source and repository as lazy singletons, and `ProfileBloc` as a factory.\n- **Routing:** add a `/profile` route in the router and expose the path as a constant from the barrel.\n- **Entry point:** add a navigation item or avatar button in the existing shell. Keep that change small, since it's the only edit outside the feature.\n- **Scope:** if other screens need profile data (e.g. a header avatar), provide the Bloc higher up or expose a read-only stream through the repository. Don't reach into the page's Bloc.\n\n## 7. Tests\n\n- `ProfileBloc`: `blocTest` for load success and failure, name change, save success and failure, and a double-tap save being ignored.\n- `ProfileRepositoryImpl`: model-to-entity mapping and error translation, with a mocked data source.\n- `ProfileModel`: JSON round-trip.\n- `ProfileView`: widget tests for loading, error, and content, with a mocked Bloc.\n\n## 8. Order of work\n\n1. Domain, then data, then tests for both.\n2. Bloc and its tests.\n3. Page and widgets, then DI and route.\n4. Run `dart format`, `flutter analyze`, and `flutter test`.\n\nBefore I write this into your repo, I need to know which API client and error-handling pattern an existing feature (e.g. a similar settings or account feature) uses, and what the profile endpoint contract looks like. If you point me at a reference feature, I'll mirror it exactly instead of using the generic choices above.",
+        "judgment": {
+          "score": 38,
+          "expectations": [
+            {
+              "criterion": "inspects and preserves Bloc conventions",
+              "met": false,
+              "evidence": "The response states \"I can't inspect the codebase from here\" and proceeds with assumed generic conventions (get_it, go_router, equatable). It does say to match existing error strategy and ask for a reference feature, but it did not inspect anything. It only expresses intent to mirror conventions after being pointed to a feature."
+            },
+            {
+              "criterion": "keeps UI data access behind state and repository boundaries",
+              "met": true,
+              "evidence": "It specifies presentation \u2192 domain \u2190 data layering, an abstract ProfileRepository injected into ProfileBloc, a data source hidden behind the repository impl, and a ProfileView driven by BlocBuilder/BlocListener. It also says other screens should not reach into the page's Bloc and should use a repository stream instead."
+            },
+            {
+              "criterion": "does not introduce ChangeNotifier unnecessarily",
+              "met": false,
+              "evidence": "The response never introduces ChangeNotifier and uses Bloc throughout. However, it makes no explicit decision or verification about avoiding ChangeNotifier, so by the strict rule it isn't demonstrated."
+            }
+          ],
+          "summary": "The response gives a well-layered Bloc design with clear repository and state boundaries, which meets the second criterion. It did not inspect the codebase, so it cannot show that existing Bloc conventions are preserved. It also makes no explicit statement about avoiding ChangeNotifier, though it never uses it."
+        },
+        "judgments": [
+          {
+            "score": 38,
+            "expectations": [
+              {
+                "criterion": "inspects and preserves Bloc conventions",
+                "met": false,
+                "evidence": "The response states \"I can't inspect the codebase from here\" and proceeds with assumed generic conventions (get_it, go_router, equatable). It does say to match existing error strategy and ask for a reference feature, but it did not inspect anything. It only expresses intent to mirror conventions after being pointed to a feature."
+              },
+              {
+                "criterion": "keeps UI data access behind state and repository boundaries",
+                "met": true,
+                "evidence": "It specifies presentation \u2192 domain \u2190 data layering, an abstract ProfileRepository injected into ProfileBloc, a data source hidden behind the repository impl, and a ProfileView driven by BlocBuilder/BlocListener. It also says other screens should not reach into the page's Bloc and should use a repository stream instead."
+              },
+              {
+                "criterion": "does not introduce ChangeNotifier unnecessarily",
+                "met": false,
+                "evidence": "The response never introduces ChangeNotifier and uses Bloc throughout. However, it makes no explicit decision or verification about avoiding ChangeNotifier, so by the strict rule it isn't demonstrated."
+              }
+            ],
+            "summary": "The response gives a well-layered Bloc design with clear repository and state boundaries, which meets the second criterion. It did not inspect the codebase, so it cannot show that existing Bloc conventions are preserved. It also makes no explicit statement about avoiding ChangeNotifier, though it never uses it."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 38.0,
+          "minimum_score": 38,
+          "maximum_score": 38,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I haven't inspected your app's code, so this is a plan that extends the existing Bloc feature-first design rather than a migration. Before writing anything, I'd check how an existing feature is built and copy its conventions.\n\n## What to check first\n\n- **A representative feature**, such as settings or auth: folder layout, naming, and whether it uses Bloc or Cubit, `freezed`, `equatable`, or sealed classes.\n- **Dependency injection**: `get_it`, `RepositoryProvider`, or constructor wiring.\n- **Data layer**: whether repositories sit behind abstract interfaces, and which HTTP or storage service they wrap.\n- **Shared pieces I might reuse**: the current-user source, such as an auth repository, and the error and result types.\n- **Tests**: `bloc_test`, mocking library, and fixture style.\n\n## Proposed structure\n\nThis mirrors the usual feature-first layout. Rename the folders to match what you already have.\n\n```\nlib/features/profile/\n  data/\n    profile_repository.dart        # source of truth; coordinates service + cache\n    profile_service.dart           # wraps the API client (and storage if needed)\n    profile_dto.dart               # wire model, mapped to the domain model\n  domain/\n    profile.dart                   # immutable domain model\n  presentation/\n    bloc/\n      profile_bloc.dart            # or profile_cubit.dart\n      profile_event.dart\n      profile_state.dart\n    view/\n      profile_page.dart            # provides the bloc, handles routing\n      profile_view.dart            # renders state, forwards intent\n      widgets/\n```\n\n## Responsibilities\n\n- **View**: renders `ProfileState` and dispatches events like `ProfileRequested` and `ProfileSaved`. It contains no data access or validation rules.\n- **Bloc**: owns UI state (loading, loaded, editing, saving, failure) and calls the repository. Use a Cubit instead if the other features do, since the profile flow is simple.\n- **Repository**: exposes domain `Profile`, maps DTOs, and handles caching and invalidation. It is the only thing the Bloc talks to.\n- **Service**: raw API or storage calls only.\n- **Use cases**: skip them for now. Add one only if logic is reused across features or clutters the Bloc, for example if the profile and auth features both need the same \"update display name\" rule.\n\n## Dependency and boundary rules\n\n- The dependency path is `ProfileView \u2192 ProfileBloc \u2192 ProfileRepository \u2192 ProfileService`.\n- Define an abstract `ProfileRepository` only if you already do this elsewhere or need a fake for tests. Don't add interfaces just for the pattern.\n- Don't import other features' internals. If profile needs the current user's ID, take it from the shared auth or session repository through its public API, not from another feature's Bloc.\n- Don't add a global `models/` or `utils/` folder for profile code. Only move something to `core/` if a second feature really uses it.\n- Register the repository and service in the same place other features do, and add routing through your existing router.\n\n## Verification\n\n1. Trace one flow, load profile then edit then save, end to end, and confirm no widget touches the service or HTTP client.\n2. Write `bloc_test` cases for load success, load failure, save success, and save failure with a mocked repository, with no widget rendering.\n3. Write repository tests with a fake service, covering DTO mapping and cache behavior.\n4. Add one widget test for `ProfileView` that feeds in states and checks rendering and dispatched events.\n5. Run `flutter analyze` and the tests, and check for no circular imports and no cross-feature imports other than public APIs.\n\n## Questions that would change the plan\n\n- Is profile read-only, or editable (avatar upload, validation)? Editing adds a form state and probably an image service.\n- Is the profile data the same as the authenticated user, or a separate API resource?\n- Do you need offline caching?\n\nIf you point me at the app's repo or confirm the conventions above, I'll implement it to match your existing features.",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "inspects and preserves Bloc conventions",
+              "met": false,
+              "evidence": "The response states 'I haven't inspected your app's code' and only lists what to check first. It expresses intent to match conventions ('Rename the folders to match what you already have', 'Use a Cubit instead if the other features do') but does not actually inspect anything. Preservation is planned, not verified."
+            },
+            {
+              "criterion": "keeps UI data access behind state and repository boundaries",
+              "met": true,
+              "evidence": "States the dependency path 'ProfileView \u2192 ProfileBloc \u2192 ProfileRepository \u2192 ProfileService', that the View 'contains no data access', the repository is 'the only thing the Bloc talks to', and verification step 1 confirms 'no widget touches the service or HTTP client'."
+            },
+            {
+              "criterion": "does not introduce ChangeNotifier unnecessarily",
+              "met": true,
+              "evidence": "The proposal uses Bloc/Cubit exclusively for state management and never introduces ChangeNotifier or any other state mechanism, so nothing is added unnecessarily. It does not explicitly discuss ChangeNotifier, though."
+            }
+          ],
+          "summary": "The plan keeps UI access behind Bloc and repository boundaries and sticks with Bloc/Cubit, so it avoids ChangeNotifier. However, it never inspects the codebase, even though a repo was available, so the convention-preservation criterion is unmet: it defers the check and asks the user to confirm instead."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "inspects and preserves Bloc conventions",
+                "met": false,
+                "evidence": "The response states 'I haven't inspected your app's code' and only lists what to check first. It expresses intent to match conventions ('Rename the folders to match what you already have', 'Use a Cubit instead if the other features do') but does not actually inspect anything. Preservation is planned, not verified."
+              },
+              {
+                "criterion": "keeps UI data access behind state and repository boundaries",
+                "met": true,
+                "evidence": "States the dependency path 'ProfileView \u2192 ProfileBloc \u2192 ProfileRepository \u2192 ProfileService', that the View 'contains no data access', the repository is 'the only thing the Bloc talks to', and verification step 1 confirms 'no widget touches the service or HTTP client'."
+              },
+              {
+                "criterion": "does not introduce ChangeNotifier unnecessarily",
+                "met": true,
+                "evidence": "The proposal uses Bloc/Cubit exclusively for state management and never introduces ChangeNotifier or any other state mechanism, so nothing is added unnecessarily. It does not explicitly discuss ChangeNotifier, though."
+              }
+            ],
+            "summary": "The plan keeps UI access behind Bloc and repository boundaries and sticks with Bloc/Cubit, so it avoids ChangeNotifier. However, it never inspects the codebase, even though a repo was available, so the convention-preservation criterion is unmet: it defers the check and asks the user to confirm instead."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 24.0,
+      "mandatory_failure": false,
+      "passed": false
+    },
+    {
+      "skill": "flutter-architecture",
+      "case": "repository-maps-data-source-model-to-domain",
+      "baseline": {
+        "response": "I can't open the repo in this session, so I haven't seen `OrderRepository`. The sketch below uses assumed names (`_db`, `orders` table, `customerId`, `createdAt`), so adjust it to match your existing methods.\n\n**Following the existing pattern (returns Drift rows):**\n\n```dart\nFuture<List<OrderRow>> getOrderHistory(String customerId, {int limit = 50, int offset = 0}) {\n  return (_db.select(_db.orders)\n        ..where((o) => o.customerId.equals(customerId))\n        ..orderBy([(o) => OrderingTerm.desc(o.createdAt)])\n        ..limit(limit, offset: offset))\n      .get();\n}\n```\n\n**My recommendation:** the existing pattern leaks a Drift-generated type into the presentation layer. That couples the UI to your schema, so any column change ripples into widgets. For a new method I'd map to a domain model at the repository boundary:\n\n```dart\nFuture<List<Order>> getOrderHistory(String customerId, {int limit = 50, int offset = 0}) async {\n  final rows = await (_db.select(_db.orders)\n        ..where((o) => o.customerId.equals(customerId))\n        ..orderBy([(o) => OrderingTerm.desc(o.createdAt)])\n        ..limit(limit, offset: offset))\n      .get();\n  return rows.map(Order.fromRow).toList();\n}\n```\n\nThis requires an `Order` model with a `fromRow` factory (or a mapper). Existing methods can be migrated later, and the new one won't add to the debt.\n\nTo make this fit exactly, I need to see the file. Could you point me to the `OrderRepository` path, or paste a couple of the existing methods? In particular I need to know:\n- whether the existing methods return a `Future` or a `Stream` (e.g. `.watch()`)\n- the real table and column names\n- whether a domain `Order` class already exists\n\nOnce I have those, I'll make the edit and add a test.",
+        "judgment": {
+          "score": 88,
+          "expectations": [
+            {
+              "criterion": "maps the Drift row to a domain model inside the repository before returning it",
+              "met": true,
+              "evidence": "Recommended version awaits the query, then `return rows.map(Order.fromRow).toList();` inside the repository method, returning `Future<List<Order>>`."
+            },
+            {
+              "criterion": "does not propagate the data-source type to presentation code",
+              "met": true,
+              "evidence": "Recommends returning domain `Order` and explains that the existing pattern leaks a Drift type into presentation, coupling UI to schema. The recommended method does not expose OrderRow."
+            },
+            {
+              "criterion": "does not just extend the existing leak because an existing method already does it",
+              "met": false,
+              "evidence": "It first provides the 'following the existing pattern' version returning `List<OrderRow>`, which extends the leak, though it then explicitly recommends against it and states the new method 'won't add to the debt'. It hedges rather than cleanly declining, and it leaves the choice open pending the user's file."
+            }
+          ],
+          "summary": "The response identifies the leak and recommends mapping to a domain `Order` inside the repository, which satisfies the mandatory criterion and the no-propagation criterion. It loses points because it also supplies the leaking version as the first option, and so does not fully refuse to extend the existing leak."
+        },
+        "judgments": [
+          {
+            "score": 88,
+            "expectations": [
+              {
+                "criterion": "maps the Drift row to a domain model inside the repository before returning it",
+                "met": true,
+                "evidence": "Recommended version awaits the query, then `return rows.map(Order.fromRow).toList();` inside the repository method, returning `Future<List<Order>>`."
+              },
+              {
+                "criterion": "does not propagate the data-source type to presentation code",
+                "met": true,
+                "evidence": "Recommends returning domain `Order` and explains that the existing pattern leaks a Drift type into presentation, coupling UI to schema. The recommended method does not expose OrderRow."
+              },
+              {
+                "criterion": "does not just extend the existing leak because an existing method already does it",
+                "met": false,
+                "evidence": "It first provides the 'following the existing pattern' version returning `List<OrderRow>`, which extends the leak, though it then explicitly recommends against it and states the new method 'won't add to the debt'. It hedges rather than cleanly declining, and it leaves the choice open pending the user's file."
+              }
+            ],
+            "summary": "The response identifies the leak and recommends mapping to a domain `Order` inside the repository, which satisfies the mandatory criterion and the no-propagation criterion. It loses points because it also supplies the leaking version as the first option, and so does not fully refuse to extend the existing leak."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 88.0,
+          "minimum_score": 88,
+          "maximum_score": 88,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I'd follow the existing pattern for everything except the return type. Returning `OrderRow` is the part I wouldn't copy. It ties every caller to Drift, so the repository stops being a replaceable boundary. A new method that repeats it makes the later cleanup bigger.\n\nI haven't opened the repository file in this reply, so the names below (`_db`, `Order`, `orderRows`, `placedAt`, `userId`) are assumptions to match against your code.\n\n```dart\n// order_repository.dart\nFuture<List<Order>> getOrderHistory({required String userId, int limit = 50}) async {\n  final rows = await (_db.select(_db.orderRows)\n        ..where((o) => o.userId.equals(userId))\n        ..orderBy([(o) => OrderingTerm.desc(o.placedAt)])\n        ..limit(limit))\n      .get();\n  return rows.map(_toDomain).toList();\n}\n\nOrder _toDomain(OrderRow row) => Order(\n      id: row.id,\n      total: row.total,\n      placedAt: row.placedAt,\n      // ...remaining fields\n    );\n```\n\n- **Same as the existing methods:** it uses the same injected database, query style and async shape, and sits in the same repository class.\n- **Different:** it maps `OrderRow` to your domain `Order` inside the repository, so presentation never sees a Drift type. If an `Order` model and mapper already exist, reuse them. If not, the small `_toDomain` above is enough.\n- **Left alone:** the existing methods that return `OrderRow` stay as they are. Changing them would touch every caller, which is out of scope for this task.\n\nI'd suggest a follow-up change that migrates the existing methods one at a time, starting with the one that has the fewest callers. Each step is small and keeps the app compiling.\n\nIf you'd rather match the current behaviour exactly for now, I can return `List<OrderRow>` instead. It's a one-line change, but I'd note the leak in a TODO.\n\nWhichever you choose, I'd add a repository test with an in-memory Drift database that checks ordering, the limit, and that the result contains domain objects.",
+        "judgment": {
+          "score": 92,
+          "expectations": [
+            {
+              "criterion": "maps the Drift row to a domain model inside the repository before returning it",
+              "met": true,
+              "evidence": "The code returns `rows.map(_toDomain).toList()` with `_toDomain(OrderRow row) => Order(...)` defined in the repository, and the text says it \"maps `OrderRow` to your domain `Order` inside the repository\"."
+            },
+            {
+              "criterion": "does not propagate the data-source type to presentation code",
+              "met": true,
+              "evidence": "The method returns `Future<List<Order>>`, and the response says \"presentation never sees a Drift type\"."
+            },
+            {
+              "criterion": "does not just extend the existing leak because an existing method already does it",
+              "met": true,
+              "evidence": "The response says \"Returning `OrderRow` is the part I wouldn't copy\" and explains that repeating it makes the later cleanup bigger. It does offer a `List<OrderRow>` fallback if the user prefers, but only as an opt-in alternative with a TODO, not as its default."
+            }
+          ],
+          "summary": "The response makes the decision explicit: it keeps the existing query pattern but maps to a domain `Order` inside the repository, so no Drift type reaches presentation. It declines to copy the existing leak and proposes an incremental follow-up migration. The offered `OrderRow` fallback and the unverified field names, which it flags as assumptions, are minor weaknesses."
+        },
+        "judgments": [
+          {
+            "score": 92,
+            "expectations": [
+              {
+                "criterion": "maps the Drift row to a domain model inside the repository before returning it",
+                "met": true,
+                "evidence": "The code returns `rows.map(_toDomain).toList()` with `_toDomain(OrderRow row) => Order(...)` defined in the repository, and the text says it \"maps `OrderRow` to your domain `Order` inside the repository\"."
+              },
+              {
+                "criterion": "does not propagate the data-source type to presentation code",
+                "met": true,
+                "evidence": "The method returns `Future<List<Order>>`, and the response says \"presentation never sees a Drift type\"."
+              },
+              {
+                "criterion": "does not just extend the existing leak because an existing method already does it",
+                "met": true,
+                "evidence": "The response says \"Returning `OrderRow` is the part I wouldn't copy\" and explains that repeating it makes the later cleanup bigger. It does offer a `List<OrderRow>` fallback if the user prefers, but only as an opt-in alternative with a TODO, not as its default."
+              }
+            ],
+            "summary": "The response makes the decision explicit: it keeps the existing query pattern but maps to a domain `Order` inside the repository, so no Drift type reaches presentation. It declines to copy the existing leak and proposes an incremental follow-up migration. The offered `OrderRow` fallback and the unverified field names, which it flags as assumptions, are minor weaknesses."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 92.0,
+          "minimum_score": 92,
+          "maximum_score": 92,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 4.0,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": 63.0,
+    "with_skill_average": 77.0,
+    "average_delta": 14.0,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-architecture": {
+        "cases": 2,
+        "passed": 1,
+        "baseline_average": 63.0,
+        "with_skill_average": 77.0,
+        "average_delta": 14.0
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

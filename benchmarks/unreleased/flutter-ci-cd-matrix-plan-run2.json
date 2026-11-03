@@ -1,0 +1,126 @@
+{
+  "created_at": "2026-11-03T13:37:03.561464+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "ca4c8d7baec044395d4da1480b2e20304734d948",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-ci-cd",
+      "case": "matrix-build-caching-and-secret-isolation",
+      "with_skill": {
+        "response": "I haven't inspected your Flutter app or existing workflows, so I'm not writing the full workflow file yet. A guessed YAML would likely misstate how your integration suite runs on each OS. The working directory also looks like a skills repo rather than an app, so please confirm which project this targets.\n\n## Files I need\n\n- `pubspec.yaml` and `pubspec.lock`, plus the workspace or melos config if there is one\n- The Flutter version source (`.fvmrc`, `.tool-versions`, a pinned `flutter-version`, or the `environment:` block)\n- Everything in `.github/workflows/` and any scripts they call\n- The `integration_test/` layout, and the exact command and target (desktop, emulator or simulator, or web) you use today\n- Flavors, code-generation commands, and whether generated files are committed\n- The names of existing secrets and environments (names only, never values)\n\n## Design I'll apply\n\n**Matrix**\n- `ubuntu-latest`, `macos-latest`, `windows-latest`, with `fail-fast: false` so one OS failure doesn't hide the others.\n- Unit tests run on all three. Integration tests run per OS only on targets that make sense. Linux desktop needs a virtual display, and macOS and Windows run their own desktop targets. I need to know what your suite targets before committing to this.\n- Pin the runner images deliberately where reproducibility matters, since `latest` drifts.\n- `concurrency` with `cancel-in-progress` for superseded PR runs.\n\n**Caching**\n- Cache only the pub package cache, not `build/` or `.dart_tool/`.\n- The key includes OS, architecture, the effective Flutter version, and the lockfile hash:\n  ```\n  pub-${{ runner.os }}-${{ runner.arch }}-flutter-<resolved version>-${{ hashFiles('**/pubspec.lock') }}\n  ```\n- A cache hit and a cache miss must run identical gates and give the same result.\n- The cache path differs on Windows, so I'll use the per-OS pub cache location.\n\n**Secret isolation**\n- This workflow has no deploy job and references no deploy secrets at all, which is the strongest guarantee for forks.\n- Triggers are `pull_request` and `push` to the default branch. I won't use `pull_request_target`, which would give fork code a privileged context.\n- Top-level `permissions: contents: read`, widened only per job if something requires it.\n- Deploy tokens, if they exist, belong only in a separate workflow tied to a protected environment with required reviewers, never reachable from this one.\n- Third-party actions pinned to full commit SHAs, with Dependabot or Renovate to keep them current.\n\n**No publishing**\n- No tagging, release creation, `pub publish`, or store upload steps. Test results and coverage are uploaded as artifacts with bounded retention.\n\n**Gates**\n- No `continue-on-error`, and no retries that mask deterministic failures.\n- Formatting and golden checks must not rewrite files, and a generation-freshness check must fail on a diff.\n\n## Verification once written\n\nI'll lint the workflow with `actionlint`, run the underlying test commands locally where possible, and check the cold-cache and warm-cache paths and the fork-PR trigger behavior. I'll report any gaps, such as macOS runner minutes or integration targets I couldn't exercise locally.\n\nSend those files (or point me to the project directory) and I'll produce the workflow.",
+        "judgment": {
+          "score": 55,
+          "expectations": [
+            {
+              "criterion": "specifies matrix jobs across the target runners, as workflow YAML or an explicit plan, without duplicating pipeline definitions unsafely",
+              "met": true,
+              "evidence": "Plan lists `ubuntu-latest`, `macos-latest`, `windows-latest` with `fail-fast: false`, unit tests on all three, integration per OS on suitable targets, concurrency cancel-in-progress. It is a single matrix plan, not duplicated pipelines."
+            },
+            {
+              "criterion": "specifies cache keys built from the runner OS and lockfile hashes, as workflow YAML or an explicit plan, so cache hits are deterministic",
+              "met": true,
+              "evidence": "Gives key `pub-${{ runner.os }}-${{ runner.arch }}-flutter-<resolved version>-${{ hashFiles('**/pubspec.lock') }}`, caches only pub cache, and requires per-OS cache paths."
+            },
+            {
+              "criterion": "[MANDATORY] restricts deployment secrets to protected environments and blocks fork access",
+              "met": true,
+              "evidence": "States the workflow references no deploy secrets, avoids `pull_request_target`, uses `permissions: contents: read`, and says deploy tokens belong only in a separate workflow tied to a protected environment with required reviewers, unreachable from this one."
+            },
+            {
+              "criterion": "[MANDATORY] does not trigger publication, tagging, or release actions",
+              "met": true,
+              "evidence": "Explicitly states no tagging, release creation, `pub publish`, or store upload steps; only test and coverage artifacts are uploaded."
+            }
+          ],
+          "summary": "The response covers all four criteria with an explicit plan: a three-OS matrix, a deterministic OS and lockfile-hash cache key, secret isolation with protected environments and no `pull_request_target`, and no publish or release steps. It stops short of writing any workflow YAML and asks for project files first, so it delivers a design rather than a working configuration. The score is held down for that incompleteness even though each criterion is met by its plan."
+        },
+        "judgments": [
+          {
+            "score": 55,
+            "expectations": [
+              {
+                "criterion": "specifies matrix jobs across the target runners, as workflow YAML or an explicit plan, without duplicating pipeline definitions unsafely",
+                "met": true,
+                "evidence": "Plan lists `ubuntu-latest`, `macos-latest`, `windows-latest` with `fail-fast: false`, unit tests on all three, integration per OS on suitable targets, concurrency cancel-in-progress. It is a single matrix plan, not duplicated pipelines."
+              },
+              {
+                "criterion": "specifies cache keys built from the runner OS and lockfile hashes, as workflow YAML or an explicit plan, so cache hits are deterministic",
+                "met": true,
+                "evidence": "Gives key `pub-${{ runner.os }}-${{ runner.arch }}-flutter-<resolved version>-${{ hashFiles('**/pubspec.lock') }}`, caches only pub cache, and requires per-OS cache paths."
+              },
+              {
+                "criterion": "[MANDATORY] restricts deployment secrets to protected environments and blocks fork access",
+                "met": true,
+                "evidence": "States the workflow references no deploy secrets, avoids `pull_request_target`, uses `permissions: contents: read`, and says deploy tokens belong only in a separate workflow tied to a protected environment with required reviewers, unreachable from this one."
+              },
+              {
+                "criterion": "[MANDATORY] does not trigger publication, tagging, or release actions",
+                "met": true,
+                "evidence": "Explicitly states no tagging, release creation, `pub publish`, or store upload steps; only test and coverage artifacts are uploaded."
+              }
+            ],
+            "summary": "The response covers all four criteria with an explicit plan: a three-OS matrix, a deterministic OS and lockfile-hash cache key, secret isolation with protected environments and no `pull_request_target`, and no publish or release steps. It stops short of writing any workflow YAML and asks for project files first, so it delivers a design rather than a working configuration. The score is held down for that incompleteness even though each criterion is met by its plan."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 55.0,
+          "minimum_score": 55,
+          "maximum_score": 55,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 0,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 55.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-ci-cd": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 55.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

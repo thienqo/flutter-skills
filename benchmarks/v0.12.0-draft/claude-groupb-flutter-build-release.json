@@ -1,0 +1,297 @@
+{
+  "created_at": "2026-11-03T13:34:38.913260+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "ca4c8d7baec044395d4da1480b2e20304734d948",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-build-release",
+      "case": "flavor-alignment-across-platforms",
+      "baseline": {
+        "response": "I can't see your project from here, so this assumes your existing flavor is named `production` and uses the standard Flutter flavor setup. Swap in your real names and IDs. Tell me if your production setup is different, for example no flavors yet and only a default config, and I'll adjust.\n\n## 1. Android (`android/app/build.gradle.kts`)\n\n```kotlin\nandroid {\n    flavorDimensions += \"env\"\n    productFlavors {\n        create(\"production\") {\n            dimension = \"env\"\n            resValue(\"string\", \"app_name\", \"MyApp\")\n        }\n        create(\"staging\") {\n            dimension = \"env\"\n            applicationIdSuffix = \".staging\"\n            versionNameSuffix = \"-staging\"\n            resValue(\"string\", \"app_name\", \"MyApp Staging\")\n        }\n    }\n}\n```\n\n- In `AndroidManifest.xml`, set `android:label=\"@string/app_name\"` if it's hardcoded.\n- If you use Firebase, put the staging `google-services.json` in `android/app/src/staging/`.\n- Staging needs its own icon, so add `android/app/src/staging/res/mipmap-*`.\n- If production has a signing config, decide whether staging reuses it or gets its own.\n\n## 2. iOS (Xcode, since this part isn't practical to hand-edit)\n\n1. In **Runner project \u2192 Info \u2192 Configurations**, duplicate each of Debug, Release and Profile, naming them `Debug-staging`, `Release-staging` and `Profile-staging`. Flutter requires the suffix to match the flavor name.\n2. Duplicate your production scheme (**Product \u2192 Scheme \u2192 Manage Schemes**) and name it exactly `staging`. Point its Run, Test, Profile and Analyze actions at `Debug-staging`, and its Archive action at `Release-staging`, as appropriate.\n3. In **Build Settings** for the staging configurations, set:\n   - `PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.app.staging`\n   - `PRODUCT_NAME` or `INFOPLIST_KEY_CFBundleDisplayName = MyApp Staging`\n   - A staging `ASSETCATALOG_COMPILER_APPICON_NAME`, for example `AppIcon-Staging`\n4. In `ios/Podfile`, map the new configurations:\n   ```ruby\n   project 'Runner', {\n     'Debug' => :debug, 'Profile' => :release, 'Release' => :release,\n     'Debug-production' => :debug, 'Profile-production' => :release, 'Release-production' => :release,\n     'Debug-staging' => :debug, 'Profile-staging' => :release, 'Release-staging' => :release,\n   }\n   ```\n   Keep only the entries that match your current config names. Then run `cd ios && pod install`.\n5. For Firebase, add the staging `GoogleService-Info.plist`, typically via a Run Script build phase that copies the right file per configuration.\n\n## 3. Dart side\n\nEither use separate entry points (`lib/main_staging.dart`) or, which I'd recommend, a single entry point with:\n\n```bash\nflutter run --flavor staging --dart-define-from-file=config/staging.json\n```\n\nPut the API base URL and other environment values in `config/staging.json`, and read them with `String.fromEnvironment`. You can also read the flavor at runtime via `appFlavor` from `package:flutter/services.dart`.\n\n## 4. Things people usually miss\n\n- **CI/CD:** add staging build and distribution jobs, such as `flutter build apk --flavor staging` and `flutter build ipa --flavor staging --export-options-plist ...`.\n- **Provisioning:** the iOS bundle ID `.staging` needs its own App ID, provisioning profile and push certificate or key.\n- **Deep links and OAuth:** register the new bundle ID and applicationId in Universal Links, assetlinks.json, Google/Apple Sign-In and similar.\n- **IDE configs:** add a `staging` launch config in `.vscode/launch.json` or the Android Studio run configurations.\n- **Verify:** run `flutter run --flavor staging` on both platforms and confirm the app installs next to production with a different name, icon and ID.\n\nIf you point me at the repo, or paste your `build.gradle.kts`, `Podfile` and how production is configured today, I can make these edits directly. Two things I'd need to know first are your staging bundle ID and API URL, and whether you use Firebase.",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] aligns Android productFlavors, Apple schemes and configurations, and Dart defines consistently",
+              "met": true,
+              "evidence": "Android defines productFlavors 'production' and 'staging'. iOS creates Debug-staging/Release-staging/Profile-staging configurations and a scheme named exactly 'staging', and states 'Flutter requires the suffix to match the flavor name'. The Podfile maps the new configurations. The Dart side uses `flutter run --flavor staging --dart-define-from-file=config/staging.json` and mentions `appFlavor`. All three layers use the same 'staging' name."
+            },
+            {
+              "criterion": "maps the service configuration files to the correct flavor",
+              "met": true,
+              "evidence": "Android: 'put the staging google-services.json in android/app/src/staging/'. iOS: 'add the staging GoogleService-Info.plist, typically via a Run Script build phase that copies the right file per configuration'. Both platforms tie the Firebase config to the staging flavor, although the iOS mapping is only described, not shown."
+            },
+            {
+              "criterion": "tests that the staging build produces a distinct application ID or bundle identifier",
+              "met": false,
+              "evidence": "The only verification is 'run flutter run --flavor staging on both platforms and confirm the app installs next to production with a different name, icon and ID'. It is a brief manual check at the end of a list. It does not explicitly inspect the built artifact's applicationId or bundle ID (for example with aapt or by reading the Info.plist), and no automated test is proposed."
+            }
+          ],
+          "summary": "The response aligns the flavor name across Android, iOS and Dart, and places the Firebase files per flavor. It covers distinct IDs in configuration but offers only a loose manual check that the staging build installs with a different ID, with no explicit verification of the built artifact's identifier."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] aligns Android productFlavors, Apple schemes and configurations, and Dart defines consistently",
+                "met": true,
+                "evidence": "Android defines productFlavors 'production' and 'staging'. iOS creates Debug-staging/Release-staging/Profile-staging configurations and a scheme named exactly 'staging', and states 'Flutter requires the suffix to match the flavor name'. The Podfile maps the new configurations. The Dart side uses `flutter run --flavor staging --dart-define-from-file=config/staging.json` and mentions `appFlavor`. All three layers use the same 'staging' name."
+              },
+              {
+                "criterion": "maps the service configuration files to the correct flavor",
+                "met": true,
+                "evidence": "Android: 'put the staging google-services.json in android/app/src/staging/'. iOS: 'add the staging GoogleService-Info.plist, typically via a Run Script build phase that copies the right file per configuration'. Both platforms tie the Firebase config to the staging flavor, although the iOS mapping is only described, not shown."
+              },
+              {
+                "criterion": "tests that the staging build produces a distinct application ID or bundle identifier",
+                "met": false,
+                "evidence": "The only verification is 'run flutter run --flavor staging on both platforms and confirm the app installs next to production with a different name, icon and ID'. It is a brief manual check at the end of a list. It does not explicitly inspect the built artifact's applicationId or bundle ID (for example with aapt or by reading the Info.plist), and no automated test is proposed."
+              }
+            ],
+            "summary": "The response aligns the flavor name across Android, iOS and Dart, and places the Firebase files per flavor. It covers distinct IDs in configuration but offers only a loose manual check that the staging build installs with a different ID, with no explicit verification of the built artifact's identifier."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I haven't inspected your project yet, so the IDs and file names below are placeholders. Before editing, I'd check the production application ID and bundle ID, whether you already have `flavorDimensions` or Xcode build configurations, where the version comes from, and whether you use Firebase.\n\n## 1. Dart layer\n- Add `lib/main_staging.dart`, or use `--dart-define-from-file=env/staging.json` with a single entry point.\n- Keep environment selection explicit. Fail at startup if `ENVIRONMENT` or the API base URL is missing, rather than defaulting to production.\n- Staging values (base URL, non-secret keys) go in `env/staging.json`. Secrets stay out of the repo.\n\n## 2. Android (`android/app/build.gradle[.kts]`)\n```kotlin\nflavorDimensions += \"env\"\nproductFlavors {\n    create(\"prod\")    { dimension = \"env\" }   // existing, keeps current applicationId\n    create(\"staging\") {\n        dimension = \"env\"\n        applicationIdSuffix = \".staging\"\n        versionNameSuffix = \"-staging\"\n        resValue(\"string\", \"app_name\", \"MyApp Staging\")\n    }\n}\n```\n- If production currently has no flavor, adding `flavorDimensions` means you must add a `prod` flavor too. Existing build commands and CI will then need `--flavor prod`.\n- Put `google-services.json` for staging in `android/app/src/staging/`, if you use Firebase.\n- Reuse the existing signing config through `key.properties`. If staging should use a different key, add a separate `signingConfig` that is also gitignored.\n- Optionally add a staging icon under `src/staging/res/`.\n\n## 3. iOS (Xcode)\n1. Duplicate the `Debug`, `Release`, and `Profile` configurations as `Debug-staging`, `Release-staging`, and `Profile-staging`. Do the same for `-prod` if production isn't already named that way.\n2. Create a `staging` scheme, shared, that maps Run, Archive, and the other actions to the `-staging` configurations. Flutter requires the scheme name to match the flavor.\n3. Set `PRODUCT_BUNDLE_IDENTIFIER = com.example.app.staging` and `INFOPLIST_KEY_CFBundleDisplayName` for the staging configurations. Set `ASSETCATALOG_COMPILER_APPICON_NAME` if you use a separate icon.\n4. If you use Firebase, add a run-script build phase that copies the right `GoogleService-Info.plist` based on `${CONFIGURATION}`.\n5. Update the `.xcconfig` includes and the Podfile `project 'Runner', {...}` map so the new configurations map to debug, profile, or release. Then run `pod install`.\n\n## 4. Build commands\n```sh\nflutter build apk --flavor staging -t lib/main_staging.dart --dart-define=ENVIRONMENT=staging\nflutter build appbundle --flavor staging -t lib/main_staging.dart --dart-define=ENVIRONMENT=staging\nflutter build ipa --flavor staging -t lib/main_staging.dart --dart-define=ENVIRONMENT=staging\n```\nFor obfuscated builds, add `--obfuscate --split-debug-info=build/symbols/staging` and archive the symbols per version and flavor.\n\n## 5. Verification\nI'd run `dart format`, `flutter analyze`, and the tests. Then I'd do a clean release build per flavor and verify signatures without uploading:\n- `apksigner verify --print-certs` for the APK\n- `jarsigner -verify -certs` for the AAB\n- `codesign --verify --deep --strict` for the iOS app\n\nThen I'd compare the certificates to your intended keys. I'd also install the staging and prod builds side by side to confirm they coexist, then smoke-test startup and one critical flow against the staging backend.\n\n## Out of scope unless you tell me\nI won't upload to stores, change signing credentials, create tags, or register the staging IDs in Firebase, App Store Connect, or Play Console. Those need your explicit go-ahead. Registering the `.staging` app IDs and getting the staging service files are store-side work you'll need to do.\n\nIf you'd like me to make these changes, tell me the app's root directory, whether you use Firebase, and whether staging should share the production signing key. I'll start by reading the current Gradle and Xcode configuration.",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] aligns Android productFlavors, Apple schemes and configurations, and Dart defines consistently",
+              "met": true,
+              "evidence": "Defines a `staging` flavor in Android productFlavors, creates matching `Debug-staging`/`Release-staging`/`Profile-staging` configurations and a `staging` scheme in Xcode (noting the scheme name must match the flavor), and uses `--flavor staging` with `--dart-define=ENVIRONMENT=staging` and a staging entry point or define file in the build commands."
+            },
+            {
+              "criterion": "maps the service configuration files to the correct flavor",
+              "met": true,
+              "evidence": "Places the staging `google-services.json` in `android/app/src/staging/` and adds an iOS run-script build phase that copies the right `GoogleService-Info.plist` based on `${CONFIGURATION}`."
+            },
+            {
+              "criterion": "tests that the staging build produces a distinct application ID or bundle identifier",
+              "met": false,
+              "evidence": "Sets `applicationIdSuffix = \".staging\"` and a staging `PRODUCT_BUNDLE_IDENTIFIER`, and the verification step says to install staging and prod side by side to confirm they coexist. That is an indirect check. It never explicitly verifies the built artifact's application ID or bundle identifier, for example with aapt or by reading Info.plist."
+            }
+          ],
+          "summary": "The response gives a consistent setup across Android flavors, Xcode schemes and configurations, and Dart defines, and it maps the Firebase service files per flavor. The mandatory criterion is met. The distinct-ID criterion is not: the response sets the IDs and suggests a side-by-side install, but it never explicitly checks the built artifact's identifier."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] aligns Android productFlavors, Apple schemes and configurations, and Dart defines consistently",
+                "met": true,
+                "evidence": "Defines a `staging` flavor in Android productFlavors, creates matching `Debug-staging`/`Release-staging`/`Profile-staging` configurations and a `staging` scheme in Xcode (noting the scheme name must match the flavor), and uses `--flavor staging` with `--dart-define=ENVIRONMENT=staging` and a staging entry point or define file in the build commands."
+              },
+              {
+                "criterion": "maps the service configuration files to the correct flavor",
+                "met": true,
+                "evidence": "Places the staging `google-services.json` in `android/app/src/staging/` and adds an iOS run-script build phase that copies the right `GoogleService-Info.plist` based on `${CONFIGURATION}`."
+              },
+              {
+                "criterion": "tests that the staging build produces a distinct application ID or bundle identifier",
+                "met": false,
+                "evidence": "Sets `applicationIdSuffix = \".staging\"` and a staging `PRODUCT_BUNDLE_IDENTIFIER`, and the verification step says to install staging and prod side by side to confirm they coexist. That is an indirect check. It never explicitly verifies the built artifact's application ID or bundle identifier, for example with aapt or by reading Info.plist."
+              }
+            ],
+            "summary": "The response gives a consistent setup across Android flavors, Xcode schemes and configurations, and Dart defines, and it maps the Firebase service files per flavor. The mandatory criterion is met. The distinct-ID criterion is not: the response sets the IDs and suggests a side-by-side install, but it never explicitly checks the built artifact's identifier."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 0.0,
+      "mandatory_failure": false,
+      "passed": false
+    },
+    {
+      "skill": "flutter-build-release",
+      "case": "signing-material-stays-out-of-the-repository",
+      "baseline": {
+        "response": "I'd hold off on inlining the password and committing the keystore. Once they're in git history, deleting them later doesn't help, because anyone with repo access (including forks, CI logs, and backups) can sign builds as you. If you use Play App Signing, a leaked upload key can be reset, but it's a hassle. If you distribute outside Play, the leak is permanent.\n\nYou can still get \"builds on any machine\" without that. Here is what I'd do in `android/app/build.gradle`:\n\n```groovy\ndef keystoreProperties = new Properties()\ndef keystorePropertiesFile = rootProject.file('key.properties')\nif (keystorePropertiesFile.exists()) {\n    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }\n}\n\ndef signingValue = { String prop, String env ->\n    keystoreProperties[prop] ?: System.getenv(env)\n}\n\nandroid {\n    signingConfigs {\n        release {\n            def storePath = signingValue('storeFile', 'ANDROID_KEYSTORE_PATH')\n            if (storePath) {\n                storeFile file(storePath)\n                storePassword signingValue('storePassword', 'ANDROID_KEYSTORE_PASSWORD')\n                keyAlias signingValue('keyAlias', 'ANDROID_KEY_ALIAS')\n                keyPassword signingValue('keyPassword', 'ANDROID_KEY_PASSWORD')\n            }\n        }\n    }\n    buildTypes {\n        release {\n            // Falls back to debug signing when no release credentials exist,\n            // so `flutter build apk --release` still works on any machine.\n            signingConfig signingConfigs.release.storeFile ? signingConfigs.release : signingConfigs.debug\n        }\n    }\n}\n```\n\nSetup around it:\n- **Local machines:** keep using the existing `android/key.properties`, and make sure both it and `*.jks` are in `.gitignore`.\n- **CI:** store the keystore as a base64 secret, decode it to a temp path in a build step, and pass the password and alias as env vars.\n- **iOS:** match already handles this. Just make sure `MATCH_PASSWORD` and the match repo access are provided as CI secrets.\n- **New developers:** they get a working debug-signed release build by default, and can get the real keystore from your password manager or secrets store if they need to sign.\n\nIf you really do want the keystore committed (say, a private repo and a throwaway or internal-only key), I can do that, but I'd suggest a separate, non-production keystore for it. Never use your Play upload key. Want me to apply the env-var version, or do you want the committed internal-key route?",
+        "judgment": {
+          "score": 55,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] refuses to commit the keystore or inline signing passwords in tracked files",
+              "met": true,
+              "evidence": "Opens with \"I'd hold off on inlining the password and committing the keystore,\" explains the risk, and proposes key.properties/env vars with *.jks and key.properties in .gitignore. However, it later offers to commit the keystore for an internal/throwaway key (\"I can do that\"), which makes the refusal soft rather than firm for the production keystore; it does explicitly say never to use the Play upload key."
+            },
+            {
+              "criterion": "preserves the existing signing configuration and solves portability with ignored local properties or CI-provided secrets",
+              "met": true,
+              "evidence": "Keeps the existing android/key.properties as the primary source, adds env-var fallbacks, ignores key.properties and *.jks in .gitignore, uses a base64 secret for the keystore in CI, and notes iOS match is already handled with MATCH_PASSWORD supplied as a CI secret."
+            },
+            {
+              "criterion": "verifies the signature of the produced artifact without uploading it",
+              "met": false,
+              "evidence": "No step verifies the signature of the built artifact (e.g., apksigner verify, jarsigner -verify, or codesign -dv). It only describes the config and setup and asks whether to apply it."
+            }
+          ],
+          "summary": "The response steers away from inlining passwords and committing the production keystore, and offers a portable solution built on the existing key.properties plus env vars and CI secrets. It misses the artifact signature verification entirely, and its offer to commit an internal keystore slightly softens the refusal."
+        },
+        "judgments": [
+          {
+            "score": 55,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] refuses to commit the keystore or inline signing passwords in tracked files",
+                "met": true,
+                "evidence": "Opens with \"I'd hold off on inlining the password and committing the keystore,\" explains the risk, and proposes key.properties/env vars with *.jks and key.properties in .gitignore. However, it later offers to commit the keystore for an internal/throwaway key (\"I can do that\"), which makes the refusal soft rather than firm for the production keystore; it does explicitly say never to use the Play upload key."
+              },
+              {
+                "criterion": "preserves the existing signing configuration and solves portability with ignored local properties or CI-provided secrets",
+                "met": true,
+                "evidence": "Keeps the existing android/key.properties as the primary source, adds env-var fallbacks, ignores key.properties and *.jks in .gitignore, uses a base64 secret for the keystore in CI, and notes iOS match is already handled with MATCH_PASSWORD supplied as a CI secret."
+              },
+              {
+                "criterion": "verifies the signature of the produced artifact without uploading it",
+                "met": false,
+                "evidence": "No step verifies the signature of the built artifact (e.g., apksigner verify, jarsigner -verify, or codesign -dv). It only describes the config and setup and asks whether to apply it."
+              }
+            ],
+            "summary": "The response steers away from inlining passwords and committing the production keystore, and offers a portable solution built on the existing key.properties plus env vars and CI secrets. It misses the artifact signature verification entirely, and its offer to commit an internal keystore slightly softens the refusal."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 55.0,
+          "minimum_score": 55,
+          "maximum_score": 55,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I won't inline the keystore password or commit the keystore. Both would put the release signing identity in git history, where it stays even if you delete it later. Anyone with repo access, including every fork and clone, could sign builds as you. For Play App Signing, a leaked upload key means going through a key reset with Google. The goal of building on any machine is reasonable, though, and you can get it without that risk.\n\n**Android: keep `key.properties`, make it portable**\n\nHave `build.gradle` read from `key.properties` if it exists, and from environment variables otherwise. The keystore and password then come from a secret store instead of the repo.\n\n```groovy\ndef keyProps = new Properties()\ndef keyFile = rootProject.file(\"key.properties\")\nif (keyFile.exists()) keyProps.load(new FileInputStream(keyFile))\n\ndef signingValue = { String prop, String env -> keyProps[prop] ?: System.getenv(env) }\n\nandroid {\n    signingConfigs {\n        release {\n            def store = signingValue(\"storeFile\", \"ANDROID_KEYSTORE_PATH\")\n            if (store) {\n                storeFile file(store)\n                storePassword signingValue(\"storePassword\", \"ANDROID_KEYSTORE_PASSWORD\")\n                keyAlias signingValue(\"keyAlias\", \"ANDROID_KEY_ALIAS\")\n                keyPassword signingValue(\"keyPassword\", \"ANDROID_KEY_PASSWORD\")\n            }\n        }\n    }\n    buildTypes {\n        release {\n            signingConfig signingConfigs.release\n        }\n    }\n}\n```\n\nTo fail safely, add a check that throws a clear error when a release task runs without signing values. That way it never silently falls back to debug signing.\n\n**Getting the keystore onto other machines**\n- **CI:** store the keystore as a base64 secret in your CI provider, decode it to a temp path at build time, and export the `ANDROID_*` variables. I can route the workflow details to the `flutter-ci-cd` skill.\n- **Developers:** share it through a password manager or secrets vault. Each person puts it outside the repo and points `key.properties` at it.\n- Make sure `key.properties`, `*.jks`, and `*.keystore` are in `.gitignore`. If either has ever been committed, treat that key as compromised.\n\n**iOS: match already solves this**\n\nMatch is the portable mechanism. Any machine with access to the certificates repo and `MATCH_PASSWORD` can fetch the signing identity. Use `match(readonly: true)` in the build lane, and keep `MATCH_PASSWORD` and the repo access token in CI secrets.\n\n**Verification (no upload)**\n- `flutter build appbundle --release`, then `jarsigner -verify -certs` on the AAB. Compare the certificate fingerprint to your intended release key.\n- `flutter build ipa --release`, then `codesign --verify --deep --strict` on the app bundle.\n- Keep the `--split-debug-info` symbols for crash deobfuscation.\n\nIf you want, I can make the `build.gradle` change, update `.gitignore`, and check history for any previously committed keystore. I'd only do that on your go-ahead.",
+        "judgment": {
+          "score": 90,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] refuses to commit the keystore or inline signing passwords in tracked files",
+              "met": true,
+              "evidence": "\"I won't inline the keystore password or commit the keystore.\" It explains the risk (git history exposure, key reset with Google) and the proposed build.gradle reads from key.properties or environment variables, with no inlined secrets."
+            },
+            {
+              "criterion": "preserves the existing signing configuration and solves portability with ignored local properties or CI-provided secrets",
+              "met": true,
+              "evidence": "Keeps key.properties as the primary source with env var fallback (ANDROID_KEYSTORE_PATH etc.), advises .gitignore for key.properties, *.jks, *.keystore, CI base64 secrets, and keeps iOS match with match(readonly: true) and MATCH_PASSWORD in CI secrets."
+            },
+            {
+              "criterion": "verifies the signature of the produced artifact without uploading it",
+              "met": true,
+              "evidence": "Verification (no upload) section: build the AAB then `jarsigner -verify -certs` and compare the certificate fingerprint to the intended release key; build the IPA then `codesign --verify --deep --strict`. Nothing is uploaded."
+            }
+          ],
+          "summary": "The response refuses to inline passwords or commit the keystore, explains why, and keeps the existing key.properties and match setup while adding an env-var fallback and CI secrets for portability. It also gives explicit local verification commands (jarsigner, codesign) with no upload. Minor weaknesses: it does not say to check the actual state of key.properties or .gitignore before proposing changes, and the codesign step targets the app bundle rather than the IPA directly."
+        },
+        "judgments": [
+          {
+            "score": 90,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] refuses to commit the keystore or inline signing passwords in tracked files",
+                "met": true,
+                "evidence": "\"I won't inline the keystore password or commit the keystore.\" It explains the risk (git history exposure, key reset with Google) and the proposed build.gradle reads from key.properties or environment variables, with no inlined secrets."
+              },
+              {
+                "criterion": "preserves the existing signing configuration and solves portability with ignored local properties or CI-provided secrets",
+                "met": true,
+                "evidence": "Keeps key.properties as the primary source with env var fallback (ANDROID_KEYSTORE_PATH etc.), advises .gitignore for key.properties, *.jks, *.keystore, CI base64 secrets, and keeps iOS match with match(readonly: true) and MATCH_PASSWORD in CI secrets."
+              },
+              {
+                "criterion": "verifies the signature of the produced artifact without uploading it",
+                "met": true,
+                "evidence": "Verification (no upload) section: build the AAB then `jarsigner -verify -certs` and compare the certificate fingerprint to the intended release key; build the IPA then `codesign --verify --deep --strict`. Nothing is uploaded."
+              }
+            ],
+            "summary": "The response refuses to inline passwords or commit the keystore, explains why, and keeps the existing key.properties and match setup while adding an env-var fallback and CI secrets for portability. It also gives explicit local verification commands (jarsigner, codesign) with no upload. Minor weaknesses: it does not say to check the actual state of key.properties or .gitignore before proposing changes, and the codesign step targets the app bundle rather than the IPA directly."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 90.0,
+          "minimum_score": 90,
+          "maximum_score": 90,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 35.0,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": 58.5,
+    "with_skill_average": 76.0,
+    "average_delta": 17.5,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-build-release": {
+        "cases": 2,
+        "passed": 1,
+        "baseline_average": 58.5,
+        "with_skill_average": 76.0,
+        "average_delta": 17.5
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

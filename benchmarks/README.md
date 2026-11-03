@@ -83,6 +83,25 @@ Claude Code was both solver and judge with its default model, one judge and an 8
 | `flutter-animation` | `chooses-implicit-animation` | 100 | 93 | -7 | yes |
 | `flutter-app-workflow` | `ticket-scoped-branch-commit-and-push-boundary` | 30 | 15 | -15 | no |
 
+### Three-case follow-up for the low-delta skills
+
+The twelve skills with a delta of +12 or less in the table above were rerun on two more cases each, with baselines, using the same Claude Code setup. Files: `v0.12.0-draft/claude-groupb-<skill>.json`. Each mean covers three cases (the first case plus two more). Nine of the twelve skills now show a delta between +6 and +27, so a one-case delta understated them and no skill was trimmed. `flutter-text-rendering` (baseline 98) adds almost nothing on these cases. `flutter-ci-cd` and `flutter-package-development` score below 80 with the skill. The `flutter-ci-cd` matrix case scored 72, 55, and 62 after its rubric was reworded to accept a plan, and one run missed a mandatory expectation, so it remains open. The package-development means include the case fixed in this release.
+
+| Skill | Baseline mean | With-skill mean | Delta |
+|---|---:|---:|---:|
+| `dart-language` | 54 | 81 | +27 |
+| `flutter-persistence` | 75 | 94 | +19 |
+| `flutter-ai-integration` | 76 | 94 | +18 |
+| `flutter-build-release` | 68 | 84 | +16 |
+| `dart-concurrency` | 72 | 86 | +14 |
+| `flutter-architecture` | 72 | 85 | +13 |
+| `flutter-security` | 75 | 84 | +9 |
+| `flutter-localization` | 77 | 85 | +8 |
+| `flutter-package-development` | 64 | 70 | +6 |
+| `flutter-animation` | 75 | 81 | +6 |
+| `flutter-text-rendering` | 98 | 96 | -2 |
+| `flutter-ci-cd` | 76 | 70 | -7 |
+
 ## Unreleased focused result
 
 The `flutter-device-testing` semantic inspection cases ran with Claude Code 2.1.310 as both solver and judge, with baselines skipped. The accessibility-tree navigation case scored 92 and the empty-semantics-tree case scored 35 with a mandatory failure in the [initial result](unreleased/flutter-device-testing-semantic-inspection-initial.json): the agent led with the requested coordinate tap and gave the diagnosis afterwards, and it did not route the missing identifier to `flutter-accessibility`. After the reference required that diagnosis first and that routing, the case scored 96; see the [final result](unreleased/flutter-device-testing-semantic-inspection.json).

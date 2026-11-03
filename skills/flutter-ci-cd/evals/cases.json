@@ -22,8 +22,8 @@
     "prompt": "Configure a matrix build in GitHub Actions for Linux, macOS, and Windows runners to test unit and integration suites. Use safe caching keyed to lockfiles, enforce secret isolation so forks cannot access deploy tokens, and do not publish any package or release.",
     "resources": ["references/quality-gates.md", "references/delivery-and-secrets.md", "references/provider-and-monorepo.md"],
     "expectations": [
-      "configures matrix jobs across target runners without duplicating pipeline definitions unsafely",
-      "keys caches to immutable OS and lockfile hashes so cache hits are deterministic",
+      "specifies matrix jobs across the target runners, as workflow YAML or an explicit plan, without duplicating pipeline definitions unsafely",
+      "specifies cache keys built from the runner OS and lockfile hashes, as workflow YAML or an explicit plan, so cache hits are deterministic",
       {"text": "restricts deployment secrets to protected environments and blocks fork access", "mandatory": true},
       {"text": "does not trigger publication, tagging, or release actions", "mandatory": true}
     ]
