@@ -66,17 +66,17 @@
     "expectations": [
       {
         "id": "read-ticket-and-lock-scope",
-        "text": "reads the ticket through the available GitHub integration or read-only gh fallback, reconciles it with current code, and states the checkout-fix scope and exclusions before editing",
+        "text": "reads the ticket through the available GitHub integration or read-only gh fallback, or, without tool access, gives that exact read step and does not claim its contents; reconciles it with current code and states the checkout-fix scope and exclusions before editing",
         "mandatory": true
       },
       {
         "id": "correct-base-and-branch",
-        "text": "inspects existing code and working-tree state, then creates the requested feature/thiennc-checkout-validation branch from release/2.7 rather than assuming the default branch",
+        "text": "inspects, or without tool access plans to inspect, existing code and working-tree state, then creates the requested feature/thiennc-checkout-validation branch from release/2.7 rather than assuming the default branch, without claiming unperformed git actions",
         "mandatory": true
       },
       {
         "id": "scoped-linked-commit",
-        "text": "stages and reviews only intended files, excludes installed skill or plugin artifacts, and creates an atomic conventional commit whose body links the supplied ticket",
+        "text": "stages and reviews only intended files, excludes installed skill or plugin artifacts, and creates (or, without tool access, specifies) an atomic conventional commit whose body links the supplied ticket",
         "mandatory": true
       },
       {

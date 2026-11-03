@@ -1,0 +1,297 @@
+{
+  "created_at": "2026-11-03T13:31:51.374823+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "ca4c8d7baec044395d4da1480b2e20304734d948",
+    "dirty": false,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "dart-language",
+      "case": "sealed-hierarchy-exhaustive-switch",
+      "baseline": {
+        "response": "I haven't seen your actual code, so this is the standard Dart 3 shape for it. Send me the file, or tell me where it lives, and I'll apply it directly and update the call sites.\n\n## Before (typical)\n\n```dart\nenum PaymentStatus { success, failed, pending }\n\nclass PaymentResult {\n  final PaymentStatus status;   // or a raw String like 'success'\n  final String? errorMessage;   // only meaningful when failed\n  const PaymentResult(this.status, [this.errorMessage]);\n}\n```\n\nThe problems are that `errorMessage` can be set on a success or be null on a failure, and nothing forces callers to handle every status.\n\n## After\n\n```dart\nsealed class PaymentResult {\n  const PaymentResult();\n}\n\nfinal class PaymentSuccess extends PaymentResult {\n  const PaymentSuccess({required this.transactionId});\n  final String transactionId; // replace with whatever success data you carry\n}\n\nfinal class PaymentPending extends PaymentResult {\n  const PaymentPending();\n}\n\nfinal class PaymentFailure extends PaymentResult {\n  const PaymentFailure({required this.message});\n  final String message; // non-nullable: a failure always has a reason\n}\n```\n\n## Consuming it\n\nUse a `switch` expression with no `default`. Adding a new subtype later makes every incomplete switch a compile error.\n\n```dart\nString describe(PaymentResult result) => switch (result) {\n  PaymentSuccess(:final transactionId) => 'Paid ($transactionId)',\n  PaymentPending()                     => 'Processing\u2026',\n  PaymentFailure(:final message)       => 'Failed: $message',\n};\n```\n\n## Migration steps\n\n1. **Add the sealed hierarchy** alongside the old type, with one subclass per old enum value.\n2. **Move data to the case that owns it.** The old optional `errorMessage` becomes a required field on `PaymentFailure`. If the old string status carried other values, such as `'refunded'` or `'cancelled'`, give each its own subclass.\n3. **Convert the boundary.** Where you parse API responses, map the status string to a subtype in one place, and make the unknown case explicit:\n   ```dart\n   PaymentResult parse(Map<String, dynamic> json) => switch (json['status']) {\n     'success' => PaymentSuccess(transactionId: json['id'] as String),\n     'pending' => const PaymentPending(),\n     'failed'  => PaymentFailure(message: json['error'] as String? ?? 'Unknown error'),\n     _         => PaymentFailure(message: 'Unrecognized status: ${json['status']}'),\n   };\n   ```\n   That `_` is the only wildcard, and it sits at the parsing edge rather than in business logic.\n4. **Replace `if (result.status == ...)` checks** with switches. Don't use `default` or `_` in them, or you lose the exhaustiveness guarantee.\n5. **Run `dart analyze`.** Every missed call site shows up, and tests that construct the old `PaymentResult(status, msg)` need updating.\n6. **Delete the old enum and class** once nothing references them.\n\n## Notes\n\n- `final class` for the leaves prevents further subclassing outside the library. Use plain `class` if you need to extend them.\n- Both `sealed` and `final` apply per library, so keep the hierarchy in one file.\n- If you use `freezed` or `equatable`, add value equality to the subclasses. Otherwise, add `==` and `hashCode` by hand if tests compare results.\n\nWhich file defines the current type? I'll make the change and run the analyzer.",
+        "judgment": {
+          "score": 38,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] creates a sealed hierarchy that makes switch exhaustive",
+              "met": true,
+              "evidence": "Defines `sealed class PaymentResult` with final subclasses PaymentSuccess, PaymentPending, PaymentFailure, and shows a `switch` expression with no default that covers all subtypes, explaining that adding a subtype makes incomplete switches a compile error."
+            },
+            {
+              "criterion": "checks SDK constraint supports sealed classes before using them",
+              "met": false,
+              "evidence": "Never mentions checking pubspec.yaml's SDK constraint or that sealed classes require Dart 3.0+. It refers to 'Dart 3 shape' only in passing and offers no verification step."
+            },
+            {
+              "criterion": "preserves the public API or documents the breaking change",
+              "met": false,
+              "evidence": "Migration steps say to add the hierarchy alongside the old type and later delete the old enum/class, and that tests constructing `PaymentResult(status, msg)` need updating, but it never explicitly states that the public API changes or frames this as a breaking change. It does not preserve the old API (no compatibility getters or deprecation)."
+            }
+          ],
+          "summary": "The response gives a correct sealed class hierarchy with an exhaustive switch, meeting the mandatory criterion. It does not check or mention the SDK constraint needed for sealed classes, and it does not explicitly preserve the public API or document the breaking change, only implying call-site updates during migration."
+        },
+        "judgments": [
+          {
+            "score": 38,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] creates a sealed hierarchy that makes switch exhaustive",
+                "met": true,
+                "evidence": "Defines `sealed class PaymentResult` with final subclasses PaymentSuccess, PaymentPending, PaymentFailure, and shows a `switch` expression with no default that covers all subtypes, explaining that adding a subtype makes incomplete switches a compile error."
+              },
+              {
+                "criterion": "checks SDK constraint supports sealed classes before using them",
+                "met": false,
+                "evidence": "Never mentions checking pubspec.yaml's SDK constraint or that sealed classes require Dart 3.0+. It refers to 'Dart 3 shape' only in passing and offers no verification step."
+              },
+              {
+                "criterion": "preserves the public API or documents the breaking change",
+                "met": false,
+                "evidence": "Migration steps say to add the hierarchy alongside the old type and later delete the old enum/class, and that tests constructing `PaymentResult(status, msg)` need updating, but it never explicitly states that the public API changes or frames this as a breaking change. It does not preserve the old API (no compatibility getters or deprecation)."
+              }
+            ],
+            "summary": "The response gives a correct sealed class hierarchy with an exhaustive switch, meeting the mandatory criterion. It does not check or mention the SDK constraint needed for sealed classes, and it does not explicitly preserve the public API or document the breaking change, only implying call-site updates during migration."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 38.0,
+          "minimum_score": 38,
+          "maximum_score": 38,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I haven't looked at the payment code yet, so this is the target shape and the migration plan. Send me the file path, or I'll search the repo for the enum, and I'll apply it directly.\n\n**Prerequisite:** `sealed` needs Dart 3.0+, so I'll check the `environment: sdk:` constraint in `pubspec.yaml` first.\n\n**Target shape** (variant names are placeholders until I see your actual status strings):\n\n```dart\nsealed class PaymentResult {\n  const PaymentResult();\n}\n\nfinal class PaymentSucceeded extends PaymentResult {\n  const PaymentSucceeded();\n}\n\nfinal class PaymentPending extends PaymentResult {\n  const PaymentPending();\n}\n\nfinal class PaymentFailed extends PaymentResult {\n  const PaymentFailed(this.message, [this.error, this.stackTrace]);\n\n  final String message;\n  final Object? error;\n  final StackTrace? stackTrace;\n}\n```\n\nThe error message only exists on the failure variant, so \"success with an error message\" can no longer be represented. If the current code carries an original exception, `PaymentFailed` keeps it and the stack trace instead of reducing them to a string.\n\n**Call sites** switch without a `default`, so adding a variant later becomes a compile error everywhere it is unhandled:\n\n```dart\nString label(PaymentResult r) => switch (r) {\n  PaymentSucceeded() => 'Paid',\n  PaymentPending() => 'Processing',\n  PaymentFailed(:final message) => 'Failed: $message',\n};\n```\n\n**Plan:**\n1. Find the enum and every place that reads the status string or error message, including any JSON or persistence mapping.\n2. Replace the enum with the sealed hierarchy. All subtypes stay in one library (file), and they're `final` so nothing outside can extend them.\n3. Convert each `if`/`switch` on the status string to an exhaustive switch with no `default`.\n4. If the status string crosses a boundary (API, storage), keep the string-to-variant mapping in one factory or function at that edge. Unknown strings should become an explicit failure rather than a silent fallback.\n5. If the type is part of a public package API, this is a breaking change. I'll flag it and check examples and downstream callers before finishing. If any of these classes use `freezed` or are generated, I'll edit the annotated source and regenerate rather than touching `*.g.dart` files.\n6. Run `dart format`, `dart analyze`, and the narrowest relevant tests.\n\nIs this a public API, and does the status string come from a backend response?",
+        "judgment": {
+          "score": 82,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] creates a sealed hierarchy that makes switch exhaustive",
+              "met": true,
+              "evidence": "Defines `sealed class PaymentResult` with final subtypes PaymentSucceeded, PaymentPending, PaymentFailed, and shows a `switch` expression with no default covering all variants. It also says to convert call sites to exhaustive switches with no `default`."
+            },
+            {
+              "criterion": "checks SDK constraint supports sealed classes before using them",
+              "met": true,
+              "evidence": "States the prerequisite: \"`sealed` needs Dart 3.0+, so I'll check the `environment: sdk:` constraint in `pubspec.yaml` first.\" This is explicit, though it is a stated plan and not an executed check."
+            },
+            {
+              "criterion": "preserves the public API or documents the breaking change",
+              "met": true,
+              "evidence": "Plan step 5: \"If the type is part of a public package API, this is a breaking change. I'll flag it and check examples and downstream callers before finishing.\" It also asks whether this is a public API. The breaking-change note is conditional, not a firm statement."
+            }
+          ],
+          "summary": "The response gives a correct sealed class hierarchy with an exhaustive switch and no default, which meets the mandatory criterion. It names the Dart 3.0+ SDK constraint check and flags the public API breaking change as conditional. Both are stated as plans, not performed, because the code was not inspected. It does not propose a compatibility shim to preserve the old API."
+        },
+        "judgments": [
+          {
+            "score": 82,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] creates a sealed hierarchy that makes switch exhaustive",
+                "met": true,
+                "evidence": "Defines `sealed class PaymentResult` with final subtypes PaymentSucceeded, PaymentPending, PaymentFailed, and shows a `switch` expression with no default covering all variants. It also says to convert call sites to exhaustive switches with no `default`."
+              },
+              {
+                "criterion": "checks SDK constraint supports sealed classes before using them",
+                "met": true,
+                "evidence": "States the prerequisite: \"`sealed` needs Dart 3.0+, so I'll check the `environment: sdk:` constraint in `pubspec.yaml` first.\" This is explicit, though it is a stated plan and not an executed check."
+              },
+              {
+                "criterion": "preserves the public API or documents the breaking change",
+                "met": true,
+                "evidence": "Plan step 5: \"If the type is part of a public package API, this is a breaking change. I'll flag it and check examples and downstream callers before finishing.\" It also asks whether this is a public API. The breaking-change note is conditional, not a firm statement."
+              }
+            ],
+            "summary": "The response gives a correct sealed class hierarchy with an exhaustive switch and no default, which meets the mandatory criterion. It names the Dart 3.0+ SDK constraint check and flags the public API breaking change as conditional. Both are stated as plans, not performed, because the code was not inspected. It does not propose a compatibility shim to preserve the old API."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 82.0,
+          "minimum_score": 82,
+          "maximum_score": 82,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 44.0,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "dart-language",
+      "case": "never-hand-edits-generated-file",
+      "baseline": {
+        "response": "I can make that edit, but I haven't opened `user.g.dart` or `user.dart` yet, so I need to know which field is missing. Its name, type, and JSON key (if it differs from the name) are enough. Without them I'd be guessing.\n\nA hand edit would touch two places in `user.g.dart`:\n\n```dart\n// _$UserFromJson\nUser _$UserFromJson(Map<String, dynamic> json) => User(\n      id: json['id'] as String,\n      // add the missing field here, e.g.:\n      nickname: json['nickname'] as String?,\n    );\n\n// _$UserToJson (so serialization stays symmetric)\nMap<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{\n      'id': instance.id,\n      'nickname': instance.nickname,\n    };\n```\n\nThe edit is a stopgap, because the next `build_runner` run will overwrite it. A field missing from the generated code usually means one of two things:\n\n- **The field isn't in `user.dart`, or has `@JsonKey(includeFromJson: false)`.** If so, the generator is behaving correctly, and the lasting fix is to add or correct the field in `user.dart`.\n- **`user.g.dart` is stale.** Running `dart run build_runner build --delete-conflicting-outputs` should regenerate it correctly, and that is likely faster than hand-editing.\n\nIf you want the quick patch for now, send me the field details and I'll apply it. I'd also check `user.dart` afterward so the patch doesn't silently disappear on the next regeneration.",
+        "judgment": {
+          "score": 30,
+          "expectations": [
+            {
+              "criterion": "edits the annotated source class (and its json_serializable/freezed annotations), not the generated .g.dart file",
+              "met": false,
+              "evidence": "The response offers to hand-edit user.g.dart and shows a patch for it. It mentions fixing user.dart only as the 'lasting fix' and as an afterthought check, and it never commits to editing the source class instead of the generated file."
+            },
+            {
+              "criterion": "regenerates through the project's build_runner command rather than hand-patching output",
+              "met": true,
+              "evidence": "It suggests `dart run build_runner build --delete-conflicting-outputs` as likely faster than hand-editing. However, it presents this as an option next to the hand patch, not as the chosen approach."
+            },
+            {
+              "criterion": "does not treat the stale generated file as a bug in the generator itself",
+              "met": true,
+              "evidence": "It says that if the field is missing from user.dart or excluded by @JsonKey, 'the generator is behaving correctly', and it treats a stale user.g.dart as a regeneration issue, not a generator bug."
+            }
+          ],
+          "summary": "The response correctly identifies build_runner regeneration and does not blame the generator. It fails the mandatory criterion: it offers to hand-patch user.g.dart, includes a code patch for it, and says it will apply the edit once given the field details. Editing user.dart is only mentioned as a follow-up. Because the mandatory criterion is unmet, the score is low."
+        },
+        "judgments": [
+          {
+            "score": 30,
+            "expectations": [
+              {
+                "criterion": "edits the annotated source class (and its json_serializable/freezed annotations), not the generated .g.dart file",
+                "met": false,
+                "evidence": "The response offers to hand-edit user.g.dart and shows a patch for it. It mentions fixing user.dart only as the 'lasting fix' and as an afterthought check, and it never commits to editing the source class instead of the generated file."
+              },
+              {
+                "criterion": "regenerates through the project's build_runner command rather than hand-patching output",
+                "met": true,
+                "evidence": "It suggests `dart run build_runner build --delete-conflicting-outputs` as likely faster than hand-editing. However, it presents this as an option next to the hand patch, not as the chosen approach."
+              },
+              {
+                "criterion": "does not treat the stale generated file as a bug in the generator itself",
+                "met": true,
+                "evidence": "It says that if the field is missing from user.dart or excluded by @JsonKey, 'the generator is behaving correctly', and it treats a stale user.g.dart as a regeneration issue, not a generator bug."
+              }
+            ],
+            "summary": "The response correctly identifies build_runner regeneration and does not blame the generator. It fails the mandatory criterion: it offers to hand-patch user.g.dart, includes a code patch for it, and says it will apply the edit once given the field details. Editing user.dart is only mentioned as a follow-up. Because the mandatory criterion is unmet, the score is low."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 30.0,
+          "minimum_score": 30,
+          "maximum_score": 30,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I won't hand-edit `user.g.dart`. The next `build_runner` run will overwrite the change, so it would unblock you only until then, and the source and generated code would be out of sync.\n\nA missing field in `_$UserFromJson` almost always means one of two things:\n\n1. **The field isn't on the annotated `User` class in `user.dart`.** Add it to the field list and constructor, with `@JsonKey(...)` if the wire name, nullability, or default differs.\n2. **The generated file is stale.** The field is already in `user.dart`, but the output wasn't regenerated.\n\nThe fix is to correct the source if needed, then regenerate with the project's own command:\n\n```sh\ndart run build_runner build --delete-conflicting-outputs\n```\n\nIf the repo has a documented script for this (a Makefile target or a `melos` script), use that instead. After regenerating, run `dart analyze` and the narrowest tests that cover `User` parsing.\n\nIf the build fails, the error will name the file and generator involved. Send me that output and I'll go from there.\n\nIf you give me the field's name, type, nullability, and JSON key, I can make the change in `user.dart`, regenerate, and verify it.",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] edits the annotated source class (and its json_serializable/freezed annotations), not the generated .g.dart file",
+              "met": true,
+              "evidence": "Declines to hand-edit user.g.dart and directs the fix to the annotated User class in user.dart: \"Add it to the field list and constructor, with @JsonKey(...)\". It offers to make the change in user.dart once given field details, though it doesn't actually edit anything yet."
+            },
+            {
+              "criterion": "regenerates through the project's build_runner command rather than hand-patching output",
+              "met": true,
+              "evidence": "Recommends `dart run build_runner build --delete-conflicting-outputs` and says to use a documented Makefile or melos script if the repo has one. It did not inspect the repo to confirm the project's actual command."
+            },
+            {
+              "criterion": "does not treat the stale generated file as a bug in the generator itself",
+              "met": true,
+              "evidence": "Attributes the missing field to either the field being absent from the source class or the generated output being stale, not to a generator bug. It doesn't blame json_serializable."
+            }
+          ],
+          "summary": "The response refuses to patch user.g.dart, points to the source class, and recommends regenerating with build_runner, so all three criteria are met. It stays advisory: it never inspects user.dart or the repo's scripts, so it doesn't verify which cause applies or confirm the project's actual regeneration command."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] edits the annotated source class (and its json_serializable/freezed annotations), not the generated .g.dart file",
+                "met": true,
+                "evidence": "Declines to hand-edit user.g.dart and directs the fix to the annotated User class in user.dart: \"Add it to the field list and constructor, with @JsonKey(...)\". It offers to make the change in user.dart once given field details, though it doesn't actually edit anything yet."
+              },
+              {
+                "criterion": "regenerates through the project's build_runner command rather than hand-patching output",
+                "met": true,
+                "evidence": "Recommends `dart run build_runner build --delete-conflicting-outputs` and says to use a documented Makefile or melos script if the repo has one. It did not inspect the repo to confirm the project's actual command."
+              },
+              {
+                "criterion": "does not treat the stale generated file as a bug in the generator itself",
+                "met": true,
+                "evidence": "Attributes the missing field to either the field being absent from the source class or the generated output being stale, not to a generator bug. It doesn't blame json_serializable."
+              }
+            ],
+            "summary": "The response refuses to patch user.g.dart, points to the source class, and recommends regenerating with build_runner, so all three criteria are met. It stays advisory: it never inspects user.dart or the repo's scripts, so it doesn't verify which cause applies or confirm the project's actual regeneration command."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 32.0,
+      "mandatory_failure": false,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": 34.0,
+    "with_skill_average": 72.0,
+    "average_delta": 38.0,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "dart-language": {
+        "cases": 2,
+        "passed": 1,
+        "baseline_average": 34.0,
+        "with_skill_average": 72.0,
+        "average_delta": 38.0
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

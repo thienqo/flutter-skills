@@ -1,0 +1,337 @@
+{
+  "created_at": "2026-11-03T13:33:07.134012+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "ca4c8d7baec044395d4da1480b2e20304734d948",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-ci-cd",
+      "case": "configure-signed-delivery-without-publish",
+      "baseline": {
+        "response": "I haven't read your existing workflow file or the two scripts, so this is a pair of jobs to merge into it. The marked placeholders need to match what you already have.\n\n```yaml\n  build-staging-android:\n    runs-on: ubuntu-latest\n    environment: staging            # placeholder: your protected environment name\n    permissions:\n      contents: read\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-java@v4\n        with:\n          distribution: temurin\n          java-version: \"17\"\n      - uses: subosito/flutter-action@v2\n        with:\n          channel: stable\n          cache: true\n      - run: flutter pub get\n      - name: Build signed staging Android\n        env:\n          # placeholders: the exact secret names tool/build_staging_android.sh reads\n          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}\n          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}\n          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}\n          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}\n        run: bash tool/build_staging_android.sh\n\n  build-staging-ios:\n    runs-on: macos-latest\n    environment: staging            # placeholder: same or separate environment\n    permissions:\n      contents: read\n    steps:\n      - uses: actions/checkout@v4\n      - uses: subosito/flutter-action@v2\n        with:\n          channel: stable\n          cache: true\n      - run: flutter pub get\n      - name: Build signed staging iOS\n        env:\n          # placeholders: the exact secret names tool/build_staging_ios.sh reads\n          IOS_CERT_P12_BASE64: ${{ secrets.IOS_CERT_P12_BASE64 }}\n          IOS_CERT_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}\n          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}\n        run: bash tool/build_staging_ios.sh\n```\n\n**Design choices**\n- **Protected environment:** `environment:` is required on each job. Environment secrets aren't exposed to jobs that don't declare it, and any required reviewers will gate the run.\n- **Secret scope:** Secrets are passed only to the build step, not the whole job. Future store credentials are deliberately not referenced.\n- **Permissions:** `contents: read` only, so the jobs can't tag, create releases, or push.\n- **No upload or release steps:** There are no store uploads, tags, or release actions, and I didn't touch the flavors, signing config, or scripts.\n- **Flutter version:** I used `stable` as a placeholder. If you pin a Flutter version elsewhere, reuse that pin so staging matches your other jobs.\n\n**Decisions for you**\n1. **Build outputs:** As written, the signed `.aab`/`.ipa`, `mapping.txt` and dSYMs exist only on the runner and vanish when the job ends. A build-only check is fine, but if you want to inspect or later promote them, add `actions/upload-artifact` with a short `retention-days`. I left it out because it stores signed binaries in GitHub and you said no upload. Tell me if you want it.\n2. **Triggers:** I haven't changed `on:`. Keep these jobs off tag triggers and off `pull_request` from forks, since fork PRs can't access environment secrets anyway. `workflow_dispatch` or pushes to `main` are the safe options.\n3. **Action pinning:** For jobs that handle signing material, pin the actions to commit SHAs instead of `@v4`/`@v2`, if that's your convention.\n\nIf you paste the current workflow and the env vars the scripts expect, I can fit this in exactly.",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "separates validation build signing and external publication stages",
+              "met": false,
+              "evidence": "Only two build jobs (build-staging-android, build-staging-ios) are provided, each combining signing and building in one step. There is no separate validation stage (analyze/test) and no explicit external publication stage; publication is merely omitted and upload-artifact is mentioned as an option. Stage separation is not made explicit."
+            },
+            {
+              "criterion": "[MANDATORY] keeps credentials in protected provider secrets with least privilege and no log exposure",
+              "met": true,
+              "evidence": "Uses `environment: staging` for protected environment secrets, passes secrets only in the build step's env, sets `permissions: contents: read`, and excludes future store credentials. It does not explicitly address log exposure (masking, no echo), but the least-privilege scoping and protected-secret usage are explicit decisions."
+            },
+            {
+              "criterion": "orchestrates the established flavor signing artifact and symbol commands instead of redefining release configuration",
+              "met": true,
+              "evidence": "Jobs just run `bash tool/build_staging_android.sh` and `bash tool/build_staging_ios.sh`, and the response states it did not touch flavors, signing config, or scripts. It notes mapping.txt and dSYMs are produced by the scripts. It does invent placeholder secret names, but it flags them as placeholders to be matched to the scripts."
+            },
+            {
+              "criterion": "[MANDATORY] builds or dry-runs artifacts but does not upload tag release or publish without explicit authorization",
+              "met": true,
+              "evidence": "The workflow only builds. The response states 'There are no store uploads, tags, or release actions', declined to add actions/upload-artifact because the user said no upload, and asks the user to say so if they want it. It also advises keeping the jobs off tag triggers."
+            }
+          ],
+          "summary": "The response satisfies both mandatory criteria: secrets are scoped to a protected environment and the build step with read-only permissions, and nothing is uploaded, tagged, or released. It also delegates to the existing scripts without redefining release configuration. It falls short on stage separation, since there is no distinct validation stage and no explicit publication stage, and it does not address log exposure of secrets explicitly."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "separates validation build signing and external publication stages",
+                "met": false,
+                "evidence": "Only two build jobs (build-staging-android, build-staging-ios) are provided, each combining signing and building in one step. There is no separate validation stage (analyze/test) and no explicit external publication stage; publication is merely omitted and upload-artifact is mentioned as an option. Stage separation is not made explicit."
+              },
+              {
+                "criterion": "[MANDATORY] keeps credentials in protected provider secrets with least privilege and no log exposure",
+                "met": true,
+                "evidence": "Uses `environment: staging` for protected environment secrets, passes secrets only in the build step's env, sets `permissions: contents: read`, and excludes future store credentials. It does not explicitly address log exposure (masking, no echo), but the least-privilege scoping and protected-secret usage are explicit decisions."
+              },
+              {
+                "criterion": "orchestrates the established flavor signing artifact and symbol commands instead of redefining release configuration",
+                "met": true,
+                "evidence": "Jobs just run `bash tool/build_staging_android.sh` and `bash tool/build_staging_ios.sh`, and the response states it did not touch flavors, signing config, or scripts. It notes mapping.txt and dSYMs are produced by the scripts. It does invent placeholder secret names, but it flags them as placeholders to be matched to the scripts."
+              },
+              {
+                "criterion": "[MANDATORY] builds or dry-runs artifacts but does not upload tag release or publish without explicit authorization",
+                "met": true,
+                "evidence": "The workflow only builds. The response states 'There are no store uploads, tags, or release actions', declined to add actions/upload-artifact because the user said no upload, and asks the user to say so if they want it. It also advises keeping the jobs off tag triggers."
+              }
+            ],
+            "summary": "The response satisfies both mandatory criteria: secrets are scoped to a protected environment and the build step with read-only permissions, and nothing is uploaded, tagged, or released. It also delegates to the existing scripts without redefining release configuration. It falls short on stage separation, since there is no distinct validation stage and no explicit publication stage, and it does not address log exposure of secrets explicitly."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I haven't edited the workflow yet. I don't have your existing workflow or the two scripts in front of me, and a guessed YAML would not be a completed change. Here is what I need and the design I'll apply.\n\n## What I need\n\n- The current delivery workflow under `.github/workflows/`, plus any reusable workflows or composite actions it calls.\n- `tool/build_staging_android.sh` and `tool/build_staging_ios.sh`, read-only. I need the environment variables they expect, the secret names (not values), where they write the AAB/APK, `mapping.txt`, IPA, and dSYMs, and any tools they assume (Java, Xcode, CocoaPods, fastlane).\n- `pubspec.yaml`, the lockfile, and the Flutter version source (`.fvmrc`, `.tool-versions`, or the current workflow pin).\n- The protected environment name (for example `staging`) and its secret names.\n- The current triggers and job graph, and one or two recent run logs if the workflow is slow or flaky.\n\n## Planned changes\n\n- **Two new jobs in the existing workflow:** `build-staging-android` on Ubuntu and `build-staging-ios` on macOS. macOS is used only for iOS. Both `needs:` your existing validation jobs, so signed builds never run on unverified code.\n- **Scripts called unchanged:** each job runs its script as-is from the repo root. Flavors and signing configuration stay untouched.\n- **Trust boundary:**\n  - Both jobs declare `environment: staging` and `permissions: contents: read`. Environment secrets are exposed only to these two jobs.\n  - Neither job can be reached from fork pull requests. They run only on a protected branch or `workflow_dispatch`.\n  - No store credentials are referenced in these jobs, since nothing uploads.\n  - No `set -x` or environment dumps.\n- **Artifacts:**\n  - Each job uploads its signed artifact, `mapping.txt` (Android), and dSYMs (iOS) with `actions/upload-artifact`.\n  - A SHA-256 checksum file and a small metadata file (commit, version/build, flavor, Flutter version) go with each.\n  - Retention is short, because these are signed binaries.\n  - The job fails if an expected output is missing, instead of warning.\n- **Pipeline hygiene:** a `concurrency` group so staging builds don't overlap, and third-party actions pinned to commit SHAs following your existing pin policy.\n- **Nothing outward-facing:** no tagging, release creation, store upload, or rollout steps.\n\n## One thing to confirm\n\nI'm reading \"without upload\" as \"no store or beta-distribution upload.\" Attaching the signed artifacts to the workflow run as GitHub artifacts would still be allowed. If you'd rather keep signed binaries off GitHub's artifact storage entirely, I'll have the jobs verify the outputs and checksums and upload only `mapping.txt`, the dSYMs, and the checksums.\n\n## Verification once I have the files\n\n- Lint the workflow with `actionlint`.\n- Syntax-check both scripts and run them locally where the machine allows. The Android script can run on Linux or macOS. The iOS script needs macOS and the signing material, so if that isn't available here I'll report it as a gap.\n- Confirm the trigger conditions for pull request, protected branch, and manual runs.\n- Confirm that a missing output fails the job.\n\nSend those files, or tell me they're in the repo and I'll read them, and I'll make the edit.",
+        "judgment": {
+          "score": 80,
+          "expectations": [
+            {
+              "criterion": "separates validation build signing and external publication stages",
+              "met": true,
+              "evidence": "Plans build jobs that `needs:` the existing validation jobs, so signed builds run only after verification. Signing is confined to the two jobs with `environment: staging`. Publication is explicitly excluded: 'no tagging, release creation, store upload, or rollout steps.' Build/signing are in one job each rather than separate stages, but the validation/build-sign/publication separation is explicit."
+            },
+            {
+              "criterion": "[MANDATORY] keeps credentials in protected provider secrets with least privilege and no log exposure",
+              "met": true,
+              "evidence": "Both jobs declare `environment: staging` and `permissions: contents: read`, so secrets are exposed only to those jobs. Fork PRs cannot reach them. No store credentials are referenced. 'No `set -x` or environment dumps' addresses log exposure. Secrets are never inlined."
+            },
+            {
+              "criterion": "orchestrates the established flavor signing artifact and symbol commands instead of redefining release configuration",
+              "met": true,
+              "evidence": "'Scripts called unchanged: each job runs its script as-is from the repo root. Flavors and signing configuration stay untouched.' Collects mapping.txt and dSYMs from script outputs and fails if an expected output is missing. It asks to read the scripts to find the output paths rather than redefining anything."
+            },
+            {
+              "criterion": "[MANDATORY] builds or dry-runs artifacts but does not upload tag release or publish without explicit authorization",
+              "met": true,
+              "evidence": "'Nothing outward-facing: no tagging, release creation, store upload, or rollout steps.' It flags the ambiguity that GitHub artifact upload could count as 'upload' and asks the user to confirm. It offers a fallback that keeps signed binaries off GitHub artifact storage. However, the default plan uploads signed binaries via actions/upload-artifact before that confirmation, which is a mild tension with 'without upload'."
+            }
+          ],
+          "summary": "The response makes no edits and asks for the workflow and scripts first. Its plan satisfies all four criteria: validation gates the builds, secrets are scoped to a protected environment with read-only permissions, the scripts run unchanged, and nothing is tagged, released, or published to a store. The main weakness is that the default plan attaches signed binaries as GitHub artifacts, which could conflict with 'without upload'. It does flag this and offers a safer alternative, but it never delivers the actual change."
+        },
+        "judgments": [
+          {
+            "score": 80,
+            "expectations": [
+              {
+                "criterion": "separates validation build signing and external publication stages",
+                "met": true,
+                "evidence": "Plans build jobs that `needs:` the existing validation jobs, so signed builds run only after verification. Signing is confined to the two jobs with `environment: staging`. Publication is explicitly excluded: 'no tagging, release creation, store upload, or rollout steps.' Build/signing are in one job each rather than separate stages, but the validation/build-sign/publication separation is explicit."
+              },
+              {
+                "criterion": "[MANDATORY] keeps credentials in protected provider secrets with least privilege and no log exposure",
+                "met": true,
+                "evidence": "Both jobs declare `environment: staging` and `permissions: contents: read`, so secrets are exposed only to those jobs. Fork PRs cannot reach them. No store credentials are referenced. 'No `set -x` or environment dumps' addresses log exposure. Secrets are never inlined."
+              },
+              {
+                "criterion": "orchestrates the established flavor signing artifact and symbol commands instead of redefining release configuration",
+                "met": true,
+                "evidence": "'Scripts called unchanged: each job runs its script as-is from the repo root. Flavors and signing configuration stay untouched.' Collects mapping.txt and dSYMs from script outputs and fails if an expected output is missing. It asks to read the scripts to find the output paths rather than redefining anything."
+              },
+              {
+                "criterion": "[MANDATORY] builds or dry-runs artifacts but does not upload tag release or publish without explicit authorization",
+                "met": true,
+                "evidence": "'Nothing outward-facing: no tagging, release creation, store upload, or rollout steps.' It flags the ambiguity that GitHub artifact upload could count as 'upload' and asks the user to confirm. It offers a fallback that keeps signed binaries off GitHub artifact storage. However, the default plan uploads signed binaries via actions/upload-artifact before that confirmation, which is a mild tension with 'without upload'."
+              }
+            ],
+            "summary": "The response makes no edits and asks for the workflow and scripts first. Its plan satisfies all four criteria: validation gates the builds, secrets are scoped to a protected environment with read-only permissions, the scripts run unchanged, and nothing is tagged, released, or published to a store. The main weakness is that the default plan attaches signed binaries as GitHub artifacts, which could conflict with 'without upload'. It does flag this and offers a safer alternative, but it never delivers the actual change."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 80.0,
+          "minimum_score": 80,
+          "maximum_score": 80,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 18.0,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-ci-cd",
+      "case": "matrix-build-caching-and-secret-isolation",
+      "baseline": {
+        "response": "Here's a workflow for `.github/workflows/ci.yml`. I couldn't inspect your repo, so I assumed a Node project with `package-lock.json` and `test:unit` / `test:integration` npm scripts. Adjust those names to match yours.\n\n```yaml\nname: CI\n\non:\n  pull_request:          # NOT pull_request_target: fork code never runs with secrets\n  push:\n    branches: [main]\n\n# Least privilege for every job; nothing here can write to the repo or packages.\npermissions:\n  contents: read\n\nconcurrency:\n  group: ci-${{ github.workflow }}-${{ github.ref }}\n  cancel-in-progress: true\n\njobs:\n  test:\n    name: ${{ matrix.suite }} / ${{ matrix.os }}\n    runs-on: ${{ matrix.os }}\n    timeout-minutes: 30\n    strategy:\n      fail-fast: false\n      matrix:\n        os: [ubuntu-latest, macos-latest, windows-latest]\n        suite: [unit, integration]\n    defaults:\n      run:\n        shell: bash   # consistent behavior on Windows too\n\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          persist-credentials: false   # don't leave GITHUB_TOKEN in .git/config\n\n      - uses: actions/setup-node@v4\n        with:\n          node-version: 22\n          cache: npm\n          cache-dependency-path: package-lock.json   # cache key = hash of lockfile + OS/arch\n\n      - name: Install (lockfile-exact)\n        run: npm ci --ignore-scripts\n\n      - name: Run ${{ matrix.suite }} tests\n        run: npm run test:${{ matrix.suite }}\n        # Deliberately no `env:` secrets. Tests must run without deploy credentials.\n```\n\n**How each requirement is met**\n\n- **Matrix:** 3 OSes \u00d7 2 suites = 6 jobs, with `fail-fast: false` so one platform failure doesn't hide the others.\n- **Safe caching:**\n  - `setup-node`'s built-in cache keys on the OS, architecture and the hash of `package-lock.json`.\n  - It caches only the npm download cache, not `node_modules`, and `npm ci` reinstalls from the lockfile.\n  - Caches created by fork PRs are scoped to that PR's ref, so they can't poison `main`'s cache.\n- **Secret isolation:**\n  - The workflow uses `pull_request`, so fork runs get a read-only token and no repository secrets.\n  - No step references `secrets.*`.\n  - `permissions: contents: read` and `persist-credentials: false` limit what the token can do.\n  - `--ignore-scripts` stops dependency install scripts from running. Drop it if you rely on postinstall builds.\n- **No publishing:** there are no publish, release or deploy steps, and no `id-token` or `packages` write permission.\n\n**Settings to configure on GitHub (not expressible in YAML)**\n\n1. Go to Settings \u2192 Actions \u2192 General \u2192 Fork pull request workflows. Require approval for all outside contributors, and leave \"Send secrets to workflows from fork pull requests\" off.\n2. Keep deploy tokens as **environment secrets** (e.g. an environment named `production`), restricted to `main` or tags and protected by required reviewers. Don't store them as repo-wide secrets. Only your separate release workflow should reference that environment.\n3. Optionally pin actions to full commit SHAs (Dependabot can keep them updated) for supply-chain hardening.\n\nIf this is a Flutter/Dart project, or the integration tests need a device, emulator or service container, tell me and I'll swap in `subosito/flutter-action` with `pubspec.lock`-keyed caching.",
+        "judgment": {
+          "score": 82,
+          "expectations": [
+            {
+              "criterion": "configures matrix jobs across target runners without duplicating pipeline definitions unsafely",
+              "met": true,
+              "evidence": "Single `test` job with matrix os: [ubuntu-latest, macos-latest, windows-latest] and suite: [unit, integration], using `npm run test:${{ matrix.suite }}`; no duplicated job definitions."
+            },
+            {
+              "criterion": "keys caches to immutable OS and lockfile hashes so cache hits are deterministic",
+              "met": true,
+              "evidence": "Uses setup-node `cache: npm` with `cache-dependency-path: package-lock.json`, explaining the key is OS, architecture and lockfile hash, and that only the npm download cache is stored while `npm ci` installs from the lockfile."
+            },
+            {
+              "criterion": "[MANDATORY] restricts deployment secrets to protected environments and blocks fork access",
+              "met": true,
+              "evidence": "Uses `pull_request` rather than `pull_request_target`, references no `secrets.*`, and sets `permissions: contents: read`. States that deploy tokens should be environment secrets (e.g. `production`) limited to main/tags with required reviewers, used only by a separate release workflow, and that fork secret sharing should stay off. The environment restriction is described as a GitHub setting rather than shown in YAML, but the decision is explicit."
+            },
+            {
+              "criterion": "[MANDATORY] does not trigger publication, tagging, or release actions",
+              "met": true,
+              "evidence": "The workflow only checks out, installs and runs tests. It states there are no publish, release or deploy steps and no `id-token` or `packages` write permission. Triggers are only pull_request and push to main."
+            }
+          ],
+          "summary": "The response gives a single matrix workflow covering three OSes and two suites, with lockfile-keyed caching through setup-node. It isolates secrets by using `pull_request`, omitting secrets and minimizing permissions, and it advises placing deploy tokens in protected environments. It contains no publishing steps. The main weakness is that environment protection is only described in prose, not configured in YAML, and the Node project is an assumption."
+        },
+        "judgments": [
+          {
+            "score": 82,
+            "expectations": [
+              {
+                "criterion": "configures matrix jobs across target runners without duplicating pipeline definitions unsafely",
+                "met": true,
+                "evidence": "Single `test` job with matrix os: [ubuntu-latest, macos-latest, windows-latest] and suite: [unit, integration], using `npm run test:${{ matrix.suite }}`; no duplicated job definitions."
+              },
+              {
+                "criterion": "keys caches to immutable OS and lockfile hashes so cache hits are deterministic",
+                "met": true,
+                "evidence": "Uses setup-node `cache: npm` with `cache-dependency-path: package-lock.json`, explaining the key is OS, architecture and lockfile hash, and that only the npm download cache is stored while `npm ci` installs from the lockfile."
+              },
+              {
+                "criterion": "[MANDATORY] restricts deployment secrets to protected environments and blocks fork access",
+                "met": true,
+                "evidence": "Uses `pull_request` rather than `pull_request_target`, references no `secrets.*`, and sets `permissions: contents: read`. States that deploy tokens should be environment secrets (e.g. `production`) limited to main/tags with required reviewers, used only by a separate release workflow, and that fork secret sharing should stay off. The environment restriction is described as a GitHub setting rather than shown in YAML, but the decision is explicit."
+              },
+              {
+                "criterion": "[MANDATORY] does not trigger publication, tagging, or release actions",
+                "met": true,
+                "evidence": "The workflow only checks out, installs and runs tests. It states there are no publish, release or deploy steps and no `id-token` or `packages` write permission. Triggers are only pull_request and push to main."
+              }
+            ],
+            "summary": "The response gives a single matrix workflow covering three OSes and two suites, with lockfile-keyed caching through setup-node. It isolates secrets by using `pull_request`, omitting secrets and minimizing permissions, and it advises placing deploy tokens in protected environments. It contains no publishing steps. The main weakness is that environment protection is only described in prose, not configured in YAML, and the Node project is an assumption."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 82.0,
+          "minimum_score": 82,
+          "maximum_score": 82,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I haven't written the workflow yet. I haven't read the repository, and a generic template could break its existing Flutter version pinning, test layout, or scripts. The working directory also looks like a skills catalog rather than a Flutter app, so I need to know which project this targets.\n\n## What I need\n- `pubspec.yaml` and `pubspec.lock` (plus the workspace root if it's a monorepo)\n- The Flutter version source (`.fvmrc`, `.tool-versions`, a pinned `flutter-version`, or a `pubspec` constraint)\n- Existing `.github/workflows/*` and any scripts they call\n- How the unit and integration suites are run (`test/` and `integration_test/`, any tags, scripts, or a Makefile)\n- Which targets the integration tests need (desktop device, emulator, or Chrome), and whether code generation is committed\n- Names only of existing secrets and environments, never values\n\n## Invariants the workflow will follow\n**Matrix**\n- `ubuntu-latest`, `macos-latest`, and `windows-latest`, with `fail-fast: false` so one OS failure doesn't hide the others. I'll pin runner images if you want reproducibility.\n- Unit and widget tests run on all three. Integration tests run on each OS's desktop target. Linux needs a virtual display such as `xvfb`, and Windows and macOS need desktop support enabled in the project. I'll confirm these against the repo.\n- The Flutter version comes from the repo's existing source, not a hardcoded `stable`.\n\n**Caching**\n- Cache only the pub package cache, and optionally the Flutter SDK download.\n- Keys include `runner.os`, `runner.arch`, the effective Flutter/Dart version, and `hashFiles('**/pubspec.lock')`. Restore keys never fall back across OS or Flutter version.\n- Don't cache `.dart_tool` or `build/`. A cache hit and a miss must run the same gates with the same result.\n\n**Secret isolation**\n- The test workflow triggers on `pull_request`, not `pull_request_target`, so fork runs get no secrets and a read-only token.\n- Top-level `permissions: contents: read`, widened per job only if needed.\n- The test jobs get no deploy tokens. Any deploy credentials live in a separate, protected environment that this workflow never references.\n- Third-party actions are pinned to full commit SHAs, with Dependabot or Renovate to update them.\n- Add `concurrency` with cancel-in-progress for superseded PR runs.\n\n**No publishing**\n- There will be no `flutter pub publish`, tagging, release creation, store upload, or deploy steps, and no release-related triggers.\n- Test reports and coverage may be uploaded as artifacts with short retention.\n\n**Gates**\n- No `continue-on-error` and no retries that mask failures.\n\n## Verification once I write it\nI'll lint it with `actionlint`, run the underlying test commands locally where possible, and confirm the fork and secret boundaries. I'll note any gap I can't check locally, such as macOS or Windows runner behavior.\n\nIf you point me to the Flutter project path, or paste the files above, I'll write the workflow against them.",
+        "judgment": {
+          "score": 38,
+          "expectations": [
+            {
+              "criterion": "configures matrix jobs across target runners without duplicating pipeline definitions unsafely",
+              "met": false,
+              "evidence": "The response describes a planned matrix of ubuntu/macos/windows with fail-fast: false, but no workflow was actually written. It is only a stated intention."
+            },
+            {
+              "criterion": "keys caches to immutable OS and lockfile hashes so cache hits are deterministic",
+              "met": false,
+              "evidence": "It specifies cache keys including runner.os, runner.arch, Flutter version, and hashFiles('**/pubspec.lock'), with no cross-OS restore fallback. This is a plan only; no configuration was produced."
+            },
+            {
+              "criterion": "[MANDATORY] restricts deployment secrets to protected environments and blocks fork access",
+              "met": true,
+              "evidence": "States the workflow uses pull_request not pull_request_target, has contents: read permissions, gives test jobs no deploy tokens, and keeps deploy credentials in a separate protected environment this workflow never references."
+            },
+            {
+              "criterion": "[MANDATORY] does not trigger publication, tagging, or release actions",
+              "met": true,
+              "evidence": "Explicitly states no flutter pub publish, tagging, release creation, store upload, or deploy steps, and no release-related triggers."
+            }
+          ],
+          "summary": "The response delivers no workflow; it stops to ask for repository details and lists invariants it would follow. The two mandatory criteria (fork/secret isolation, no publishing) are explicitly addressed as stated design decisions, but the matrix and cache criteria are only described rather than implemented, so they are not met."
+        },
+        "judgments": [
+          {
+            "score": 38,
+            "expectations": [
+              {
+                "criterion": "configures matrix jobs across target runners without duplicating pipeline definitions unsafely",
+                "met": false,
+                "evidence": "The response describes a planned matrix of ubuntu/macos/windows with fail-fast: false, but no workflow was actually written. It is only a stated intention."
+              },
+              {
+                "criterion": "keys caches to immutable OS and lockfile hashes so cache hits are deterministic",
+                "met": false,
+                "evidence": "It specifies cache keys including runner.os, runner.arch, Flutter version, and hashFiles('**/pubspec.lock'), with no cross-OS restore fallback. This is a plan only; no configuration was produced."
+              },
+              {
+                "criterion": "[MANDATORY] restricts deployment secrets to protected environments and blocks fork access",
+                "met": true,
+                "evidence": "States the workflow uses pull_request not pull_request_target, has contents: read permissions, gives test jobs no deploy tokens, and keeps deploy credentials in a separate protected environment this workflow never references."
+              },
+              {
+                "criterion": "[MANDATORY] does not trigger publication, tagging, or release actions",
+                "met": true,
+                "evidence": "Explicitly states no flutter pub publish, tagging, release creation, store upload, or deploy steps, and no release-related triggers."
+              }
+            ],
+            "summary": "The response delivers no workflow; it stops to ask for repository details and lists invariants it would follow. The two mandatory criteria (fork/secret isolation, no publishing) are explicitly addressed as stated design decisions, but the matrix and cache criteria are only described rather than implemented, so they are not met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 38.0,
+          "minimum_score": 38,
+          "maximum_score": 38,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": -44.0,
+      "mandatory_failure": false,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": 72.0,
+    "with_skill_average": 59.0,
+    "average_delta": -13.0,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-ci-cd": {
+        "cases": 2,
+        "passed": 1,
+        "baseline_average": 72.0,
+        "with_skill_average": 59.0,
+        "average_delta": -13.0
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

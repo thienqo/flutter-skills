@@ -1,0 +1,35 @@
+Validated 227 behavior cases and 76 routing cases.
+behavior dart-concurrency:web-compute-does-not-provide-parallelism score=100.0 judges=1 agreement=100.0% delta=0.0 mandatory_failure=False passed=True
+behavior dart-language:records-not-for-domain-identity score=100.0 judges=1 agreement=100.0% delta=5.0 mandatory_failure=False passed=True
+behavior flutter-accessibility:announcements-use-the-owning-view score=45.0 judges=1 agreement=100.0% delta=15.0 mandatory_failure=True passed=False
+behavior flutter-animation:chooses-implicit-animation score=93.0 judges=1 agreement=100.0% delta=-7.0 mandatory_failure=False passed=True
+behavior flutter-app-workflow:ticket-scoped-branch-commit-and-push-boundary score=15.0 judges=1 agreement=100.0% delta=-15.0 mandatory_failure=True passed=False
+behavior flutter-architecture:reuses-existing-di-mechanism score=100.0 judges=1 agreement=100.0% delta=10.0 mandatory_failure=False passed=True
+behavior flutter-background-execution:uses-os-scheduler-for-terminated-sync score=90.0 judges=1 agreement=100.0% delta=35.0 mandatory_failure=False passed=True
+behavior flutter-build-release:obfuscation-preserves-symbols score=100.0 judges=1 agreement=100.0% delta=12.0 mandatory_failure=False passed=True
+behavior flutter-ci-cd:harden-existing-github-actions score=91.0 judges=1 agreement=100.0% delta=6.0 mandatory_failure=False passed=True
+behavior flutter-code-review:delivery-workflow-review-stays-within-task-impact score=85.0 judges=1 agreement=100.0% delta=17.0 mandatory_failure=False passed=True
+behavior flutter-dependency-upgrades:stages-production-major-upgrades score=92.0 judges=1 agreement=100.0% delta=70.0 mandatory_failure=False passed=True
+behavior flutter-device-testing:verifies-deep-link-on-device score=95.0 judges=1 agreement=100.0% delta=80.0 mandatory_failure=False passed=True
+behavior flutter-figma-workflow:maps-figma-frame-to-existing-design-system score=92.0 judges=1 agreement=100.0% delta=16.0 mandatory_failure=False passed=True
+behavior flutter-localization:plural-and-formatting score=90.0 judges=1 agreement=100.0% delta=6.0 mandatory_failure=False passed=True
+behavior flutter-navigation:preserves-existing-go-router score=85.0 judges=1 agreement=100.0% delta=30.0 mandatory_failure=False passed=True
+behavior flutter-networking:runtime-response-does-not-become-the-whole-contract score=94.0 judges=1 agreement=100.0% delta=52.0 mandatory_failure=False passed=True
+behavior flutter-notifications:notification-tap-matrix-is-repeatable-and-idempotent score=92.0 judges=1 agreement=100.0% delta=47.0 mandatory_failure=False passed=True
+behavior flutter-observability:trace-checkout-without-pii score=78.0 judges=1 agreement=100.0% delta=48.0 mandatory_failure=False passed=False
+behavior flutter-openapi-client:documented-fields-and-observed-response-stay-distinct score=78.0 judges=1 agreement=100.0% delta=20.0 mandatory_failure=False passed=False
+behavior flutter-performance:resizes-images-before-clearing-cache score=45.0 judges=1 agreement=100.0% delta=10.0 mandatory_failure=True passed=False
+behavior flutter-persistence:migration-failure-preserves-prior-user-data score=94.0 judges=1 agreement=100.0% delta=12.0 mandatory_failure=False passed=True
+behavior flutter-platform-integration:plugin-before-custom-channel score=8.0 judges=1 agreement=100.0% delta=-2.0 mandatory_failure=True passed=False
+behavior flutter-responsive-layout:navigation-adapts-to-window-width score=95.0 judges=1 agreement=100.0% delta=30.0 mandatory_failure=False passed=True
+behavior flutter-security:hardcoded-service-secret-is-not-fixed-by-obfuscation score=100.0 judges=1 agreement=100.0% delta=10.0 mandatory_failure=False passed=True
+behavior flutter-state-management:state-disposed-with-lifecycle-owner score=70.0 judges=1 agreement=100.0% delta=3.0 mandatory_failure=False passed=False
+behavior flutter-testing:cleans-only-ai-created-disposable-test-probe score=85.0 judges=1 agreement=100.0% delta=47.0 mandatory_failure=False passed=True
+behavior flutter-text-rendering:soft-wrap-does-not-remove-hard-breaks score=95.0 judges=1 agreement=100.0% delta=1.0 mandatory_failure=False passed=True
+behavior flutter-ui-design:preserves-existing-brand-system score=95.0 judges=1 agreement=100.0% delta=55.0 mandatory_failure=False passed=True
+behavior flutter-ui-patterns:no-side-effects-in-build score=88.0 judges=1 agreement=100.0% delta=21.0 mandatory_failure=False passed=True
+behavior flutter-visual-effects:gates-experimental-liquid-renderer score=95.0 judges=1 agreement=100.0% delta=17.0 mandatory_failure=False passed=True
+behavior flutter-webview:origin-policy-does-not-use-string-prefixes score=90.0 judges=1 agreement=100.0% delta=28.0 mandatory_failure=False passed=True
+routing large-text-overflow selected=['flutter-accessibility', 'flutter-responsive-layout'] passed=True
+Wrote results to benchmarks/v0.12.0-draft/claude-catalog-sweep.json
+Wrote Markdown report to benchmarks/v0.12.0-draft/claude-catalog-sweep.md

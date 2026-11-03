@@ -1,0 +1,126 @@
+{
+  "created_at": "2026-11-03T10:27:48.426163+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "dad34ddd6f214d29df374e35ed3631b270eb1688",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-performance",
+      "case": "resizes-images-before-clearing-cache",
+      "with_skill": {
+        "response": "Clearing the cache when memory gets high would hide the symptom, not fix it. Flutter already clears `imageCache` when the OS signals memory pressure (`PaintingBinding.handleMemoryPressure`). If memory still climbs, the likely problem is images decoded far larger than the thumbnails show them. Clearing would also make thumbnails re-download and re-decode as you scroll back, which adds jank and network traffic.\n\n\"Full-resolution images\" is a strong lead, but it's still a hypothesis. Here's how I'd confirm it and then fix it.\n\n## 1. Confirm the cause (profile mode, real device)\n\nRecord the device, Flutter version, the grid dataset, and a fixed scroll script (for example, scroll to the end and back, three times).\n\nWhile scrolling, watch:\n- `PaintingBinding.instance.imageCache.currentSizeBytes` and `.liveImageCount` (log them periodically, or use the DevTools Memory view).\n- Decoded image sizes against display sizes. Turn on `debugInvertOversizedImages = true` in a debug build for a quick visual check, then confirm with Memory view snapshots in profile mode.\n\n**Confirms it:** decoded bitmaps are many times the thumbnail size (a 4000\u00d73000 decode for a ~120 dp tile is about 48 MB each), and memory plateaus near the cache's byte limit (100 MB by default) plus live images.\n\n**Points elsewhere:** memory keeps growing past the cache limit and doesn't drop after leaving the screen. Then compare repeated-flow heap snapshots for retained ownership: undisposed `ScrollController`s, stream subscriptions, image stream listeners, or a custom cache or map of `ImageProvider`s or bytes that never evicts.\n\n## 2. Fix at the source: decode at display size\n\n```dart\nLayoutBuilder(\n  builder: (context, constraints) {\n    final dpr = MediaQuery.devicePixelRatioOf(context);\n    final px = (constraints.maxWidth * dpr).round();\n    return Image.network(\n      url,\n      fit: BoxFit.cover,\n      cacheWidth: px, // decode at the tile's physical size\n      // set only one dimension to keep aspect ratio\n    );\n  },\n)\n```\n\nOr wrap the provider directly with `ResizeImage(NetworkImage(url), width: px)`. If you use `cached_network_image`, set `memCacheWidth` / `maxWidthDiskCache` instead.\n\nThe best fix is server-side: request a thumbnail-sized variant (for example, `?w=256`) so you don't download full-resolution bytes at all.\n\nAlso check:\n- The grid is lazy (`GridView.builder`), not a `GridView` with every child built up front.\n- No code holds `ImageProvider`s, `Uint8List`s, or `ui.Image`s in lists or maps outside the framework cache.\n\n## 3. Only if needed: bound the cache, don't clear it reactively\n\nIf memory is still too high after resized decodes, set an explicit limit at startup:\n\n```dart\nPaintingBinding.instance.imageCache\n  ..maximumSize = 200\n  ..maximumSizeBytes = 50 << 20; // 50 MB\n```\n\nThis keeps memory bounded without losing everything on screen. I'd avoid a custom \"clear when memory is high\" loop, since the framework's memory-pressure handler already does that.\n\n## 4. Verify\n\nRun the same scroll script before and after the change, at least three runs each. Report peak and steady-state memory, `currentSizeBytes`, and frame timings (UI/raster), with the spread between runs. Then run the widget and integration tests and check:\n- Thumbnails still look sharp on high-DPR devices.\n- Placeholder and error states still work.\n- Scrolling back doesn't cause visible reloading.\n\nIf you share the grid widget code, I can apply the resize change directly.",
+        "judgment": {
+          "score": 96,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] attributes the growth to decoded image size via the image cache or memory profiler before changing code",
+              "met": true,
+              "evidence": "Section 1 ('Confirm the cause') comes before any code change. It treats full-resolution decoding as a hypothesis and has the user watch `imageCache.currentSizeBytes` and `.liveImageCount`, use the DevTools Memory view, and compare decoded image sizes against display sizes with `debugInvertOversizedImages`. It states what confirms the hypothesis (decoded bitmaps far larger than the tile, memory plateauing near the cache byte limit) and what points elsewhere (growth past the cache limit, retained ownership in heap snapshots)."
+            },
+            {
+              "criterion": "sets cacheWidth/cacheHeight (or an equivalent resize) to the display size instead of the source resolution",
+              "met": true,
+              "evidence": "Section 2 computes the tile's physical pixel width as `constraints.maxWidth * devicePixelRatio` and passes it to `Image.network(cacheWidth: px)`. It sets only one dimension to keep the aspect ratio. It also offers `ResizeImage` and `memCacheWidth` for cached_network_image, and server-side thumbnail variants."
+            },
+            {
+              "criterion": "rejects periodically clearing the whole image cache as the fix",
+              "met": true,
+              "evidence": "The opening says clearing the cache 'would hide the symptom, not fix it'. It adds that Flutter already clears on memory pressure, and that clearing causes re-download, re-decode and jank. Section 3 repeats the point: 'I'd avoid a custom \"clear when memory is high\" loop.' Its fallback is a bounded cache limit, not clearing."
+            },
+            {
+              "criterion": "verifies bounded memory after the resize with the same repeated scroll flow",
+              "met": true,
+              "evidence": "Section 1 defines a fixed scroll script (scroll to the end and back, three times). Section 4 says: 'Run the same scroll script before and after the change, at least three runs each.' It reports peak and steady-state memory and `currentSizeBytes`, with the spread between runs."
+            }
+          ],
+          "summary": "The response meets all four criteria, including the mandatory one. It refuses the requested cache-clearing approach and explains why. It confirms the decoded-size hypothesis with image-cache metrics and the memory profiler before changing code, then fixes the problem by decoding at the tile's physical display size. It verifies the fix by rerunning the same repeated scroll script and measuring memory. Extra guidance on lazy grids, retained providers and optional cache limits adds value without distracting from the fix."
+        },
+        "judgments": [
+          {
+            "score": 96,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] attributes the growth to decoded image size via the image cache or memory profiler before changing code",
+                "met": true,
+                "evidence": "Section 1 ('Confirm the cause') comes before any code change. It treats full-resolution decoding as a hypothesis and has the user watch `imageCache.currentSizeBytes` and `.liveImageCount`, use the DevTools Memory view, and compare decoded image sizes against display sizes with `debugInvertOversizedImages`. It states what confirms the hypothesis (decoded bitmaps far larger than the tile, memory plateauing near the cache byte limit) and what points elsewhere (growth past the cache limit, retained ownership in heap snapshots)."
+              },
+              {
+                "criterion": "sets cacheWidth/cacheHeight (or an equivalent resize) to the display size instead of the source resolution",
+                "met": true,
+                "evidence": "Section 2 computes the tile's physical pixel width as `constraints.maxWidth * devicePixelRatio` and passes it to `Image.network(cacheWidth: px)`. It sets only one dimension to keep the aspect ratio. It also offers `ResizeImage` and `memCacheWidth` for cached_network_image, and server-side thumbnail variants."
+              },
+              {
+                "criterion": "rejects periodically clearing the whole image cache as the fix",
+                "met": true,
+                "evidence": "The opening says clearing the cache 'would hide the symptom, not fix it'. It adds that Flutter already clears on memory pressure, and that clearing causes re-download, re-decode and jank. Section 3 repeats the point: 'I'd avoid a custom \"clear when memory is high\" loop.' Its fallback is a bounded cache limit, not clearing."
+              },
+              {
+                "criterion": "verifies bounded memory after the resize with the same repeated scroll flow",
+                "met": true,
+                "evidence": "Section 1 defines a fixed scroll script (scroll to the end and back, three times). Section 4 says: 'Run the same scroll script before and after the change, at least three runs each.' It reports peak and steady-state memory and `currentSizeBytes`, with the spread between runs."
+              }
+            ],
+            "summary": "The response meets all four criteria, including the mandatory one. It refuses the requested cache-clearing approach and explains why. It confirms the decoded-size hypothesis with image-cache metrics and the memory profiler before changing code, then fixes the problem by decoding at the tile's physical display size. It verifies the fix by rerunning the same repeated scroll script and measuring memory. Extra guidance on lazy grids, retained providers and optional cache limits adds value without distracting from the fix."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 96.0,
+          "minimum_score": 96,
+          "maximum_score": 96,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 96.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-performance": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 96.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

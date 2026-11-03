@@ -1,0 +1,297 @@
+{
+  "created_at": "2026-11-03T13:33:10.073536+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "ca4c8d7baec044395d4da1480b2e20304734d948",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-localization",
+      "case": "plural-full-cldr-categories-for-arabic",
+      "baseline": {
+        "response": "Here are both ARB entries. The English source uses exactly your three forms. The Arabic translation needs more, because Arabic has six plural categories (`zero`, `one`, `two`, `few`, `many`, `other`) and `=0 / =1 / other` would show wrong grammar for most counts.\n\n**`lib/l10n/app_en.arb`**\n```json\n\"notificationCount\": \"{count, plural, =0{No notifications} =1{1 notification} other{{count} notifications}}\",\n\"@notificationCount\": {\n  \"description\": \"Number of notifications the user has\",\n  \"placeholders\": {\n    \"count\": {\n      \"type\": \"int\",\n      \"format\": \"decimalPattern\"\n    }\n  }\n}\n```\n\n**`lib/l10n/app_ar.arb`**\n```json\n\"notificationCount\": \"{count, plural, =0{\u0644\u0627 \u062a\u0648\u062c\u062f \u0625\u0634\u0639\u0627\u0631\u0627\u062a} =1{\u0625\u0634\u0639\u0627\u0631 \u0648\u0627\u062d\u062f} two{\u0625\u0634\u0639\u0627\u0631\u0627\u0646} few{{count} \u0625\u0634\u0639\u0627\u0631\u0627\u062a} many{{count} \u0625\u0634\u0639\u0627\u0631\u064b\u0627} other{{count} \u0625\u0634\u0639\u0627\u0631}}\"\n```\n\nHow the Arabic categories map:\n\n| Count | Category | Text |\n|---|---|---|\n| 0 | `=0` | \u0644\u0627 \u062a\u0648\u062c\u062f \u0625\u0634\u0639\u0627\u0631\u0627\u062a |\n| 1 | `=1` | \u0625\u0634\u0639\u0627\u0631 \u0648\u0627\u062d\u062f |\n| 2 | `two` | \u0625\u0634\u0639\u0627\u0631\u0627\u0646 |\n| 3-10 | `few` | \u0663 \u0625\u0634\u0639\u0627\u0631\u0627\u062a |\n| 11-99 | `many` | \u0661\u0661 \u0625\u0634\u0639\u0627\u0631\u064b\u0627 |\n| 100+ | `other` | \u0661\u0660\u0660 \u0625\u0634\u0639\u0627\u0631 |\n\nNotes:\n- `format: decimalPattern` on the placeholder makes `{count}` follow the locale's number formatting. Whether it renders Arabic-Indic digits (\u0663) or Western digits (3) depends on the Arabic locale, such as `ar` versus `ar_EG`. If you need a specific digit style, check the output on your target locales.\n- `=0` and `=1` are exact matches and take precedence over the category forms. That is fine here, since Arabic `one` only covers 1 anyway.\n- Only `other` is required by ICU, but gen-l10n will use `two`, `few`, and `many` when they are present for `ar`.\n- Have a native speaker review the wording, especially the `many` form, before shipping.\n\nAfter adding both entries, run `flutter gen-l10n` (or `flutter pub get` if `generate: true` is set), then call `AppLocalizations.of(context)!.notificationCount(n)`.\n\nI haven't edited any files in your repo. Tell me if you want me to apply these to the ARB files directly.",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "identifies that Arabic's plural rules need the fuller CLDR category set (zero/one/two/few/many/other), not just =0/=1/other",
+              "met": true,
+              "evidence": "States 'Arabic has six plural categories (zero, one, two, few, many, other) and =0 / =1 / other would show wrong grammar for most counts.'"
+            },
+            {
+              "criterion": "provides the additional plural categories the target locale's rules require",
+              "met": true,
+              "evidence": "The Arabic ARB includes two{\u0625\u0634\u0639\u0627\u0631\u0627\u0646}, few{...}, many{...}, other{...} in addition to =0 and =1."
+            },
+            {
+              "criterion": "tests representative counts that exercise the additional categories, not only 0 and 1",
+              "met": false,
+              "evidence": "Provides a mapping table (0, 1, 2, 3-10, 11-99, 100+) but never runs or writes tests or verifies generated output. The table is documentation, and the response says to check output on target locales."
+            }
+          ],
+          "summary": "The response clearly identifies that Arabic needs the full CLDR set and supplies two/few/many/other forms. It only presents a count-to-category table and does not test or verify representative counts, so the third criterion is not met."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "identifies that Arabic's plural rules need the fuller CLDR category set (zero/one/two/few/many/other), not just =0/=1/other",
+                "met": true,
+                "evidence": "States 'Arabic has six plural categories (zero, one, two, few, many, other) and =0 / =1 / other would show wrong grammar for most counts.'"
+              },
+              {
+                "criterion": "provides the additional plural categories the target locale's rules require",
+                "met": true,
+                "evidence": "The Arabic ARB includes two{\u0625\u0634\u0639\u0627\u0631\u0627\u0646}, few{...}, many{...}, other{...} in addition to =0 and =1."
+              },
+              {
+                "criterion": "tests representative counts that exercise the additional categories, not only 0 and 1",
+                "met": false,
+                "evidence": "Provides a mapping table (0, 1, 2, 3-10, 11-99, 100+) but never runs or writes tests or verifies generated output. The table is documentation, and the response says to check output on target locales."
+              }
+            ],
+            "summary": "The response clearly identifies that Arabic needs the full CLDR set and supplies two/few/many/other forms. It only presents a count-to-category table and does not test or verify representative counts, so the third criterion is not met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I added the English message exactly as you specified. The Arabic message uses more plural categories than the English one, because Arabic needs them.\n\n**`lib/l10n/app_en.arb`**\n```json\n\"notificationCount\": \"{count, plural, =0{No notifications} =1{1 notification} other{{count} notifications}}\",\n\"@notificationCount\": {\n  \"description\": \"Number of notifications the user has, shown in the inbox header and badge.\",\n  \"placeholders\": {\n    \"count\": {\n      \"type\": \"int\",\n      \"example\": \"3\"\n    }\n  }\n}\n```\n\n**`lib/l10n/app_ar.arb`**\n```json\n\"notificationCount\": \"{count, plural, =0{\u0644\u0627 \u062a\u0648\u062c\u062f \u0625\u0634\u0639\u0627\u0631\u0627\u062a} =1{\u0625\u0634\u0639\u0627\u0631 \u0648\u0627\u062d\u062f} =2{\u0625\u0634\u0639\u0627\u0631\u0627\u0646} few{{count} \u0625\u0634\u0639\u0627\u0631\u0627\u062a} many{{count} \u0625\u0634\u0639\u0627\u0631\u064b\u0627} other{{count} \u0625\u0634\u0639\u0627\u0631}}\"\n```\n\n**Why Arabic isn't a copy of the English structure:** CLDR gives Arabic six plural categories, and each one needs its own wording:\n\n| Category | Counts | Arabic form |\n|---|---|---|\n| zero | 0 | \u0644\u0627 \u062a\u0648\u062c\u062f \u0625\u0634\u0639\u0627\u0631\u0627\u062a |\n| one | 1 | \u0625\u0634\u0639\u0627\u0631 \u0648\u0627\u062d\u062f |\n| two | 2 | \u0625\u0634\u0639\u0627\u0631\u0627\u0646 (dual form) |\n| few | 3-10 | `{count}` \u0625\u0634\u0639\u0627\u0631\u0627\u062a |\n| many | 11-99 | `{count}` \u0625\u0634\u0639\u0627\u0631\u064b\u0627 |\n| other | 100+ and fractions | `{count}` \u0625\u0634\u0639\u0627\u0631 |\n\nWith only `=0`, `=1` and `other`, counts like 2 or 5 would fall through to the `other` wording, which is grammatically wrong in Arabic. Because the English text is fixed by your request, I kept it to three forms. English only needs those.\n\n**Usage:**\n```dart\nText(AppLocalizations.of(context)!.notificationCount(unreadCount))\n```\n\n**Notes:**\n- Make sure `app_ar.arb` has `\"@@locale\": \"ar\"` and that `ar` is in `supportedLocales`.\n- This translation is a reasonable draft, but have a native Arabic speaker review it before release, especially the wording for the `many` and `other` forms.\n- I haven't run anything. To verify, run `flutter gen-l10n` and `flutter analyze`. Then add a test under the `ar` locale for counts 0, 1, 2, 5, 11 and 100, wrapped in `Directionality` RTL, to confirm each category renders the right text.",
+        "judgment": {
+          "score": 72,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] identifies that Arabic's plural rules need the fuller CLDR category set (zero/one/two/few/many/other), not just =0/=1/other",
+              "met": true,
+              "evidence": "States 'CLDR gives Arabic six plural categories, and each one needs its own wording' with a table of zero/one/two/few/many/other, and notes that with only =0, =1, other, counts like 2 or 5 would fall through to the wrong wording."
+            },
+            {
+              "criterion": "provides the additional plural categories the target locale's rules require",
+              "met": true,
+              "evidence": "The Arabic ARB includes =2, few, many, and other forms with Arabic text. It uses =0 and =1 rather than zero/one, but these cover the same counts and the table maps the categories explicitly."
+            },
+            {
+              "criterion": "tests representative counts that exercise the additional categories, not only 0 and 1",
+              "met": false,
+              "evidence": "It did not run or write any tests ('I haven't run anything'). It only recommends adding a test for counts 0, 1, 2, 5, 11 and 100 under the ar locale, which is a suggestion rather than a performed verification."
+            }
+          ],
+          "summary": "The response correctly recognizes that Arabic needs the full CLDR plural set and supplies the extra categories (two, few, many, other) with a clear explanation. It does not actually test any counts. It only proposes a representative test plan (0, 1, 2, 5, 11, 100) and states plainly that nothing was run, so the testing criterion is not met."
+        },
+        "judgments": [
+          {
+            "score": 72,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] identifies that Arabic's plural rules need the fuller CLDR category set (zero/one/two/few/many/other), not just =0/=1/other",
+                "met": true,
+                "evidence": "States 'CLDR gives Arabic six plural categories, and each one needs its own wording' with a table of zero/one/two/few/many/other, and notes that with only =0, =1, other, counts like 2 or 5 would fall through to the wrong wording."
+              },
+              {
+                "criterion": "provides the additional plural categories the target locale's rules require",
+                "met": true,
+                "evidence": "The Arabic ARB includes =2, few, many, and other forms with Arabic text. It uses =0 and =1 rather than zero/one, but these cover the same counts and the table maps the categories explicitly."
+              },
+              {
+                "criterion": "tests representative counts that exercise the additional categories, not only 0 and 1",
+                "met": false,
+                "evidence": "It did not run or write any tests ('I haven't run anything'). It only recommends adding a test for counts 0, 1, 2, 5, 11 and 100 under the ar locale, which is a suggestion rather than a performed verification."
+              }
+            ],
+            "summary": "The response correctly recognizes that Arabic needs the full CLDR plural set and supplies the extra categories (two, few, many, other) with a clear explanation. It does not actually test any counts. It only proposes a representative test plan (0, 1, 2, 5, 11, 100) and states plainly that nothing was run, so the testing criterion is not met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 72.0,
+          "minimum_score": 72,
+          "maximum_score": 72,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 10.0,
+      "mandatory_failure": false,
+      "passed": false
+    },
+    {
+      "skill": "flutter-localization",
+      "case": "rtl-uses-directional-insets-not-physical-sides",
+      "baseline": {
+        "response": "Since the screen must support Arabic (RTL), use the directional variants instead of the literal ones. `EdgeInsets.only(left: 16)` and `Alignment.centerLeft` are fixed to the physical left, so in Arabic the card would sit on the wrong side.\n\n**Use these instead:**\n\n- `EdgeInsetsDirectional.only(start: 16)` instead of `EdgeInsets.only(left: 16)`\n- `AlignmentDirectional.centerStart` instead of `Alignment.centerLeft`\n\n```dart\nAlign(\n  alignment: AlignmentDirectional.centerStart,\n  child: Padding(\n    padding: const EdgeInsetsDirectional.only(start: 16),\n    child: Card(\n      child: Padding(\n        padding: const EdgeInsets.all(16),\n        child: Text(l10n.title),\n      ),\n    ),\n  ),\n)\n```\n\nOr, with a `Container`:\n\n```dart\nContainer(\n  alignment: AlignmentDirectional.centerStart,\n  padding: const EdgeInsetsDirectional.only(start: 16),\n  child: Card(child: ...),\n)\n```\n\n**Behavior:**\n- LTR (English): padding and alignment on the left.\n- RTL (Arabic): padding and alignment on the right.\n\n**Things to check for RTL support:**\n- The app needs localization set up (`localizationsDelegates`, `supportedLocales` including `Locale('ar')`) so `Directionality` flips automatically. `MaterialApp` with `GlobalMaterialLocalizations.delegate` handles this.\n- Use `start`/`end` everywhere else too (`TextAlign.start`, `CrossAxisAlignment.start`, `PositionedDirectional`, `BorderRadiusDirectional`). Row and Column already follow the text direction.\n- Directional icons (back arrows, chevrons) may need mirroring. Material icons like `Icons.arrow_back` don't auto-flip, so use `Icons.arrow_back_ios_new` with `matchTextDirection`, or check `Directionality.of(context)`.\n- Test with `Directionality(textDirection: TextDirection.rtl, child: ...)` in a widget test or golden test.\n\nOnly use `left`/`right` when you truly need a physical side regardless of language, such as a shadow offset or a map overlay.",
+        "judgment": {
+          "score": 85,
+          "expectations": [
+            {
+              "criterion": "Rejects EdgeInsets.only(left:) and Alignment.centerLeft for content that must mirror in RTL",
+              "met": true,
+              "evidence": "States that `EdgeInsets.only(left: 16)` and `Alignment.centerLeft` are fixed to the physical left so in Arabic the card would sit on the wrong side, and says to use directional variants instead."
+            },
+            {
+              "criterion": "Uses EdgeInsetsDirectional and AlignmentDirectional or equivalent start/end APIs instead",
+              "met": true,
+              "evidence": "Provides `EdgeInsetsDirectional.only(start: 16)` and `AlignmentDirectional.centerStart` in both Align/Padding and Container code examples."
+            },
+            {
+              "criterion": "Tests the layout in an RTL locale to confirm mirroring",
+              "met": false,
+              "evidence": "Only suggests as a checklist item: 'Test with `Directionality(textDirection: TextDirection.rtl, child: ...)` in a widget test or golden test.' It is a recommendation, not an explicit test performed or written, and uses a Directionality override rather than an Arabic locale."
+            }
+          ],
+          "summary": "The response clearly rejects the physical left/centerLeft APIs for RTL and replaces them with EdgeInsetsDirectional and AlignmentDirectional, with correct examples. It only mentions RTL testing as a suggestion without writing or running a test, and uses a Directionality wrapper rather than an Arabic locale, so the testing criterion is not met."
+        },
+        "judgments": [
+          {
+            "score": 85,
+            "expectations": [
+              {
+                "criterion": "Rejects EdgeInsets.only(left:) and Alignment.centerLeft for content that must mirror in RTL",
+                "met": true,
+                "evidence": "States that `EdgeInsets.only(left: 16)` and `Alignment.centerLeft` are fixed to the physical left so in Arabic the card would sit on the wrong side, and says to use directional variants instead."
+              },
+              {
+                "criterion": "Uses EdgeInsetsDirectional and AlignmentDirectional or equivalent start/end APIs instead",
+                "met": true,
+                "evidence": "Provides `EdgeInsetsDirectional.only(start: 16)` and `AlignmentDirectional.centerStart` in both Align/Padding and Container code examples."
+              },
+              {
+                "criterion": "Tests the layout in an RTL locale to confirm mirroring",
+                "met": false,
+                "evidence": "Only suggests as a checklist item: 'Test with `Directionality(textDirection: TextDirection.rtl, child: ...)` in a widget test or golden test.' It is a recommendation, not an explicit test performed or written, and uses a Directionality override rather than an Arabic locale."
+              }
+            ],
+            "summary": "The response clearly rejects the physical left/centerLeft APIs for RTL and replaces them with EdgeInsetsDirectional and AlignmentDirectional, with correct examples. It only mentions RTL testing as a suggestion without writing or running a test, and uses a Directionality wrapper rather than an Arabic locale, so the testing criterion is not met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 85.0,
+          "minimum_score": 85,
+          "maximum_score": 85,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "Since the screen must support Arabic, I'd avoid `EdgeInsets.only(left: 16)` and `Alignment.centerLeft`. Those are physical-side APIs, so they stay on the visual left in RTL, where the card's leading edge is the right. Use the directional equivalents so they mirror with text direction:\n\n```dart\nPadding(\n  padding: const EdgeInsetsDirectional.only(start: 16),\n  child: Align(\n    alignment: AlignmentDirectional.centerStart,\n    child: Card(\n      child: /* card content */,\n    ),\n  ),\n)\n```\n\nOr, if the card is a single container:\n\n```dart\nContainer(\n  padding: const EdgeInsetsDirectional.only(start: 16),\n  alignment: AlignmentDirectional.centerStart,\n  child: /* card content */,\n)\n```\n\n- In LTR (English), `start` is the left, so the result is the same as what you asked for.\n- In RTL (Arabic), `start` is the right, so the padding and alignment move to the right edge, which is the leading side.\n- `Directionality` is supplied by `MaterialApp` based on the active locale, so you don't need to reverse anything manually.\n\nIf you actually need the card pinned to the physical left in every locale (for example, it sits next to a fixed-position visual element), keep `EdgeInsets.only(left: 16)` and `Alignment.centerLeft`. That's rare for text-bearing cards, so I assumed you want it to mirror.\n\nTo check this works:\n1. Make sure `supportedLocales` includes an Arabic locale (`Locale('ar')`) and that your localization delegates are set up, so `Directionality` resolves to RTL.\n2. Add a widget test that pumps the screen with `locale: const Locale('ar')` and confirms the card sits on the right (for example, compare `tester.getTopRight(find.byType(Card))` against the screen width minus 16). Add a matching `en` case that checks the left.\n3. Run the screen with large text scale and a long string, since padding and alignment problems often show up together with overflow.\n\nI haven't edited any files. If you point me to the screen's file, I can make the change and add the RTL test.",
+        "judgment": {
+          "score": 93,
+          "expectations": [
+            {
+              "criterion": "rejects EdgeInsets.only(left:) and Alignment.centerLeft for content that must mirror in RTL",
+              "met": true,
+              "evidence": "\"I'd avoid `EdgeInsets.only(left: 16)` and `Alignment.centerLeft`. Those are physical-side APIs, so they stay on the visual left in RTL\" \u2014 it explicitly rejects both for the Arabic-supporting screen, while noting a rare exception for fixed physical placement."
+            },
+            {
+              "criterion": "uses EdgeInsetsDirectional and AlignmentDirectional or equivalent start/end APIs instead",
+              "met": true,
+              "evidence": "Code uses `EdgeInsetsDirectional.only(start: 16)` and `AlignmentDirectional.centerStart` in both the Padding/Align and Container examples."
+            },
+            {
+              "criterion": "tests the layout in an RTL locale to confirm mirroring",
+              "met": true,
+              "evidence": "Recommends a widget test pumping the screen with `locale: const Locale('ar')`, checking `tester.getTopRight(find.byType(Card))` against screen width minus 16, plus a matching `en` case. It frames this as a recommended step and offers to add it rather than having run it, but the verification is explicitly specified."
+            }
+          ],
+          "summary": "The response clearly rejects the physical-side APIs for RTL content, substitutes the directional equivalents with correct code, and specifies a concrete Arabic-locale widget test to confirm mirroring. It also honestly states no files were edited and no test was run, and offers to implement the change and test."
+        },
+        "judgments": [
+          {
+            "score": 93,
+            "expectations": [
+              {
+                "criterion": "rejects EdgeInsets.only(left:) and Alignment.centerLeft for content that must mirror in RTL",
+                "met": true,
+                "evidence": "\"I'd avoid `EdgeInsets.only(left: 16)` and `Alignment.centerLeft`. Those are physical-side APIs, so they stay on the visual left in RTL\" \u2014 it explicitly rejects both for the Arabic-supporting screen, while noting a rare exception for fixed physical placement."
+              },
+              {
+                "criterion": "uses EdgeInsetsDirectional and AlignmentDirectional or equivalent start/end APIs instead",
+                "met": true,
+                "evidence": "Code uses `EdgeInsetsDirectional.only(start: 16)` and `AlignmentDirectional.centerStart` in both the Padding/Align and Container examples."
+              },
+              {
+                "criterion": "tests the layout in an RTL locale to confirm mirroring",
+                "met": true,
+                "evidence": "Recommends a widget test pumping the screen with `locale: const Locale('ar')`, checking `tester.getTopRight(find.byType(Card))` against screen width minus 16, plus a matching `en` case. It frames this as a recommended step and offers to add it rather than having run it, but the verification is explicitly specified."
+              }
+            ],
+            "summary": "The response clearly rejects the physical-side APIs for RTL content, substitutes the directional equivalents with correct code, and specifies a concrete Arabic-locale widget test to confirm mirroring. It also honestly states no files were edited and no test was run, and offers to implement the change and test."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 93.0,
+          "minimum_score": 93,
+          "maximum_score": 93,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 8.0,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": 73.5,
+    "with_skill_average": 82.5,
+    "average_delta": 9.0,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-localization": {
+        "cases": 2,
+        "passed": 1,
+        "baseline_average": 73.5,
+        "with_skill_average": 82.5,
+        "average_delta": 9.0
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

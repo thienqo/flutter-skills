@@ -1,0 +1,297 @@
+{
+  "created_at": "2026-11-03T13:34:57.581048+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "ca4c8d7baec044395d4da1480b2e20304734d948",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-animation",
+      "case": "hero-tag-uniqueness-across-list",
+      "baseline": {
+        "response": "Because a product can appear in several tabs, the Hero tag can't be just the product ID. Tabs built with `IndexedStack`, `AutomaticKeepAliveClientMixin` or `PageStorage` keep every tab's grid alive in the same route. Two Heroes with the same tag then trigger \"There are multiple heroes that share the same tag within a subtree\", or the flight picks the wrong source.\n\nThe fix is to make the tag unique per product and per origin (tab), and pass that exact tag to the detail screen.\n\n## 1. Build the tag in one place\n\n```dart\nclass HeroTags {\n  static Object product(String tabId, String productId) =>\n      'product-image/$tabId/$productId';\n}\n```\n\n## 2. Grid item (source)\n\n```dart\nclass ProductGridItem extends StatelessWidget {\n  const ProductGridItem({\n    super.key,\n    required this.product,\n    required this.tabId,\n  });\n\n  final Product product;\n  final String tabId;\n\n  @override\n  Widget build(BuildContext context) {\n    final heroTag = HeroTags.product(tabId, product.id);\n\n    return GestureDetector(\n      onTap: () => Navigator.of(context).push(\n        MaterialPageRoute(\n          builder: (_) => ProductDetailScreen(\n            product: product,\n            heroTag: heroTag,\n          ),\n        ),\n      ),\n      child: Hero(\n        tag: heroTag,\n        child: Image.network(product.imageUrl, fit: BoxFit.cover),\n      ),\n    );\n  }\n}\n```\n\n## 3. Detail screen (destination)\n\n```dart\nclass ProductDetailScreen extends StatelessWidget {\n  const ProductDetailScreen({\n    super.key,\n    required this.product,\n    required this.heroTag,\n  });\n\n  final Product product;\n  final Object heroTag;\n\n  @override\n  Widget build(BuildContext context) {\n    return Scaffold(\n      appBar: AppBar(title: Text(product.name)),\n      body: Column(\n        children: [\n          Hero(\n            tag: heroTag,\n            child: Image.network(product.imageUrl,\n                width: double.infinity, height: 300, fit: BoxFit.cover),\n          ),\n          // ...rest of details\n        ],\n      ),\n    );\n  }\n}\n```\n\n## 4. Pass `tabId` from each tab\n\n```dart\nProductGridItem(product: p, tabId: 'favorites')\nProductGridItem(product: p, tabId: 'trending')\n```\n\nUse a stable ID for the tab (an enum name or a key), not the index, if tabs can be reordered.\n\n## Gotchas\n\n- **Same grid twice in one tab:** if a product can appear in two sections of the same tab (e.g. \"Recommended\" and \"All\"), include the section in the tag too.\n- **Don't wrap the whole card in the Hero** if it contains text or buttons. Use the image only, or add a `flightShuttleBuilder` with a `Material` ancestor to avoid text-style glitches mid-flight.\n- **Same shape on both ends:** if the grid image has rounded corners and the detail image doesn't, add a `createRectTween` or a `flightShuttleBuilder` that animates `ClipRRect` radius.\n- **Returning to a different tab:** the tag returns the Hero to the tab it came from, which is the correct behavior. Don't switch tabs while the route is open.\n- **Nested navigators:** if each tab has its own `Navigator`, Heroes only fly within one navigator. Push the detail route on the root navigator (`Navigator.of(context, rootNavigator: true)`) if you want the transition to cover the bottom nav bar. Otherwise the default is fine.\n\nIf you tell me where the grid and tab code live, I can apply this directly to your files and add a widget test that checks that no duplicate tags exist across tabs.",
+        "judgment": {
+          "score": 58,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] keeps tags unique within each participating route subtree while using the same selected tag on the source and destination Heroes",
+              "met": true,
+              "evidence": "Builds the tag via HeroTags.product(tabId, productId), making it unique per tab/product, and passes the exact same heroTag to the detail screen's Hero ('pass that exact tag to the detail screen'). Also notes including the section in the tag if the product appears twice in one tab."
+            },
+            {
+              "criterion": "handles the case where the same product appears in multiple tab contexts",
+              "met": true,
+              "evidence": "Explicitly explains that IndexedStack/keep-alive tabs keep all grids alive and that tag must include tabId; shows passing tabId 'favorites' and 'trending'; notes that return flight goes back to the originating tab."
+            },
+            {
+              "criterion": "verifies that forward and reverse Hero flights occur as well as checking for tag collision assertion errors",
+              "met": false,
+              "evidence": "No verification is actually performed or specified. It only offers at the end to 'add a widget test that checks that no duplicate tags exist across tabs', which covers neither forward/reverse flight checks nor assertion-error checks, and is just an offer."
+            }
+          ],
+          "summary": "The response correctly composes a per-tab unique tag and reuses the identical tag on the source and destination Heroes, and addresses the multi-tab case. It does not verify forward and reverse flights or check for collision assertions; it only offers a possible duplicate-tag test."
+        },
+        "judgments": [
+          {
+            "score": 58,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] keeps tags unique within each participating route subtree while using the same selected tag on the source and destination Heroes",
+                "met": true,
+                "evidence": "Builds the tag via HeroTags.product(tabId, productId), making it unique per tab/product, and passes the exact same heroTag to the detail screen's Hero ('pass that exact tag to the detail screen'). Also notes including the section in the tag if the product appears twice in one tab."
+              },
+              {
+                "criterion": "handles the case where the same product appears in multiple tab contexts",
+                "met": true,
+                "evidence": "Explicitly explains that IndexedStack/keep-alive tabs keep all grids alive and that tag must include tabId; shows passing tabId 'favorites' and 'trending'; notes that return flight goes back to the originating tab."
+              },
+              {
+                "criterion": "verifies that forward and reverse Hero flights occur as well as checking for tag collision assertion errors",
+                "met": false,
+                "evidence": "No verification is actually performed or specified. It only offers at the end to 'add a widget test that checks that no duplicate tags exist across tabs', which covers neither forward/reverse flight checks nor assertion-error checks, and is just an offer."
+              }
+            ],
+            "summary": "The response correctly composes a per-tab unique tag and reuses the identical tag on the source and destination Heroes, and addresses the multi-tab case. It does not verify forward and reverse flights or check for collision assertions; it only offers a possible duplicate-tag test."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 58.0,
+          "minimum_score": 58,
+          "maximum_score": 58,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "Because the same product can show up in several tabs, the Hero tag has to be scoped to the tab the user tapped from. The grid and the detail screen must still share exactly that one tag, or the flight won't happen.\n\n## Approach\n\n- **Tag = tab context + product id**, e.g. `'$tabName-$productId'`. A tag that is unique across the whole app would stop the detail screen from matching its source Hero, so the flight would never run.\n- **Pass the chosen tag to the detail screen** instead of rebuilding it there from the product id.\n- **Inspect the tab structure** before deciding whether anything more is needed. Mounted tabs alone don't prove a collision. What matters is which route subtrees take part in the Navigator's Hero controller during the push:\n  - If each tab has its own `Navigator`, the tab-scoped tag is usually enough.\n  - If tabs share one Navigator and stay mounted (e.g. `IndexedStack`), the scoped tags prevent duplicates. If anything still collides, wrap the non-visible tabs in `HeroMode(enabled: isActiveTab)`.\n\n## Grid item (source)\n\n```dart\nclass ProductGridItem extends StatelessWidget {\n  const ProductGridItem({\n    super.key,\n    required this.product,\n    required this.tabName,\n  });\n\n  final Product product;\n  final String tabName;\n\n  String get heroTag => '$tabName-${product.id}';\n\n  @override\n  Widget build(BuildContext context) {\n    return GestureDetector(\n      onTap: () => Navigator.of(context).push(\n        MaterialPageRoute<void>(\n          builder: (_) => ProductDetailScreen(\n            product: product,\n            heroTag: heroTag, // pass the exact tag used by the source\n          ),\n        ),\n      ),\n      child: Hero(\n        tag: heroTag,\n        child: Image.network(product.imageUrl, fit: BoxFit.cover),\n      ),\n    );\n  }\n}\n```\n\n## Detail screen (destination)\n\n```dart\nclass ProductDetailScreen extends StatelessWidget {\n  const ProductDetailScreen({\n    super.key,\n    required this.product,\n    required this.heroTag,\n  });\n\n  final Product product;\n  final String heroTag;\n\n  @override\n  Widget build(BuildContext context) {\n    return Scaffold(\n      appBar: AppBar(title: Text(product.name)),\n      body: Column(\n        children: [\n          Hero(\n            tag: heroTag, // must equal the source tag\n            child: Image.network(product.imageUrl),\n          ),\n          // ...details\n        ],\n      ),\n    );\n  }\n}\n```\n\n## If tabs share a Navigator and stay mounted\n\n```dart\nHeroMode(\n  enabled: index == currentIndex,\n  child: ProductGrid(tabName: tabs[index].name),\n)\n```\n\n## Reduced motion\n\nThe default Material route transition already respects the platform setting in most cases. If you use a custom route or a long Hero flight, check `MediaQuery.disableAnimationsOf(context)` and shorten or skip the transition (e.g. `transitionDuration: Duration.zero`). The task must complete the same way either way.\n\n## Things to verify\n\n- The tap-through flight works from each tab, and the **reverse flight** returns to the correct tab's item.\n- A product visible in two tabs doesn't trigger a duplicate-tag assertion.\n- Switching tabs and then opening a product doesn't fly from a different tab's image.\n- If the grid is a scrollable list and the item scrolls offscreen before the pop, the return flight still behaves acceptably.\n- Reduced-motion on: navigation is immediate or a minimal fade, and nothing breaks.\n\n## What I need from you\n\nI haven't looked at your code, so I don't know how your tabs are built. If you tell me which of these you use, I can wire the change into the real files:\n\n1. `IndexedStack` or `TabBarView` with one shared Navigator, or a Navigator per tab?\n2. Does `Product` already have a stable `id`?\n3. Do you use `go_router` or another routing package rather than plain `Navigator.push`?",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] keeps tags unique within each participating route subtree while using the same selected tag on the source and destination Heroes",
+              "met": true,
+              "evidence": "Uses tag '$tabName-${product.id}', passes the exact heroTag to ProductDetailScreen (\"pass the exact tag used by the source\", \"must equal the source tag\"). It explicitly reasons about which route subtrees participate in the Navigator's Hero controller, and uses HeroMode on non-visible tabs if collisions persist, so uniqueness within the participating subtrees is addressed."
+            },
+            {
+              "criterion": "handles the case where the same product appears in multiple tab contexts",
+              "met": true,
+              "evidence": "Tag is scoped by tab context + product id so the same product in different tabs gets different tags; HeroMode(enabled: index == currentIndex) is offered for shared-Navigator mounted tabs; and a verification item covers a product visible in two tabs."
+            },
+            {
+              "criterion": "verifies that forward and reverse Hero flights occur as well as checking for tag collision assertion errors",
+              "met": false,
+              "evidence": "It lists manual 'Things to verify' (tap-through flight, reverse flight returns to correct tab, no duplicate-tag assertion), but these are a checklist for the user. The response does not run or write any test (e.g., widget test pumping and checking Hero flights or exceptions) and does not verify anything itself."
+            }
+          ],
+          "summary": "The response gets the core design right: tab-scoped tags shared between source and destination, with HeroMode as a fallback, and it handles the same product in several tabs. It falls short on verification, offering only a manual checklist instead of an actual check of forward/reverse flights and collision assertions."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] keeps tags unique within each participating route subtree while using the same selected tag on the source and destination Heroes",
+                "met": true,
+                "evidence": "Uses tag '$tabName-${product.id}', passes the exact heroTag to ProductDetailScreen (\"pass the exact tag used by the source\", \"must equal the source tag\"). It explicitly reasons about which route subtrees participate in the Navigator's Hero controller, and uses HeroMode on non-visible tabs if collisions persist, so uniqueness within the participating subtrees is addressed."
+              },
+              {
+                "criterion": "handles the case where the same product appears in multiple tab contexts",
+                "met": true,
+                "evidence": "Tag is scoped by tab context + product id so the same product in different tabs gets different tags; HeroMode(enabled: index == currentIndex) is offered for shared-Navigator mounted tabs; and a verification item covers a product visible in two tabs."
+              },
+              {
+                "criterion": "verifies that forward and reverse Hero flights occur as well as checking for tag collision assertion errors",
+                "met": false,
+                "evidence": "It lists manual 'Things to verify' (tap-through flight, reverse flight returns to correct tab, no duplicate-tag assertion), but these are a checklist for the user. The response does not run or write any test (e.g., widget test pumping and checking Hero flights or exceptions) and does not verify anything itself."
+              }
+            ],
+            "summary": "The response gets the core design right: tab-scoped tags shared between source and destination, with HeroMode as a fallback, and it handles the same product in several tabs. It falls short on verification, offering only a manual checklist instead of an actual check of forward/reverse flights and collision assertions."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 4.0,
+      "mandatory_failure": false,
+      "passed": false
+    },
+    {
+      "skill": "flutter-animation",
+      "case": "animated-switcher-needs-distinct-keys",
+      "baseline": {
+        "response": "The catch: `AnimatedSwitcher` decides whether to animate by comparing the old and new child using `Widget.canUpdate`, which checks `runtimeType` and `key`. Two plain `Text` widgets with no keys have the same type and a null key, so Flutter treats the second as an update of the first. No transition runs and the text just changes. You need to give each child a distinct `key`.\n\n```dart\nclass ResultText extends StatelessWidget {\n  const ResultText({super.key, required this.result});\n\n  /// null while loading\n  final String? result;\n\n  @override\n  Widget build(BuildContext context) {\n    return AnimatedSwitcher(\n      duration: const Duration(milliseconds: 300),\n      child: result == null\n          ? const Text('Loading...', key: ValueKey('loading'))\n          : Text(result!, key: ValueKey('loaded')),\n    );\n  }\n}\n```\n\n`AnimatedSwitcher` uses a `FadeTransition` by default, so this fades out the old child and fades in the new one with no extra setup.\n\nIf the result itself can change (for example, a refresh that returns new text) and you want that to fade too, key the loaded child on its value:\n\n```dart\nText(result!, key: ValueKey(result))\n```\n\nSome notes:\n- During the transition both children are in the tree briefly, in a `Stack`. If the two texts differ in size, the layout can shift slightly. You can pass a custom `layoutBuilder` if that matters.\n- If this is driven by a `FutureBuilder`, the same rule applies: give each branch (loading, error, data) its own key.",
+        "judgment": {
+          "score": 67,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] identifies that both children need distinct Keys or the transition will be silently skipped",
+              "met": true,
+              "evidence": "Explains that two unkeyed Text widgets have the same runtimeType and null key, so Widget.canUpdate treats the second as an update: \"No transition runs and the text just changes. You need to give each child a distinct `key`.\""
+            },
+            {
+              "criterion": "gives each state a stable distinguishing key such as a ValueKey tied to the state or content",
+              "met": true,
+              "evidence": "Uses `ValueKey('loading')` for the loading Text and `ValueKey('loaded')` for the loaded Text, and suggests `ValueKey(result)` if the content itself changes."
+            },
+            {
+              "criterion": "tests that the transition actually plays when switching between the loading and loaded states",
+              "met": false,
+              "evidence": "The response provides no test, no pumpWidget/pump verification, and no instruction to confirm that a FadeTransition appears or that both children are present mid-transition. It only mentions that both children are in the tree during the transition as a layout note."
+            }
+          ],
+          "summary": "The response correctly diagnoses the missing-key problem and applies distinct ValueKeys to the loading and loaded states, satisfying the mandatory criterion and the key-selection criterion. It does not verify the transition plays, such as with a widget test that pumps mid-transition and checks for both children or a FadeTransition, so the third criterion is unmet."
+        },
+        "judgments": [
+          {
+            "score": 67,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] identifies that both children need distinct Keys or the transition will be silently skipped",
+                "met": true,
+                "evidence": "Explains that two unkeyed Text widgets have the same runtimeType and null key, so Widget.canUpdate treats the second as an update: \"No transition runs and the text just changes. You need to give each child a distinct `key`.\""
+              },
+              {
+                "criterion": "gives each state a stable distinguishing key such as a ValueKey tied to the state or content",
+                "met": true,
+                "evidence": "Uses `ValueKey('loading')` for the loading Text and `ValueKey('loaded')` for the loaded Text, and suggests `ValueKey(result)` if the content itself changes."
+              },
+              {
+                "criterion": "tests that the transition actually plays when switching between the loading and loaded states",
+                "met": false,
+                "evidence": "The response provides no test, no pumpWidget/pump verification, and no instruction to confirm that a FadeTransition appears or that both children are present mid-transition. It only mentions that both children are in the tree during the transition as a layout note."
+              }
+            ],
+            "summary": "The response correctly diagnoses the missing-key problem and applies distinct ValueKeys to the loading and loaded states, satisfying the mandatory criterion and the key-selection criterion. It does not verify the transition plays, such as with a widget test that pumps mid-transition and checks for both children or a FadeTransition, so the third criterion is unmet."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 67.0,
+          "minimum_score": 67,
+          "maximum_score": 67,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "With two plain `Text` widgets and no keys, `AnimatedSwitcher` won't fade. Both children have the same `runtimeType` and `key` (null), so `Widget.canUpdate` is true and the switcher updates in place with no transition. The fix is to give each state a distinct `Key`.\n\n```dart\nclass ResultText extends StatelessWidget {\n  const ResultText({super.key, required this.result});\n\n  final String? result; // null while loading\n\n  @override\n  Widget build(BuildContext context) {\n    final reduceMotion = MediaQuery.disableAnimationsOf(context);\n\n    return AnimatedSwitcher(\n      duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 300),\n      child: result == null\n          ? const Text('Loading\u2026', key: ValueKey('loading'))\n          : Text(result!, key: ValueKey('result-$result')),\n    );\n  }\n}\n```\n\nNotes:\n\n- **Keys:** `ValueKey('loading')` vs. `ValueKey('result-\u2026')` makes the switcher see a new child and run the default `FadeTransition`. If the result can change again (e.g. a refresh), keying on the value also fades between results. If you want a fade only on loading \u2192 loaded, use a constant key like `ValueKey('loaded')` instead.\n- **Reduced motion:** with `MediaQuery.disableAnimationsOf`, the swap becomes immediate, so the content still appears and the task isn't affected.\n- **No controller needed:** `AnimatedSwitcher` is implicit, so there's nothing to dispose.\n- **Layout:** during the fade, the default layout builder stacks the old and new children centered. If the two texts differ in size, you may see a small jump. If that matters, wrap the switcher in a fixed-size or `Align`ed container.\n\nFor verification, a widget test can pump the widget with `result: null`, rebuild with a value, then `pump(Duration(milliseconds: 150))`. Both `Text` widgets should be in the tree mid-fade. After `pumpAndSettle`, only the result should remain. Repeat the test with `disableAnimations: true` in `MediaQuery` and confirm the swap is immediate.",
+        "judgment": {
+          "score": 88,
+          "expectations": [
+            {
+              "criterion": "identifies that both children need distinct Keys or the transition will be silently skipped",
+              "met": true,
+              "evidence": "States that with no keys both Text widgets have same runtimeType and null key, so Widget.canUpdate is true and the switcher updates in place with no transition; the fix is to give each state a distinct Key."
+            },
+            {
+              "criterion": "gives each state a stable distinguishing key such as a ValueKey tied to the state or content",
+              "met": true,
+              "evidence": "Uses const Text('Loading\u2026', key: ValueKey('loading')) and Text(result!, key: ValueKey('result-$result')), and mentions a constant ValueKey('loaded') alternative."
+            },
+            {
+              "criterion": "tests that the transition actually plays when switching between the loading and loaded states",
+              "met": false,
+              "evidence": "Only describes a test (pump with null, rebuild with a value, pump 150ms, expect both Texts in the tree, then pumpAndSettle) without writing or running it. Since the description is explicit about what to verify but no test is actually executed, this is only partially satisfied and is treated as not met."
+            }
+          ],
+          "summary": "The response correctly diagnoses the silent-skip problem from missing keys and provides distinct ValueKeys for the loading and loaded states. It only outlines a widget test in prose rather than writing or running one, so the verification criterion is not clearly met."
+        },
+        "judgments": [
+          {
+            "score": 88,
+            "expectations": [
+              {
+                "criterion": "identifies that both children need distinct Keys or the transition will be silently skipped",
+                "met": true,
+                "evidence": "States that with no keys both Text widgets have same runtimeType and null key, so Widget.canUpdate is true and the switcher updates in place with no transition; the fix is to give each state a distinct Key."
+              },
+              {
+                "criterion": "gives each state a stable distinguishing key such as a ValueKey tied to the state or content",
+                "met": true,
+                "evidence": "Uses const Text('Loading\u2026', key: ValueKey('loading')) and Text(result!, key: ValueKey('result-$result')), and mentions a constant ValueKey('loaded') alternative."
+              },
+              {
+                "criterion": "tests that the transition actually plays when switching between the loading and loaded states",
+                "met": false,
+                "evidence": "Only describes a test (pump with null, rebuild with a value, pump 150ms, expect both Texts in the tree, then pumpAndSettle) without writing or running it. Since the description is explicit about what to verify but no test is actually executed, this is only partially satisfied and is treated as not met."
+              }
+            ],
+            "summary": "The response correctly diagnoses the silent-skip problem from missing keys and provides distinct ValueKeys for the loading and loaded states. It only outlines a widget test in prose rather than writing or running one, so the verification criterion is not clearly met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 88.0,
+          "minimum_score": 88,
+          "maximum_score": 88,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 21.0,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": 62.5,
+    "with_skill_average": 75.0,
+    "average_delta": 12.5,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-animation": {
+        "cases": 2,
+        "passed": 1,
+        "baseline_average": 62.5,
+        "with_skill_average": 75.0,
+        "average_delta": 12.5
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

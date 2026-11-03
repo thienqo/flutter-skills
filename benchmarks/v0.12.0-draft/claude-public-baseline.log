@@ -1,0 +1,16 @@
+Validated 227 behavior cases and 76 routing cases.
+behavior flutter-package-development:dry-run-does-not-authorize-publish score=94.0 judges=1 agreement=100.0% delta=4.0 mandatory_failure=False passed=True
+behavior flutter-runtime-debugging:runtime-fix-repeats-original-flow score=95.0 judges=1 agreement=100.0% delta=55.0 mandatory_failure=False passed=True
+behavior flutter-ai-integration:skill-install-needs-no-provider-key score=100.0 judges=1 agreement=100.0% delta=5.0 mandatory_failure=False passed=True
+behavior flutter-authentication:native-client-secret-is-not-secret score=92.0 judges=1 agreement=100.0% delta=27.0 mandatory_failure=False passed=True
+behavior flutter-in-app-purchases:sandbox-readiness-is-not-store-publication score=72.0 judges=1 agreement=100.0% delta=37.0 mandatory_failure=False passed=False
+behavior flutter-product-analytics:sdk-log-is-not-end-to-end-proof score=95.0 judges=1 agreement=100.0% delta=30.0 mandatory_failure=False passed=True
+routing reusable-federated-plugin-release selected=['flutter-package-development'] passed=True
+routing attach-to-running-lifecycle-failure selected=['flutter-platform-integration', 'flutter-runtime-debugging'] passed=True
+routing human-support-chat-is-not-ai selected=['flutter-networking'] passed=True
+routing verified-store-subscription-entitlement selected=['flutter-in-app-purchases'] passed=True
+routing authentication-threat-review-stays-security-led selected=['flutter-security'] passed=True
+routing existing-session-authenticated-http-transport selected=['flutter-networking'] passed=True
+routing production-crash-context-is-not-product-analytics selected=['flutter-observability'] passed=True
+Wrote results to benchmarks/v0.12.0-draft/claude-public-baseline.json
+Wrote Markdown report to benchmarks/v0.12.0-draft/claude-public-baseline.md

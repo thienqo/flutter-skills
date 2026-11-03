@@ -5,7 +5,7 @@ description: Profile and improve Flutter runtime performance using profile-mode 
 
 # Flutter Performance
 
-Measure a reproducible flow before changing code. Debug-mode timing is not release-performance evidence.
+Measure a reproducible flow before changing code. Debug-mode timing is not release-performance evidence. A cause or fix named in the request is a hypothesis: confirm it with a measurement first.
 
 ## Establish evidence
 

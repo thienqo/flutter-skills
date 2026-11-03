@@ -1,0 +1,297 @@
+{
+  "created_at": "2026-11-03T13:31:51.374928+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "ca4c8d7baec044395d4da1480b2e20304734d948",
+    "dirty": false,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "dart-concurrency",
+      "case": "latest-request-wins",
+      "baseline": {
+        "response": "This is a classic out-of-order response race. Query A starts, query B starts, B returns first, then A returns late and overwrites B's results. Debouncing alone doesn't fix it, because any two requests in flight at once can still resolve in the wrong order.\n\nI haven't looked at your code yet. Since this is a Flutter repo, here are the fixes I'd consider, in order of preference.\n\n**1. Cancel or ignore superseded requests (most robust)**\n\nWith streams, `switchMap` (rxdart) drops the previous inner request when a new query arrives:\n\n```dart\n_queries\n  .debounceTime(const Duration(milliseconds: 300))\n  .distinct()\n  .switchMap((q) => Stream.fromFuture(repo.search(q)))\n  .listen(_emitResults);\n```\n\nWith Bloc, use `restartable()` from `bloc_concurrency`:\n\n```dart\non<SearchChanged>(_onChanged, transformer: restartable());\n```\n\n**2. Request-ID guard (works anywhere, no dependencies)**\n\n```dart\nint _latestRequest = 0;\n\nFuture<void> _search(String query) async {\n  final id = ++_latestRequest;\n  final results = await repo.search(query);\n  if (id != _latestRequest) return; // a newer query started; discard this\n  setState(() => _results = results);\n}\n```\n\nAlso check `mounted` after the `await` if this is in a `State`.\n\n**3. Compare against the current query**\n\n```dart\nfinal results = await repo.search(query);\nif (query != _controller.text) return;\n```\n\nThis is simpler, but it breaks if the user types A, then B, then A again, because the stale A response is accepted. Prefer the request ID.\n\n**4. Real cancellation (optional)**\n\nIf you use Dio, pass a `CancelToken` and cancel the previous one on each new query. This saves bandwidth, but you should still keep a guard from option 2 or 1.\n\n**Related things to check**\n- Is there a debounce at all? Add one (about 250\u2013300 ms) to reduce the number of requests.\n- Is the loading state tied to a single boolean? An older request finishing can set `isLoading = false` while the newest is still running. The ID guard covers this too, if the check happens before any state change.\n- With Riverpod, a `FutureProvider.family` or `AsyncNotifier` that reads the query via `ref.watch` handles this for you, since stale results are discarded when the provider rebuilds.\n\nIf you point me at the search widget, bloc, or provider (or paste it), I can tell you which of these fits and make the change.",
+        "judgment": {
+          "score": 67,
+          "expectations": [
+            {
+              "criterion": "identifies out-of-order completion",
+              "met": true,
+              "evidence": "States: \"Query A starts, query B starts, B returns first, then A returns late and overwrites B's results\" and notes that debouncing alone doesn't fix requests resolving in the wrong order."
+            },
+            {
+              "criterion": "[MANDATORY] adds explicit stale-result or cancellation policy",
+              "met": true,
+              "evidence": "Proposes switchMap/restartable() to drop superseded requests, a request-ID guard (`if (id != _latestRequest) return; // a newer query started; discard this`), and optional CancelToken cancellation, recommending a guard even with cancellation. However, these are offered as suggestions and no change was applied to the code, since the response says it hasn't looked at the code."
+            },
+            {
+              "criterion": "tests reversed completion order",
+              "met": false,
+              "evidence": "No test is proposed or written that makes the older request complete after the newer one, e.g. with Completers. The response only offers to inspect and change the code."
+            }
+          ],
+          "summary": "The response correctly diagnoses the out-of-order completion race and gives a clear stale-result and cancellation policy with several concrete options, so the mandatory criterion is met. It never proposes or writes a test that completes requests in reversed order, so the third criterion is not met."
+        },
+        "judgments": [
+          {
+            "score": 67,
+            "expectations": [
+              {
+                "criterion": "identifies out-of-order completion",
+                "met": true,
+                "evidence": "States: \"Query A starts, query B starts, B returns first, then A returns late and overwrites B's results\" and notes that debouncing alone doesn't fix requests resolving in the wrong order."
+              },
+              {
+                "criterion": "[MANDATORY] adds explicit stale-result or cancellation policy",
+                "met": true,
+                "evidence": "Proposes switchMap/restartable() to drop superseded requests, a request-ID guard (`if (id != _latestRequest) return; // a newer query started; discard this`), and optional CancelToken cancellation, recommending a guard even with cancellation. However, these are offered as suggestions and no change was applied to the code, since the response says it hasn't looked at the code."
+              },
+              {
+                "criterion": "tests reversed completion order",
+                "met": false,
+                "evidence": "No test is proposed or written that makes the older request complete after the newer one, e.g. with Completers. The response only offers to inspect and change the code."
+              }
+            ],
+            "summary": "The response correctly diagnoses the out-of-order completion race and gives a clear stale-result and cancellation policy with several concrete options, so the mandatory criterion is met. It never proposes or writes a test that completes requests in reversed order, so the third criterion is not met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 67.0,
+          "minimum_score": 67,
+          "maximum_score": 67,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "This is a classic out-of-order completion race. Two requests are in flight, the older one is slower, and its response lands last and overwrites the newer state. Debouncing only reduces how often it happens and doesn't guarantee ordering.\n\nI haven't looked at your code yet, so here is the fix for the two most likely shapes. Send me the search controller, bloc or notifier and I'll apply it directly.\n\n## Fix: latest-wins with a sequence token\n\n**If search is a `Future` call** (the most common case):\n\n```dart\nint _searchGeneration = 0;\n\nFuture<void> search(String query) async {\n  final generation = ++_searchGeneration;\n  try {\n    final results = await repository.search(query);\n    if (generation != _searchGeneration) return; // obsolete, drop it\n    if (!mounted) return;                        // or your lifecycle guard\n    state = SearchState.data(results);\n  } catch (e, st) {\n    if (generation != _searchGeneration) return;\n    state = SearchState.error(e, st);            // keep the stack trace\n  }\n}\n```\n\nErrors from obsolete requests are dropped too, so a stale failure can't clobber newer results.\n\n**If search is a `Stream` subscription**, store the subscription, bump the generation before cancelling, and check the generation inside the listener:\n\n```dart\nint _searchGeneration = 0;\nStreamSubscription<Results>? _searchSubscription;\n\nFuture<void> search(String query) async {\n  final generation = ++_searchGeneration;\n  final previous = _searchSubscription;\n  _searchSubscription = null;\n  await previous?.cancel();\n\n  if (generation != _searchGeneration) return;\n  _searchSubscription = repository.search(query).listen((result) {\n    if (generation == _searchGeneration) emit(result);\n  });\n}\n```\n\nCancel `_searchSubscription` in `dispose()`/`close()`. If your project already uses `switchMap` (rxdart) or bloc's `restartable()` transformer, use that instead of hand-rolling the token.\n\n## Optional extras\n\n- Keep debounce (about 300 ms) to cut request volume, but treat it as separate from the correctness fix.\n- If the HTTP client supports cancellation (for example Dio's `CancelToken`), cancel the old request too. This saves work, but the token check is still what guarantees correctness.\n\n## Verify\n\nWrite a test that reproduces the bug before you fix it, using two `Completer`s:\n\n1. Call `search('a')` and `search('ab')`.\n2. Complete `'ab'` first, then `'a'`.\n3. Assert the final state is the `'ab'` results.\n\nAlso cover a failing older request, and disposal while a request is in flight. Then run `dart analyze` (or `flutter analyze`).\n\nWhere does the search logic live, and is it Future-based or Stream-based?",
+        "judgment": {
+          "score": 96,
+          "expectations": [
+            {
+              "criterion": "identifies out-of-order completion",
+              "met": true,
+              "evidence": "Opens with \"This is a classic out-of-order completion race. Two requests are in flight, the older one is slower, and its response lands last and overwrites the newer state.\""
+            },
+            {
+              "criterion": "[MANDATORY] adds explicit stale-result or cancellation policy",
+              "met": true,
+              "evidence": "Adopts a \"latest-wins with a sequence token\" policy: `if (generation != _searchGeneration) return; // obsolete, drop it`, also drops stale errors, cancels the previous stream subscription, and mentions switchMap/restartable() and Dio CancelToken."
+            },
+            {
+              "criterion": "tests reversed completion order",
+              "met": true,
+              "evidence": "Verify section: use two Completers, call search('a') and search('ab'), complete 'ab' first then 'a', and assert final state is the 'ab' results. Also covers failing older request and disposal."
+            }
+          ],
+          "summary": "The response diagnoses the out-of-order completion race, makes an explicit latest-wins policy with generation tokens (dropping stale results and errors, cancelling old subscriptions), and specifies a reversed-completion-order test using Completers. All three criteria are clearly met, including the mandatory one."
+        },
+        "judgments": [
+          {
+            "score": 96,
+            "expectations": [
+              {
+                "criterion": "identifies out-of-order completion",
+                "met": true,
+                "evidence": "Opens with \"This is a classic out-of-order completion race. Two requests are in flight, the older one is slower, and its response lands last and overwrites the newer state.\""
+              },
+              {
+                "criterion": "[MANDATORY] adds explicit stale-result or cancellation policy",
+                "met": true,
+                "evidence": "Adopts a \"latest-wins with a sequence token\" policy: `if (generation != _searchGeneration) return; // obsolete, drop it`, also drops stale errors, cancels the previous stream subscription, and mentions switchMap/restartable() and Dio CancelToken."
+              },
+              {
+                "criterion": "tests reversed completion order",
+                "met": true,
+                "evidence": "Verify section: use two Completers, call search('a') and search('ab'), complete 'ab' first then 'a', and assert final state is the 'ab' results. Also covers failing older request and disposal."
+              }
+            ],
+            "summary": "The response diagnoses the out-of-order completion race, makes an explicit latest-wins policy with generation tokens (dropping stale results and errors, cancelling old subscriptions), and specifies a reversed-completion-order test using Completers. All three criteria are clearly met, including the mandatory one."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 96.0,
+          "minimum_score": 96,
+          "maximum_score": 96,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 29.0,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "dart-concurrency",
+      "case": "isolate-error-reaches-caller",
+      "baseline": {
+        "response": "Use `Isolate.run`. If the callback throws, the error is rethrown in the calling isolate. If the isolate dies without returning a result, the future completes with a `RemoteError` instead of waiting forever. Add a timeout and catch both cases in the UI state so it can't hang.\n\n## Compression service\n\n```dart\nimport 'dart:isolate';\nimport 'dart:typed_data';\nimport 'package:image/image.dart' as img;\n\nclass CompressionException implements Exception {\n  CompressionException(this.message);\n  final String message;\n  @override\n  String toString() => message;\n}\n\n/// Runs in a background isolate. `codec` is deliberately caller-controlled\n/// so an invalid value can be used to trigger a failure.\nUint8List _compress(({Uint8List bytes, String codec, int quality}) args) {\n  final decoded = img.decodeImage(args.bytes);\n  if (decoded == null) {\n    throw CompressionException('Could not decode image data');\n  }\n  switch (args.codec) {\n    case 'jpg':\n      return img.encodeJpg(decoded, quality: args.quality);\n    case 'png':\n      return img.encodePng(decoded);\n    default:\n      throw CompressionException('Unsupported codec: \"${args.codec}\"');\n  }\n}\n\nFuture<Uint8List> compressImage(\n  Uint8List bytes, {\n  String codec = 'jpg',\n  int quality = 80,\n  Duration timeout = const Duration(seconds: 30),\n}) {\n  return Isolate.run(\n    () => _compress((bytes: bytes, codec: codec, quality: quality)),\n  ).timeout(timeout); // guards against a stuck or never-returning isolate\n}\n```\n\n## UI state that always resolves\n\n```dart\nimport 'package:flutter/material.dart';\n\nsealed class CompressState {}\nclass Idle extends CompressState {}\nclass Loading extends CompressState {}\nclass Done extends CompressState { Done(this.bytes); final Uint8List bytes; }\nclass Failed extends CompressState { Failed(this.message); final String message; }\n\nclass CompressPage extends StatefulWidget {\n  const CompressPage({super.key, required this.input});\n  final Uint8List input;\n  @override\n  State<CompressPage> createState() => _CompressPageState();\n}\n\nclass _CompressPageState extends State<CompressPage> {\n  CompressState _state = Idle();\n\n  Future<void> _run(String codec) async {\n    setState(() => _state = Loading());\n    try {\n      final out = await compressImage(widget.input, codec: codec);\n      if (!mounted) return;\n      setState(() => _state = Done(out));\n    } on TimeoutException {\n      if (!mounted) return;\n      setState(() => _state = Failed('Compression timed out'));\n    } on CompressionException catch (e) {\n      if (!mounted) return;\n      setState(() => _state = Failed(e.message));\n    } catch (e) {\n      // RemoteError, isolate crash, OOM, etc.\n      if (!mounted) return;\n      setState(() => _state = Failed('Compression failed: $e'));\n    }\n  }\n\n  @override\n  Widget build(BuildContext context) {\n    return Scaffold(\n      body: Center(\n        child: switch (_state) {\n          Idle() => Column(mainAxisSize: MainAxisSize.min, children: [\n              ElevatedButton(onPressed: () => _run('jpg'), child: const Text('Compress (valid)')),\n              ElevatedButton(onPressed: () => _run('bogus'), child: const Text('Compress (invalid codec)')),\n            ]),\n          Loading() => const CircularProgressIndicator(),\n          Done(:final bytes) => Text('Compressed to ${bytes.length} bytes'),\n          Failed(:final message) => Column(mainAxisSize: MainAxisSize.min, children: [\n              Text(message, style: const TextStyle(color: Colors.red)),\n              TextButton(onPressed: () => setState(() => _state = Idle()), child: const Text('Retry')),\n            ]),\n        },\n      ),\n    );\n  }\n}\n```\n\n(Add `import 'dart:async';` for `TimeoutException`.)\n\n## Test that the failure surfaces\n\n```dart\ntest('invalid codec throws instead of hanging', () async {\n  final bytes = Uint8List.fromList(img.encodePng(img.Image(width: 8, height: 8)));\n  expect(\n    compressImage(bytes, codec: 'bogus', timeout: const Duration(seconds: 5)),\n    throwsA(isA<CompressionException>()),\n  );\n});\n```\n\n## Notes\n\n- **Why it doesn't hang:** every path ends in a state change. Success goes to `Done`, a thrown exception or isolate death goes to `Failed`, and a stall goes to `Failed` via the timeout. `Loading` is never a resting state.\n- **Timeout caveat:** `.timeout` only stops waiting. It does not kill the isolate. If you need cancellation, use `Isolate.spawn` with `onError`/`onExit` ports and call `isolate.kill(priority: Isolate.immediate)` on timeout.\n- **Exceptions across isolates:** a custom exception must only hold sendable fields (such as a `String`), as above. If it can't be sent, you get a `RemoteError` with the stringified message, which the generic `catch` already covers.\n- **Web:** `Isolate.run` isn't supported on Flutter web, so use `compute` or a web worker there.",
+        "judgment": {
+          "score": 50,
+          "expectations": [
+            {
+              "criterion": "propagates isolate errors back to the caller instead of silently failing",
+              "met": true,
+              "evidence": "Explicitly states Isolate.run rethrows callback errors in the calling isolate and that isolate death yields a RemoteError. The UI catches TimeoutException, CompressionException and a generic catch, setting a Failed state. The test expects compressImage to throw CompressionException."
+            },
+            {
+              "criterion": "preserves or wraps the original stack trace",
+              "met": false,
+              "evidence": "The code never captures or logs a StackTrace. The catch blocks use `catch (e)` with no stack parameter, and no Error.throwWithStackTrace or similar is used. The only mention is that a RemoteError carries a stringified message, which is not an explicit decision to preserve the trace."
+            },
+            {
+              "criterion": "tests error and cancellation paths in addition to success",
+              "met": false,
+              "evidence": "Only one test is given, for the invalid codec error path. There is no success test and no cancellation test. Cancellation is only mentioned in a note about using Isolate.spawn and kill, with no test."
+            }
+          ],
+          "summary": "The response makes error propagation explicit: errors are rethrown from Isolate.run, and the UI resolves to a Failed state through typed and generic catches plus a timeout. This meets the mandatory criterion. It does not preserve or wrap stack traces, and it tests only the invalid-codec error path, with no success test and no cancellation test."
+        },
+        "judgments": [
+          {
+            "score": 50,
+            "expectations": [
+              {
+                "criterion": "propagates isolate errors back to the caller instead of silently failing",
+                "met": true,
+                "evidence": "Explicitly states Isolate.run rethrows callback errors in the calling isolate and that isolate death yields a RemoteError. The UI catches TimeoutException, CompressionException and a generic catch, setting a Failed state. The test expects compressImage to throw CompressionException."
+              },
+              {
+                "criterion": "preserves or wraps the original stack trace",
+                "met": false,
+                "evidence": "The code never captures or logs a StackTrace. The catch blocks use `catch (e)` with no stack parameter, and no Error.throwWithStackTrace or similar is used. The only mention is that a RemoteError carries a stringified message, which is not an explicit decision to preserve the trace."
+              },
+              {
+                "criterion": "tests error and cancellation paths in addition to success",
+                "met": false,
+                "evidence": "Only one test is given, for the invalid codec error path. There is no success test and no cancellation test. Cancellation is only mentioned in a note about using Isolate.spawn and kill, with no test."
+              }
+            ],
+            "summary": "The response makes error propagation explicit: errors are rethrown from Isolate.run, and the UI resolves to a Failed state through typed and generic catches plus a timeout. This meets the mandatory criterion. It does not preserve or wrap stack traces, and it tests only the invalid-codec error path, with no success test and no cancellation test."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 50.0,
+          "minimum_score": 50,
+          "maximum_score": 50,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "Here's a design where a bad codec becomes a typed error in the UI state instead of a hang. I haven't run any of this.\n\n## Compression service\n\n```dart\nimport 'dart:isolate';\nimport 'dart:typed_data';\nimport 'package:image/image.dart' as img;\n\nclass CompressionException implements Exception {\n  const CompressionException(this.message);\n  final String message;\n  @override\n  String toString() => 'CompressionException: $message';\n}\n\nFuture<Uint8List> compressImage(Uint8List bytes, {int quality = 80}) {\n  // The closure captures only a Uint8List and an int, both sendable.\n  return Isolate.run(() => _compress(bytes, quality));\n}\n\nUint8List _compress(Uint8List bytes, int quality) {\n  // decodeImage returns null for an unknown or invalid codec, so a null\n  // result has to become an explicit error. Otherwise the \"failure\" is silent.\n  final decoded = img.decodeImage(bytes);\n  if (decoded == null) {\n    throw const CompressionException('Unsupported or invalid image codec');\n  }\n  return Uint8List.fromList(img.encodeJpg(decoded, quality: quality));\n}\n```\n\n`Isolate.run` sends any thrown error back to the caller as an async exception, so the `await` completes with an error and never waits forever. Don't use `dart:ui` codec APIs here, because they aren't available in background isolates.\n\n## State owner with latest-wins and a failure state\n\n```dart\nsealed class CompressState { const CompressState(); }\nclass Idle extends CompressState { const Idle(); }\nclass Working extends CompressState { const Working(); }\nclass Done extends CompressState { const Done(this.bytes); final Uint8List bytes; }\nclass Failed extends CompressState { const Failed(this.error); final Object error; }\n\nclass CompressController extends ChangeNotifier {\n  CompressState state = const Idle();\n  int _seq = 0;\n  bool _disposed = false;\n\n  Future<void> compress(Uint8List input) async {\n    final mine = ++_seq;\n    _set(const Working());\n    try {\n      final out = await compressImage(input)\n          .timeout(const Duration(seconds: 30));\n      if (mine == _seq) _set(Done(out));\n    } catch (e) {\n      // Reports the failure, or a timeout, as UI state.\n      if (mine == _seq) _set(Failed(e));\n    }\n  }\n\n  void _set(CompressState s) {\n    if (_disposed) return;\n    state = s;\n    notifyListeners();\n  }\n\n  @override\n  void dispose() {\n    _disposed = true;\n    super.dispose();\n  }\n}\n```\n\nThe UI switches on `state`: `Working` shows a spinner, `Failed` shows an error message with a retry button, and `Done` shows the result. Because `Failed` is a state, the spinner can't stay up after an error.\n\n## Things to know\n\n- **Timeout doesn't cancel.** `.timeout` only stops the caller from waiting, and the isolate keeps running. If you need real cancellation of long jobs, use `Isolate.spawn` with a `ReceivePort`, an error/exit listener, and `isolate.kill(priority: Isolate.immediate)`.\n- **Hard crashes.** A native crash (for example in FFI codecs) can take down the process, which no Dart handler can catch. For pure-Dart `package:image` this isn't an issue. For FFI codecs, you'd need the spawned-isolate approach with `addErrorListener` and `onExit`, and you'd have to treat an exit with no result as a failure.\n- **Web.** Isolates aren't supported on Flutter web, and `compute()` runs on the main thread there. Measure and chunk the work, or use an explicit web-worker integration.\n- **Latest-wins.** The `_seq` token stops a slow older job from overwriting a newer result or error.\n\n## Tests\n\n```dart\ntest('invalid codec surfaces Failed, not a hang', () async {\n  final c = CompressController();\n  await c.compress(Uint8List.fromList([1, 2, 3])); // not an image\n  expect(c.state, isA<Failed>());\n  expect((c.state as Failed).error, isA<CompressionException>());\n});\n\ntest('disposal during work does not notify', () async {\n  final c = CompressController();\n  final f = c.compress(validPngBytes);\n  c.dispose();\n  await f; // must not throw\n});\n\ntest('stale result is dropped', () async {\n  final c = CompressController();\n  final first = c.compress(largeValidBytes);\n  final second = c.compress(smallValidBytes);\n  await Future.wait([first, second]);\n  expect(c.state, isA<Done>()); // from the second call\n});\n```\n\nThen run `dart analyze` (or `flutter analyze`). If you want, I can wire this into a specific widget or swap in the spawned-isolate version for hard cancellation.",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "propagates isolate errors back to the caller instead of silently failing",
+              "met": true,
+              "evidence": "Explicitly states Isolate.run sends thrown errors back as async exceptions so the await completes with an error. Converts null decodeImage into a thrown CompressionException, and the controller catch maps it to a Failed state shown in the UI."
+            },
+            {
+              "criterion": "preserves or wraps the original stack trace",
+              "met": false,
+              "evidence": "The catch block uses `catch (e)` and stores only `Failed(this.error)`. The StackTrace is never captured, wrapped, or passed along, and the response does not discuss stack trace preservation."
+            },
+            {
+              "criterion": "tests error and cancellation paths in addition to success",
+              "met": false,
+              "evidence": "Tests cover the invalid codec error, disposal during work, and a stale result being dropped, but there is no success-only test and no real cancellation test. The response says timeout does not cancel, and the disposal and stale tests are not cancellation of the isolate. Timeout is not tested either."
+            }
+          ],
+          "summary": "The response meets the mandatory requirement: errors from the isolate are propagated to the caller and turned into a visible Failed state. It does not preserve the stack trace, since it catches only the error object. Its tests cover the error path, but there is no success test and no true cancellation test, so the testing criterion is not met."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "propagates isolate errors back to the caller instead of silently failing",
+                "met": true,
+                "evidence": "Explicitly states Isolate.run sends thrown errors back as async exceptions so the await completes with an error. Converts null decodeImage into a thrown CompressionException, and the controller catch maps it to a Failed state shown in the UI."
+              },
+              {
+                "criterion": "preserves or wraps the original stack trace",
+                "met": false,
+                "evidence": "The catch block uses `catch (e)` and stores only `Failed(this.error)`. The StackTrace is never captured, wrapped, or passed along, and the response does not discuss stack trace preservation."
+              },
+              {
+                "criterion": "tests error and cancellation paths in addition to success",
+                "met": false,
+                "evidence": "Tests cover the invalid codec error, disposal during work, and a stale result being dropped, but there is no success-only test and no real cancellation test. The response says timeout does not cancel, and the disposal and stale tests are not cancellation of the isolate. Timeout is not tested either."
+              }
+            ],
+            "summary": "The response meets the mandatory requirement: errors from the isolate are propagated to the caller and turned into a visible Failed state. It does not preserve the stack trace, since it catches only the error object. Its tests cover the error path, but there is no success test and no true cancellation test, so the testing criterion is not met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 12.0,
+      "mandatory_failure": false,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": 58.5,
+    "with_skill_average": 79.0,
+    "average_delta": 20.5,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "dart-concurrency": {
+        "cases": 2,
+        "passed": 1,
+        "baseline_average": 58.5,
+        "with_skill_average": 79.0,
+        "average_delta": 20.5
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

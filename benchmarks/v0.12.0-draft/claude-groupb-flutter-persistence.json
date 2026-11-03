@@ -1,0 +1,277 @@
+{
+  "created_at": "2026-11-03T13:34:40.169513+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "ca4c8d7baec044395d4da1480b2e20304734d948",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-persistence",
+      "case": "database-choice-from-query-needs",
+      "baseline": {
+        "response": "I'm assuming this is a Flutter app and haven't looked at your project. For offline tasks with filtering, due-date ordering, and versioned migrations, I recommend **Drift** (SQLite). It gives you typed queries, indexes, and a tested migration path. Isar and Hive don't have a comparable migration story.\n\n## 1. Table\n\n```dart\nimport 'package:drift/drift.dart';\n\nenum TaskStatus { open, done, archived }\n\n@TableIndex(name: 'tasks_due_idx', columns: {#dueAt})\n@TableIndex(name: 'tasks_status_idx', columns: {#status})\nclass Tasks extends Table {\n  IntColumn get id => integer().autoIncrement()();\n  TextColumn get title => text().withLength(min: 1, max: 200)();\n  TextColumn get notes => text().nullable()();\n  IntColumn get status => intEnum<TaskStatus>().withDefault(const Constant(0))();\n  DateTimeColumn get dueAt => dateTime().nullable()();   // added in v2\n  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();\n}\n```\n\nStore `dueAt` as UTC and convert for display. Drift stores it as a Unix timestamp by default.\n\n## 2. Filtering and due-date ordering\n\nTasks with no due date should sort last. Overdue tasks come first by virtue of ascending order.\n\n```dart\nStream<List<Task>> watchTasks({TaskStatus? status, String? query}) {\n  final q = select(tasks);\n  if (status != null) q.where((t) => t.status.equalsValue(status));\n  if (query != null && query.isNotEmpty) {\n    q.where((t) => t.title.like('%$query%'));\n  }\n  q.orderBy([\n    (t) => OrderingTerm(expression: t.dueAt, nulls: NullsOrder.last),\n    (t) => OrderingTerm(expression: t.createdAt),\n  ]);\n  return q.watch();\n}\n```\n\nBecause it returns a `Stream`, the UI updates automatically when rows change.\n\n## 3. Schema upgrades\n\nBump `schemaVersion` on every schema change, and use `stepByStep` so each version's migration is written once and never edited.\n\n```dart\n@DriftDatabase(tables: [Tasks])\nclass AppDb extends _$AppDb {\n  AppDb(super.e);\n\n  @override\n  int get schemaVersion => 3;\n\n  @override\n  MigrationStrategy get migration => MigrationStrategy(\n    onCreate: (m) => m.createAll(),\n    onUpgrade: stepByStep(\n      from1To2: (m, schema) async {\n        await m.addColumn(schema.tasks, schema.tasks.dueAt);\n      },\n      from2To3: (m, schema) async {\n        await m.createIndex(schema.tasksDueIdx);\n        await m.createIndex(schema.tasksStatusIdx);\n      },\n    ),\n    beforeOpen: (details) async {\n      await customStatement('PRAGMA foreign_keys = ON');\n    },\n  );\n}\n```\n\nSetup steps:\n1. Add `drift`, `drift_flutter`, and `sqlite3_flutter_libs`, plus `drift_dev` and `build_runner` as dev dependencies.\n2. In `build.yaml`, set `databases: {default: lib/data/app_db.dart}` and `schema_dir: drift_schemas/`.\n3. After each schema change, run `dart run drift_dev make-migrations`. It snapshots the schema and generates the `stepByStep` helpers and test files.\n4. Commit the `drift_schemas/` snapshots. They are what make the migration tests possible.\n\n## 4. Migration tests\n\nUse `drift_dev`'s `SchemaVerifier`. For each pair (1\u21922, 2\u21923, and 1\u21923), create the old schema, insert sample rows, migrate, and assert the data survived and `validateDatabaseSchema()` passes. A user who skipped a version in between is the case that most often breaks.\n\n## Pitfalls\n- Never edit a shipped migration step. Add a new one.\n- Adding a `NOT NULL` column needs a default, or use a table rebuild with `m.alterTable(TableMigration(...))`.\n- Run the database in a background isolate (`NativeDatabase.createInBackground`) so large lists don't jank the UI.\n- `LIKE '%\u2026%'` can't use an index. If search gets slow, move to FTS5.\n\nIf you'd rather use a different store (Isar, sqflite, or Hive), or want me to wire this into a specific feature in the repo, tell me and I'll adapt it.",
+        "judgment": {
+          "score": 55,
+          "expectations": [
+            {
+              "criterion": "chooses storage based on query and migration needs",
+              "met": true,
+              "evidence": "Recommends Drift (SQLite) for filtering, due-date ordering, and versioned migrations, and says Isar and Hive lack a comparable migration story. Notes typed queries and indexes."
+            },
+            {
+              "criterion": "keeps schema behind a repository",
+              "met": false,
+              "evidence": "No repository abstraction is introduced. The query method watchTasks sits on the database class and the UI is implied to use it directly. Drift tables and generated types are never hidden behind an interface."
+            },
+            {
+              "criterion": "tests upgrade and reopen behavior",
+              "met": true,
+              "evidence": "Section 4 describes SchemaVerifier tests for 1\u21922, 2\u21923 and 1\u21923 that insert sample rows, migrate, assert the data survived, and call validateDatabaseSchema(). Upgrade is covered explicitly. Reopen is covered only implicitly, since the tests open the old schema and migrate it. No code is shown and there is no explicit close-and-reopen test."
+            }
+          ],
+          "summary": "The response justifies Drift by its query and migration support and describes upgrade tests with data-survival checks. It does not put the schema behind a repository, and its reopen coverage is only implicit, with no code shown."
+        },
+        "judgments": [
+          {
+            "score": 55,
+            "expectations": [
+              {
+                "criterion": "chooses storage based on query and migration needs",
+                "met": true,
+                "evidence": "Recommends Drift (SQLite) for filtering, due-date ordering, and versioned migrations, and says Isar and Hive lack a comparable migration story. Notes typed queries and indexes."
+              },
+              {
+                "criterion": "keeps schema behind a repository",
+                "met": false,
+                "evidence": "No repository abstraction is introduced. The query method watchTasks sits on the database class and the UI is implied to use it directly. Drift tables and generated types are never hidden behind an interface."
+              },
+              {
+                "criterion": "tests upgrade and reopen behavior",
+                "met": true,
+                "evidence": "Section 4 describes SchemaVerifier tests for 1\u21922, 2\u21923 and 1\u21923 that insert sample rows, migrate, assert the data survived, and call validateDatabaseSchema(). Upgrade is covered explicitly. Reopen is covered only implicitly, since the tests open the old schema and migrate it. No code is shown and there is no explicit close-and-reopen test."
+              }
+            ],
+            "summary": "The response justifies Drift by its query and migration support and describes upgrade tests with data-survival checks. It does not put the schema behind a repository, and its reopen coverage is only implicit, with no code shown."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 55.0,
+          "minimum_score": 55,
+          "maximum_score": 55,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I haven't inspected the project, so this is a design to confirm against it. The working directory looks like the skills repo rather than a Flutter app. Before writing code, I'd check `pubspec.yaml` and the SDK constraints, any existing persistence package (drift, sqflite, Isar, Hive, etc.) and its version, the generated-schema policy, and who owns storage today. **If a package is already in use, keep it.** The design below carries over, and only the syntax changes.\n\n## Recommendation\n\nUse a relational database. Filtering, due-date ordering, and versioned upgrades are exactly what preferences or flat files handle badly. If nothing exists yet, I'd use **Drift on SQLite**, because it has typed queries and a built-in, testable migration API. Keep it behind a `TaskRepository` so widgets never see table details.\n\n## Ownership and classification\n\n- **Tasks** are durable user data. Migrations must never wipe them, and failure must never trigger \"delete and recreate\".\n- **Pending mutations** (create, update, delete made offline) are a durable operation queue. Store them in the same transaction as the task change.\n- **Filter and sort state** is a small setting, so preferences are fine. It isn't part of the task schema.\n- The local database is the source of truth for the UI. Decide up front whether a remote exists and who wins conflicts. If one does, last-write-wins and field merging lead to different columns, so tell me before we lock the schema.\n\n## Schema (v1)\n\n```\ntasks\n  id            TEXT PK        -- client-generated UUID, so offline creates need no server ID\n  title         TEXT NOT NULL\n  notes         TEXT\n  is_done       INTEGER NOT NULL DEFAULT 0\n  due_at        INTEGER NULL   -- UTC epoch millis; null = no due date\n  created_at    INTEGER NOT NULL\n  updated_at    INTEGER NOT NULL\n  deleted_at    INTEGER NULL   -- tombstone, so deletions can sync and reconcile\n\nINDEX tasks_filter_due ON tasks(is_done, due_at)\n```\n\nStore due dates as UTC instants. If \"due\" means a calendar day with no time, store a date-only value instead, so timezone changes don't shift it.\n\n## Filtering and ordering\n\nPush these into SQL instead of sorting in Dart:\n\n```sql\nSELECT * FROM tasks\nWHERE deleted_at IS NULL AND is_done = ?\nORDER BY (due_at IS NULL), due_at ASC, created_at ASC;\n```\n\nThe `(due_at IS NULL)` term puts undated tasks last, and `created_at` makes the order deterministic for ties. Expose it as a stream (`watch`) so the UI updates on writes. Add text search or tag filters only when a requirement exists.\n\n## Schema upgrades\n\n- Set an explicit `schemaVersion`, and write one step per version (`from < 2`, `from < 3`, \u2026) so any old install can reach the latest.\n- Make each step additive where possible (`ALTER TABLE ADD COLUMN` with a default, then backfill). Run the migration in a transaction.\n- Commit generated schema snapshots for each released version (Drift's `schema dump`), so tests can open real old-version databases.\n- On failure, surface the error and leave the file intact. Don't auto-delete. If a recovery path is needed, such as a backup copy or export, make it explicit.\n\n## Tests\n\nUse temporary directories or in-memory databases.\n\n1. First run creates the schema.\n2. Reopen preserves data.\n3. **Upgrade from every released schema snapshot** to the latest, with seeded rows checked afterward.\n4. A failed write rolls back, including the paired queue entry.\n5. Filter and ordering cases: null due dates, equal due dates, completed vs. open, and soft-deleted rows excluded.\n6. Concurrent writes.\n7. Corrupt or incompatible file handling that doesn't destroy data.\n8. Offline-to-online replay of queued mutations, if a remote exists.\n\n## Questions that change the design\n\n1. Which persistence package is already in the app, if any?\n2. Is there a backend to sync with? If so, I'd read the offline-sync and migration guidance before finalizing the queue and tombstones.\n3. Are due dates date-only or date-time?\n4. Which platforms, including web? That affects the SQLite setup.\n\nOnce you answer these, or point me at the app's repo, I can implement it.",
+        "judgment": {
+          "score": 93,
+          "expectations": [
+            {
+              "criterion": "chooses storage based on query and migration needs",
+              "met": true,
+              "evidence": "States \"Use a relational database. Filtering, due-date ordering, and versioned upgrades are exactly what preferences or flat files handle badly,\" then picks Drift on SQLite for typed queries and a testable migration API, while also keeping any existing package."
+            },
+            {
+              "criterion": "keeps schema behind a repository",
+              "met": true,
+              "evidence": "\"Keep it behind a `TaskRepository` so widgets never see table details.\""
+            },
+            {
+              "criterion": "tests upgrade and reopen behavior",
+              "met": true,
+              "evidence": "Test list includes \"Reopen preserves data\" and \"Upgrade from every released schema snapshot to the latest, with seeded rows checked afterward,\" with committed schema snapshots for old-version databases."
+            }
+          ],
+          "summary": "The response explicitly ties the storage choice to filtering, ordering, and migration needs, places the schema behind a TaskRepository, and specifies tests for both reopen persistence and upgrades from each released schema snapshot. All three criteria are clearly met."
+        },
+        "judgments": [
+          {
+            "score": 93,
+            "expectations": [
+              {
+                "criterion": "chooses storage based on query and migration needs",
+                "met": true,
+                "evidence": "States \"Use a relational database. Filtering, due-date ordering, and versioned upgrades are exactly what preferences or flat files handle badly,\" then picks Drift on SQLite for typed queries and a testable migration API, while also keeping any existing package."
+              },
+              {
+                "criterion": "keeps schema behind a repository",
+                "met": true,
+                "evidence": "\"Keep it behind a `TaskRepository` so widgets never see table details.\""
+              },
+              {
+                "criterion": "tests upgrade and reopen behavior",
+                "met": true,
+                "evidence": "Test list includes \"Reopen preserves data\" and \"Upgrade from every released schema snapshot to the latest, with seeded rows checked afterward,\" with committed schema snapshots for old-version databases."
+              }
+            ],
+            "summary": "The response explicitly ties the storage choice to filtering, ordering, and migration needs, places the schema behind a TaskRepository, and specifies tests for both reopen persistence and upgrades from each released schema snapshot. All three criteria are clearly met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 93.0,
+          "minimum_score": 93,
+          "maximum_score": 93,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 38.0,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-persistence",
+      "case": "secrets-not-in-preferences",
+      "baseline": {
+        "response": "I'd recommend against `shared_preferences` for refresh tokens. It stores values in plaintext (an XML file on Android, `NSUserDefaults` on iOS, and a plist or JSON file on desktop). A refresh token is long-lived, so anyone who gets it through a device backup, a rooted or jailbroken device, or a file-read bug can mint new access tokens until it's revoked.\n\n`flutter_secure_storage` is just as convenient and uses the iOS/macOS Keychain and Android Keystore-backed encryption:\n\n```yaml\ndependencies:\n  flutter_secure_storage: ^9.2.2\n```\n\n```dart\nimport 'package:flutter_secure_storage/flutter_secure_storage.dart';\n\nclass TokenStore {\n  TokenStore([FlutterSecureStorage? storage])\n      : _storage = storage ?? const FlutterSecureStorage();\n\n  final FlutterSecureStorage _storage;\n  static const _refreshKey = 'refresh_token';\n\n  Future<void> saveRefreshToken(String token) =>\n      _storage.write(key: _refreshKey, value: token);\n\n  Future<String?> readRefreshToken() => _storage.read(key: _refreshKey);\n\n  Future<void> clear() => _storage.delete(key: _refreshKey);\n}\n```\n\nA few notes:\n\n- **Access tokens:** keep them in memory only. Persist just the refresh token.\n- **Logout:** call `clear()` and revoke the token server-side.\n- **Rotation:** if your backend rotates refresh tokens, write the new one every time you refresh.\n- **Web:** `flutter_secure_storage` on web is not truly secure, since it uses WebCrypto over localStorage. For web, prefer an HttpOnly cookie set by your backend.\n- **Android:** the minimum SDK is 23 for the current versions.\n- **Plain prefs:** `shared_preferences` is still fine for non-sensitive data like a \"remember me\" flag or the last-used username.\n\nIf you have a hard requirement to use `shared_preferences` (for example, a throwaway prototype), tell me and I'll wire it up, but I'd wrap it behind the same `TokenStore` interface so swapping to secure storage later is a one-file change. Want me to add this to a specific project in the repo?",
+        "judgment": {
+          "score": 88,
+          "expectations": [
+            {
+              "criterion": "rejects plain preferences for secrets",
+              "met": true,
+              "evidence": "Opens with \"I'd recommend against `shared_preferences` for refresh tokens\" and explains it stores values in plaintext, with risks from backups, rooted devices, and file-read bugs. It also says plain prefs are only fine for non-sensitive data. It does offer to wire up shared_preferences for a throwaway prototype, but only if the user insists, behind an abstraction."
+            },
+            {
+              "criterion": "uses a platform-secure boundary and avoids token logging",
+              "met": false,
+              "evidence": "Uses flutter_secure_storage backed by Keychain and Keystore, which is a platform-secure boundary, and keeps access tokens in memory only. However, it never mentions avoiding logging of tokens, and nothing in the code or notes addresses log hygiene, so the second half of the criterion is not made explicit."
+            }
+          ],
+          "summary": "The response clearly rejects shared_preferences for refresh tokens and gives a sound platform-secure alternative (flutter_secure_storage with Keychain/Keystore) plus useful lifecycle notes. It does not explicitly address avoiding token logging, so the second criterion is only partly satisfied and is marked not met. The score reflects strong security guidance with that one gap."
+        },
+        "judgments": [
+          {
+            "score": 88,
+            "expectations": [
+              {
+                "criterion": "rejects plain preferences for secrets",
+                "met": true,
+                "evidence": "Opens with \"I'd recommend against `shared_preferences` for refresh tokens\" and explains it stores values in plaintext, with risks from backups, rooted devices, and file-read bugs. It also says plain prefs are only fine for non-sensitive data. It does offer to wire up shared_preferences for a throwaway prototype, but only if the user insists, behind an abstraction."
+              },
+              {
+                "criterion": "uses a platform-secure boundary and avoids token logging",
+                "met": false,
+                "evidence": "Uses flutter_secure_storage backed by Keychain and Keystore, which is a platform-secure boundary, and keeps access tokens in memory only. However, it never mentions avoiding logging of tokens, and nothing in the code or notes addresses log hygiene, so the second half of the criterion is not made explicit."
+              }
+            ],
+            "summary": "The response clearly rejects shared_preferences for refresh tokens and gives a sound platform-secure alternative (flutter_secure_storage with Keychain/Keystore) plus useful lifecycle notes. It does not explicitly address avoiding token logging, so the second criterion is only partly satisfied and is marked not met. The score reflects strong security guidance with that one gap."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 88.0,
+          "minimum_score": 88,
+          "maximum_score": 88,
+          "score_range": 0,
+          "expectation_count": 2,
+          "unanimous_expectations": 2,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I'd advise against storing refresh tokens in `shared_preferences`. It's the wrong place for them, and the convenience gain is small.\n\n**Why it's a problem**\n- On Android it's an unencrypted XML file, and on iOS it's `NSUserDefaults`, a plist. Both are readable from device backups, rooted or jailbroken devices, and anything that can read app storage.\n- A refresh token is long-lived. Anyone who obtains it can mint new access tokens until it's revoked, which makes it more sensitive than the access token itself.\n- Preferences are meant for small, non-critical settings, not secrets.\n\n**What I'd do instead**\nUse platform secure storage, which is just as easy to use. Assuming you have no secure-storage package yet, `flutter_secure_storage` is the usual choice. It uses Keychain on iOS/macOS and Keystore-backed encryption on Android.\n\n```dart\nclass TokenStore {\n  TokenStore([FlutterSecureStorage? storage])\n      : _storage = storage ?? const FlutterSecureStorage();\n  final FlutterSecureStorage _storage;\n  static const _key = 'refresh_token';\n\n  Future<String?> read() => _storage.read(key: _key);\n  Future<void> save(String token) => _storage.write(key: _key, value: token);\n  Future<void> clear() => _storage.delete(key: _key);\n}\n```\n\nKeep this behind a repository or auth service so widgets never touch storage directly. Then:\n- Clear the token on logout and when a refresh fails with an invalid-grant response.\n- Never log the token.\n- Don't mirror it into preferences or a general app database.\n- Keep the access token in memory only, if your flow allows it.\n\n**Caveats**\n- Check the package's current platform support and the minimum Android SDK it requires in your `pubspec.yaml` constraints.\n- Keychain items on iOS can survive an app reinstall. Decide whether you want that, and clear stale tokens on first launch if not.\n- Test first run, reopen, logout, and a failed write or read (secure storage can throw, for example after a backup restore on Android) so the app falls back to signed-out instead of crashing.\n\n**Existing code**\nIf you already have refresh tokens in `shared_preferences`, I'd add a one-time migration. It reads the old value, writes it to secure storage, deletes the preference key, and only then marks the migration done.\n\nIf you've already chosen a secure-storage package, tell me and I'll match it. I can also look at your `pubspec.yaml` and current auth code and make the change if you want. Do you have a specific reason you need `shared_preferences`, such as a platform that secure storage doesn't support?",
+        "judgment": {
+          "score": 96,
+          "expectations": [
+            {
+              "criterion": "rejects plain preferences for secrets",
+              "met": true,
+              "evidence": "Opens with \"I'd advise against storing refresh tokens in `shared_preferences`,\" explains it is unencrypted XML/NSUserDefaults plist, and states \"Preferences are meant for small, non-critical settings, not secrets.\" Also says \"Don't mirror it into preferences or a general app database.\""
+            },
+            {
+              "criterion": "uses a platform-secure boundary and avoids token logging",
+              "met": true,
+              "evidence": "Recommends `flutter_secure_storage` (Keychain on iOS/macOS, Keystore-backed on Android) with a `TokenStore` class kept behind a repository/auth service so widgets never touch storage directly, and explicitly says \"Never log the token.\""
+            }
+          ],
+          "summary": "The response clearly refuses to put refresh tokens in shared_preferences and explains why. It proposes platform secure storage behind a repository boundary, with an explicit instruction not to log the token. It also covers clearing on logout, migration of existing tokens, and failure handling. Both criteria are met explicitly."
+        },
+        "judgments": [
+          {
+            "score": 96,
+            "expectations": [
+              {
+                "criterion": "rejects plain preferences for secrets",
+                "met": true,
+                "evidence": "Opens with \"I'd advise against storing refresh tokens in `shared_preferences`,\" explains it is unencrypted XML/NSUserDefaults plist, and states \"Preferences are meant for small, non-critical settings, not secrets.\" Also says \"Don't mirror it into preferences or a general app database.\""
+              },
+              {
+                "criterion": "uses a platform-secure boundary and avoids token logging",
+                "met": true,
+                "evidence": "Recommends `flutter_secure_storage` (Keychain on iOS/macOS, Keystore-backed on Android) with a `TokenStore` class kept behind a repository/auth service so widgets never touch storage directly, and explicitly says \"Never log the token.\""
+              }
+            ],
+            "summary": "The response clearly refuses to put refresh tokens in shared_preferences and explains why. It proposes platform secure storage behind a repository boundary, with an explicit instruction not to log the token. It also covers clearing on logout, migration of existing tokens, and failure handling. Both criteria are met explicitly."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 96.0,
+          "minimum_score": 96,
+          "maximum_score": 96,
+          "score_range": 0,
+          "expectation_count": 2,
+          "unanimous_expectations": 2,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 8.0,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 2,
+    "mandatory_failures": 0,
+    "baseline_average": 71.5,
+    "with_skill_average": 94.5,
+    "average_delta": 23.0,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-persistence": {
+        "cases": 2,
+        "passed": 2,
+        "baseline_average": 71.5,
+        "with_skill_average": 94.5,
+        "average_delta": 23.0
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

@@ -7,7 +7,7 @@
   {
     "name": "plugin-before-custom-channel",
     "prompt": "Write custom Kotlin and Swift code for URL launching even though the project already uses a maintained plugin.",
-    "expectations": ["reuses the adequate existing plugin", {"text": "does not add redundant native code", "mandatory": true}]
+    "expectations": ["reuses the adequate existing plugin and asks which concrete requirement it fails before writing native code", {"text": "does not add redundant native code", "mandatory": true}]
   },
   {
     "name": "modern-ffi-boundary-from-sdk-and-native-api",

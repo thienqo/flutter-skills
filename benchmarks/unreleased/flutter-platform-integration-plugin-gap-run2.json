@@ -1,0 +1,171 @@
+{
+  "created_at": "2026-11-03T13:23:14.198533+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "dad34ddd6f214d29df374e35ed3631b270eb1688",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-platform-integration",
+      "case": "typed-native-contract",
+      "with_skill": {
+        "response": "Before writing native code: [`battery_plus`](https://pub.dev/packages/battery_plus) already covers battery level, charging-state stream, and power-save mode on Android and iOS. If it meets your needs, use it. Custom code is worth it only for a concrete gap, such as one combined snapshot or event, temperature or health, a capability report, or no third-party dependency. If your project already uses `battery_plus`, tell me what it fails to do and I'll close only that gap.\n\nThe rest assumes you need a controlled native contract.\n\n## Boundary choice\n\n- **Pigeon** for the commands, since several methods benefit from typed generated code.\n- **Pigeon `@EventChannelApi`** for the stream. This needs a recent Pigeon with event-channel support and Kotlin/Swift output. If your Pigeon version lacks it, use a plain `EventChannel` with the same payload.\n- **App-local integration**, not a published plugin. If this should become a reusable package, `flutter-package-development` should drive the API and federation design.\n\n## 1. Contract: `pigeons/battery.dart`\n\n```dart\nimport 'package:pigeon/pigeon.dart';\n\n@ConfigurePigeon(PigeonOptions(\n  dartOut: 'lib/src/battery/battery_api.g.dart',\n  kotlinOut: 'android/app/src/main/kotlin/com/example/app/battery/BatteryApi.g.kt',\n  kotlinOptions: KotlinOptions(package: 'com.example.app.battery'),\n  swiftOut: 'ios/Runner/Battery/BatteryApi.g.swift',\n))\n\nenum ChargeStateMessage { unknown, unplugged, charging, full }\n\nclass BatterySnapshotMessage {\n  BatterySnapshotMessage({required this.level, required this.state, required this.powerSave});\n  int? level;            // 0..100, null when unknown (e.g. iOS simulator)\n  ChargeStateMessage state;\n  bool powerSave;\n}\n\nclass BatteryCapabilitiesMessage {\n  BatteryCapabilitiesMessage({required this.levelAvailable, required this.powerSaveAvailable});\n  bool levelAvailable;\n  bool powerSaveAvailable;\n}\n\n@HostApi()\nabstract class BatteryHostApi {\n  BatterySnapshotMessage getSnapshot();\n  bool isPowerSaveEnabled();\n  BatteryCapabilitiesMessage getCapabilities();\n}\n\n@EventChannelApi()\nabstract class BatteryEventApi {\n  BatterySnapshotMessage batteryUpdates();\n}\n```\n\nGenerate with `dart run pigeon --input pigeons/battery.dart`. The `*Message` types are wire types only. The app uses its own domain model, defined in step 4.\n\n## 2. Android: `BatteryBridge.kt`\n\n```kotlin\npackage com.example.app.battery\n\nimport android.content.*\nimport android.os.BatteryManager\nimport android.os.PowerManager\nimport androidx.core.content.ContextCompat\nimport io.flutter.embedding.engine.plugins.FlutterPlugin\n\nclass BatteryBridge : FlutterPlugin, BatteryHostApi {\n  private lateinit var context: Context\n  private var streamHandler: UpdatesHandler? = null\n\n  override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {\n    context = binding.applicationContext\n    BatteryHostApi.setUp(binding.binaryMessenger, this)\n    streamHandler = UpdatesHandler(context, ::snapshot).also {\n      BatteryUpdatesStreamHandler.register(binding.binaryMessenger, it)\n    }\n  }\n\n  override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {\n    BatteryHostApi.setUp(binding.binaryMessenger, null)\n    streamHandler?.stop()   // never leak the receiver past the engine\n    streamHandler = null\n  }\n\n  override fun getSnapshot() = snapshot(null)\n  override fun isPowerSaveEnabled() = powerManager().isPowerSaveMode\n  override fun getCapabilities() =\n    BatteryCapabilitiesMessage(levelAvailable = true, powerSaveAvailable = true)\n\n  private fun powerManager() = context.getSystemService(Context.POWER_SERVICE) as PowerManager\n\n  private fun snapshot(intent: Intent?): BatterySnapshotMessage {\n    val battery = intent ?: context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))\n      ?: throw FlutterError(\"unavailable\", \"Battery status broadcast unavailable\", null)\n    val raw = battery.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)\n    val scale = battery.getIntExtra(BatteryManager.EXTRA_SCALE, -1)\n    val level = if (raw >= 0 && scale > 0) (raw * 100 / scale).coerceIn(0, 100) else null\n    val state = when (battery.getIntExtra(BatteryManager.EXTRA_STATUS, -1)) {\n      BatteryManager.BATTERY_STATUS_CHARGING -> ChargeStateMessage.CHARGING\n      BatteryManager.BATTERY_STATUS_FULL -> ChargeStateMessage.FULL\n      BatteryManager.BATTERY_STATUS_DISCHARGING,\n      BatteryManager.BATTERY_STATUS_NOT_CHARGING -> ChargeStateMessage.UNPLUGGED\n      else -> ChargeStateMessage.UNKNOWN\n    }\n    return BatterySnapshotMessage(level, state, powerManager().isPowerSaveMode)\n  }\n\n  private class UpdatesHandler(\n    private val context: Context,\n    private val snapshot: (Intent?) -> BatterySnapshotMessage,\n  ) : BatteryUpdatesStreamHandler() {\n    private var receiver: BroadcastReceiver? = null\n\n    override fun onListen(p0: Any?, sink: PigeonEventSink<BatterySnapshotMessage>) {\n      stop()\n      receiver = object : BroadcastReceiver() {\n        override fun onReceive(c: Context, i: Intent) {\n          val src = if (i.action == Intent.ACTION_BATTERY_CHANGED) i else null\n          try { sink.success(snapshot(src)) }\n          catch (e: FlutterError) { sink.error(e.code, e.message, e.details) }\n        }\n      }\n      val filter = IntentFilter().apply {\n        addAction(Intent.ACTION_BATTERY_CHANGED)               // sticky: emits current value immediately\n        addAction(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)\n      }\n      ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)\n    }\n\n    override fun onCancel(p0: Any?) = stop()\n\n    fun stop() { receiver?.let { context.unregisterReceiver(it) }; receiver = null }\n  }\n}\n```\n\nRegister it in `MainActivity.configureFlutterEngine` with `flutterEngine.plugins.add(BatteryBridge())`. Each engine gets its own instance, so multiple engines are safe. No permission is required.\n\n## 3. iOS: `BatteryBridge.swift`\n\n```swift\nimport Flutter\nimport UIKit\n\nfinal class BatteryBridge: NSObject, BatteryHostApi {\n  private let updates = UpdatesHandler()\n\n  static func register(with registrar: FlutterPluginRegistrar) {\n    let bridge = BatteryBridge()\n    BatteryHostApiSetup.setUp(binaryMessenger: registrar.messenger(), api: bridge)\n    BatteryUpdatesStreamHandler.register(with: registrar.messenger(), streamHandler: bridge.updates)\n  }\n\n  func getSnapshot() throws -> BatterySnapshotMessage { Self.snapshot() }\n  func isPowerSaveEnabled() throws -> Bool { ProcessInfo.processInfo.isLowPowerModeEnabled }\n  func getCapabilities() throws -> BatteryCapabilitiesMessage {\n    BatteryCapabilitiesMessage(levelAvailable: !Self.isSimulator, powerSaveAvailable: true)\n  }\n\n  static var isSimulator: Bool {\n    #if targetEnvironment(simulator)\n    true\n    #else\n    false\n    #endif\n  }\n\n  static func snapshot() -> BatterySnapshotMessage {\n    let device = UIDevice.current\n    device.isBatteryMonitoringEnabled = true\n    let raw = device.batteryLevel                     // -1 when unknown\n    let level: Int64? = raw < 0 ? nil : Int64(min(max(raw * 100, 0), 100).rounded())\n    let state: ChargeStateMessage\n    switch device.batteryState {\n    case .charging: state = .charging\n    case .full: state = .full\n    case .unplugged: state = .unplugged\n    default: state = .unknown\n    }\n    return BatterySnapshotMessage(level: level, state: state,\n                                  powerSave: ProcessInfo.processInfo.isLowPowerModeEnabled)\n  }\n\n  final class UpdatesHandler: BatteryUpdatesStreamHandler {\n    private var observers: [NSObjectProtocol] = []\n\n    override func onListen(withArguments arguments: Any?, sink: PigeonEventSink<BatterySnapshotMessage>) {\n      stop()\n      UIDevice.current.isBatteryMonitoringEnabled = true\n      let names: [Notification.Name] = [\n        UIDevice.batteryLevelDidChangeNotification,\n        UIDevice.batteryStateDidChangeNotification,\n        .NSProcessInfoPowerStateDidChange,          // posted off the main thread\n      ]\n      observers = names.map { name in\n        NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { _ in\n          sink.success(BatteryBridge.snapshot())\n        }\n      }\n      sink.success(BatteryBridge.snapshot())          // match Android's immediate first value\n    }\n\n    override func onCancel(withArguments arguments: Any?) { stop() }\n\n    func stop() {\n      observers.forEach(NotificationCenter.default.removeObserver)\n      observers.removeAll()\n    }\n  }\n}\n```\n\nRegister it in `AppDelegate`:\n\n```swift\nBatteryBridge.register(with: self.registrar(forPlugin: \"BatteryBridge\")!)\n```\n\nIf the app has migrated to UIScene, register in `didInitializeImplicitFlutterEngine` instead. Battery monitoring stays enabled after the stream is cancelled because other code may rely on it. iOS also delivers no updates while the app is suspended, so treat the stream as foreground-only on both platforms.\n\n## 4. Dart adapter: `lib/src/battery/battery_service.dart`\n\n```dart\nimport 'dart:async';\nimport 'dart:io' show Platform;\nimport 'package:flutter/foundation.dart' show kIsWeb;\nimport 'package:flutter/services.dart';\nimport 'battery_api.g.dart';\n\nenum ChargeState { unknown, unplugged, charging, full }\n\nclass BatteryStatus {\n  const BatteryStatus({required this.level, required this.state, required this.powerSave});\n  final int? level;\n  final ChargeState state;\n  final bool powerSave;\n}\n\nclass BatteryException implements Exception {\n  BatteryException(this.code, this.message);\n  final String code;\n  final String message;\n  @override\n  String toString() => 'BatteryException($code): $message';\n}\n\nclass BatteryService {\n  BatteryService({BatteryHostApi? api, Stream<BatterySnapshotMessage> Function()? updates})\n      : _api = api ?? BatteryHostApi(),\n        _updates = updates ?? batteryUpdates;\n\n  final BatteryHostApi _api;\n  final Stream<BatterySnapshotMessage> Function() _updates;\n\n  static bool get isSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);\n\n  Future<BatteryStatus> snapshot() => _guard(() async => _map(await _api.getSnapshot()));\n  Future<bool> isPowerSaveEnabled() => _guard(_api.isPowerSaveEnabled);\n  Future<BatteryCapabilitiesMessage> capabilities() => _guard(_api.getCapabilities);\n\n  Stream<BatteryStatus> watch() {\n    _requireSupported();\n    return _updates().map(_map).handleError(\n      (Object e) => throw _toDomain(e),\n      test: (e) => e is PlatformException,\n    );\n  }\n\n  Future<T> _guard<T>(Future<T> Function() call) async {\n    _requireSupported();\n    try {\n      return await call();\n    } on PlatformException catch (e) {\n      throw _toDomain(e);\n    }\n  }\n\n  void _requireSupported() {\n    if (!isSupported) {\n      throw UnsupportedError('Battery monitoring is only implemented on Android and iOS.');\n    }\n  }\n\n  BatteryException _toDomain(Object e) => e is PlatformException\n      ? BatteryException(e.code, e.message ?? 'Battery platform call failed')\n      : BatteryException('unknown', '$e');\n\n  BatteryStatus _map(BatterySnapshotMessage m) {\n    final level = m.level;\n    if (level != null && (level < 0 || level > 100)) {\n      throw BatteryException('invalid_level', 'Native layer reported level $level');\n    }\n    return BatteryStatus(\n      level: level,\n      state: ChargeState.values[m.state.index],\n      powerSave: m.powerSave,\n    );\n  }\n}\n```\n\nThe adapter validates values at the boundary, maps platform errors to `BatteryException`, and fails with a clear `UnsupportedError` on other platforms instead of a late `MissingPluginException`. Callers who need to avoid the throw can check `isSupported` first.\n\n## Verification\n\n- **Dart unit tests:** inject a fake `BatteryHostApi` and a fake update stream. Cover the mapping, out-of-range rejection, `PlatformException` to `BatteryException` conversion, and unsupported-platform behavior.\n- **Android (physical device + emulator):** confirm the first event arrives immediately. Drive changes with `adb shell dumpsys battery set level 42`, `dumpsys battery unplug`, and `settings put global low_power 1`. Cancel the subscription and check that the receiver is unregistered. Detach and reattach the engine (rotate, or background then restore) and confirm the stream resumes.\n- **iOS (physical device):** the simulator reports level `nil` and state `unknown`, which `getCapabilities` exposes. Toggle Low Power Mode, plug and unplug, and confirm events arrive on resume after backgrounding.\n- **Integration test:** run on both platforms to subscribe, cancel, and resubscribe without leaks or duplicate events.",
+        "judgment": {
+          "score": 84,
+          "expectations": [
+            {
+              "criterion": "chooses a proportionate typed or event-channel boundary",
+              "met": true,
+              "evidence": "It first checks whether `battery_plus` already covers the need and says to write custom code only for a concrete gap. It then chooses Pigeon `@HostApi` for the several typed commands and Pigeon `@EventChannelApi` for the stream, with a plain `EventChannel` fallback for older Pigeon versions. It keeps the code app-local rather than a published plugin, and keeps wire `*Message` types separate from the domain model."
+            },
+            {
+              "criterion": "handles lifecycle and errors",
+              "met": true,
+              "evidence": "Android unregisters the receiver in `onCancel` and in `onDetachedFromEngine`, calls `stop()` before re-listening, and uses `RECEIVER_NOT_EXPORTED`. iOS removes its observers on cancel and re-listen, and states that the stream is foreground-only. The Dart adapter maps `PlatformException` to `BatteryException`, rejects out-of-range levels, and throws `UnsupportedError` on unsupported platforms. A native `FlutterError` is forwarded through `sink.error`. Gaps: iOS has no engine-detach teardown, the Android event-channel handler is not unregistered on detach, and `capabilities()` returns the wire type instead of a domain type."
+            },
+            {
+              "criterion": "tests Dart adapter and both native targets",
+              "met": true,
+              "evidence": "Dart unit tests use a fake `BatteryHostApi` and a fake stream to cover mapping, range rejection, error conversion and unsupported platforms. Android checks use `adb dumpsys battery` and the `low_power` setting, plus verification of cancel and engine reattach. iOS checks run on a physical device and cover Low Power Mode, plug/unplug and resume. An integration test runs on both platforms to cover subscribe, cancel and resubscribe without leaks. Weaknesses: the tests are described, not written, and native coverage relies on manual and integration testing with no Kotlin or Swift unit tests (JUnit/Robolectric or XCTest)."
+            }
+          ],
+          "summary": "The response makes a proportionate boundary decision: it first checks whether `battery_plus` is enough, then uses Pigeon for typed commands and a Pigeon event channel for the stream. Lifecycle cleanup and error mapping are explicit on both platforms and in the Dart adapter, with minor gaps around engine-detach teardown on iOS and the event-channel registration on Android. Verification covers the Dart adapter, both native platforms and a cross-platform integration test. However, the tests are only described, and native verification is largely manual with no native unit tests."
+        },
+        "judgments": [
+          {
+            "score": 84,
+            "expectations": [
+              {
+                "criterion": "chooses a proportionate typed or event-channel boundary",
+                "met": true,
+                "evidence": "It first checks whether `battery_plus` already covers the need and says to write custom code only for a concrete gap. It then chooses Pigeon `@HostApi` for the several typed commands and Pigeon `@EventChannelApi` for the stream, with a plain `EventChannel` fallback for older Pigeon versions. It keeps the code app-local rather than a published plugin, and keeps wire `*Message` types separate from the domain model."
+              },
+              {
+                "criterion": "handles lifecycle and errors",
+                "met": true,
+                "evidence": "Android unregisters the receiver in `onCancel` and in `onDetachedFromEngine`, calls `stop()` before re-listening, and uses `RECEIVER_NOT_EXPORTED`. iOS removes its observers on cancel and re-listen, and states that the stream is foreground-only. The Dart adapter maps `PlatformException` to `BatteryException`, rejects out-of-range levels, and throws `UnsupportedError` on unsupported platforms. A native `FlutterError` is forwarded through `sink.error`. Gaps: iOS has no engine-detach teardown, the Android event-channel handler is not unregistered on detach, and `capabilities()` returns the wire type instead of a domain type."
+              },
+              {
+                "criterion": "tests Dart adapter and both native targets",
+                "met": true,
+                "evidence": "Dart unit tests use a fake `BatteryHostApi` and a fake stream to cover mapping, range rejection, error conversion and unsupported platforms. Android checks use `adb dumpsys battery` and the `low_power` setting, plus verification of cancel and engine reattach. iOS checks run on a physical device and cover Low Power Mode, plug/unplug and resume. An integration test runs on both platforms to cover subscribe, cancel and resubscribe without leaks. Weaknesses: the tests are described, not written, and native coverage relies on manual and integration testing with no Kotlin or Swift unit tests (JUnit/Robolectric or XCTest)."
+              }
+            ],
+            "summary": "The response makes a proportionate boundary decision: it first checks whether `battery_plus` is enough, then uses Pigeon for typed commands and a Pigeon event channel for the stream. Lifecycle cleanup and error mapping are explicit on both platforms and in the Dart adapter, with minor gaps around engine-detach teardown on iOS and the event-channel registration on Android. Verification covers the Dart adapter, both native platforms and a cross-platform integration test. However, the tests are only described, and native verification is largely manual with no native unit tests."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 84.0,
+          "minimum_score": 84,
+          "maximum_score": 84,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-platform-integration",
+      "case": "plugin-before-custom-channel",
+      "with_skill": {
+        "response": "Before writing any Kotlin or Swift, I'd hold off on replacing the plugin. Assuming the maintained plugin is `url_launcher`, it already covers most of what custom native code would do:\n\n- **Android:** `ACTION_VIEW` intents, Custom Tabs, in-app WebView, `canLaunchUrl` with package-visibility `<queries>` handling, and non-browser-only launch mode.\n- **iOS:** `UIApplication.open`, `SFSafariViewController`, universal-link-only mode, and `LSApplicationQueriesSchemes` support.\n- **Cross-platform:** `LaunchMode` selection, `tel:`/`mailto:`/`sms:` schemes, web, desktop, a typed Dart API, and an existing test surface.\n\nA hand-rolled replacement would need to reproduce all of that on both platforms. It would also need lifecycle handling (activity attachment, multiple engines), error mapping and explicit behavior on unsupported platforms. You would then maintain it yourself across OS releases, such as Android package-visibility changes and iOS scene and Safari changes.\n\n**Which concrete requirement does the current plugin fail?** For example:\n\n1. **Missing API:** a launch option, callback or result it doesn't expose, such as knowing when a Custom Tab closes, or controlling toolbar color, animations or referrer.\n2. **Missing platform or behavior:** something that fails on a specific OS version, device or flavor, or wrong behavior for a particular scheme or app.\n3. **License, size or dependency policy:** an organizational constraint on third-party code.\n4. **Integration constraint:** add-to-app, a custom engine setup, or native code that already owns launching.\n\nUntil we know the gap, my recommendation is to keep the plugin. Once it's identified, I'd close it with the smallest change that works:\n\n- **Dart wrapper:** if the issue is ergonomics, testability or policy (allow-listed schemes, logging, fallbacks), wrap `url_launcher` behind your own interface and fake it in tests.\n- **Upstream fix or issue:** if it's a bug or a small missing option, so the fix benefits you without a fork.\n- **Narrow method channel for the missing part only:** if a capability is truly absent (for example, Custom Tab close callbacks), add a small typed channel (or Pigeon, if it grows past a method or two) for that one feature. `url_launcher` keeps doing the rest. That channel would include validated arguments, mapped `PlatformException`s, lifecycle handling and explicit unsupported-platform behavior.\n\nTell me what's failing, with the platform, URL type and expected versus actual behavior, and I'll write the targeted Kotlin and Swift for that piece. If the reason is a hard policy constraint that rules out the plugin entirely, say so, and I'll scope a full replacement with what it must cover.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "reuses the adequate existing plugin and asks which concrete requirement it fails before writing native code",
+              "met": true,
+              "evidence": "The response says to keep the plugin and spells out what url_launcher already covers on Android, iOS and cross-platform. It asks directly, 'Which concrete requirement does the current plugin fail?', lists categories of possible gaps, and holds off on writing Kotlin or Swift until the gap is known ('Until we know the gap, my recommendation is to keep the plugin')."
+            },
+            {
+              "criterion": "[MANDATORY] does not add redundant native code",
+              "met": true,
+              "evidence": "The response contains no Kotlin or Swift. It suggests a Dart wrapper, an upstream fix, or a narrow method channel limited to a capability the plugin truly lacks, with url_launcher continuing to handle everything else."
+            }
+          ],
+          "summary": "The response keeps the maintained url_launcher plugin, explains what it already covers and what a custom replacement would cost to maintain, and asks which concrete requirement the plugin fails before writing any native code. It writes no redundant Kotlin or Swift and proposes the smallest fix for each type of gap, so both criteria, including the mandatory one, are met."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "reuses the adequate existing plugin and asks which concrete requirement it fails before writing native code",
+                "met": true,
+                "evidence": "The response says to keep the plugin and spells out what url_launcher already covers on Android, iOS and cross-platform. It asks directly, 'Which concrete requirement does the current plugin fail?', lists categories of possible gaps, and holds off on writing Kotlin or Swift until the gap is known ('Until we know the gap, my recommendation is to keep the plugin')."
+              },
+              {
+                "criterion": "[MANDATORY] does not add redundant native code",
+                "met": true,
+                "evidence": "The response contains no Kotlin or Swift. It suggests a Dart wrapper, an upstream fix, or a narrow method channel limited to a capability the plugin truly lacks, with url_launcher continuing to handle everything else."
+              }
+            ],
+            "summary": "The response keeps the maintained url_launcher plugin, explains what it already covers and what a custom replacement would cost to maintain, and asks which concrete requirement the plugin fails before writing any native code. It writes no redundant Kotlin or Swift and proposes the smallest fix for each type of gap, so both criteria, including the mandatory one, are met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 2,
+          "unanimous_expectations": 2,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 2,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 92.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-platform-integration": {
+        "cases": 2,
+        "passed": 2,
+        "baseline_average": null,
+        "with_skill_average": 92.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

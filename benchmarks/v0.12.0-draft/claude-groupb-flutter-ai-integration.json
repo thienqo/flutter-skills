@@ -1,0 +1,297 @@
+{
+  "created_at": "2026-11-03T13:33:06.815269+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "ca4c8d7baec044395d4da1480b2e20304734d948",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-ai-integration",
+      "case": "mobile-client-does-not-hold-secret",
+      "baseline": {
+        "response": "I'd push back on one part of this plan: the key can't safely live in the client, even with `--dart-define` and obfuscation.\n\n**Why that approach doesn't protect the key**\n- `--dart-define` values are compiled into the binary as plain string constants.\n- `--obfuscate` (with `--split-debug-info`) only renames symbols, such as classes and functions. It doesn't encrypt string literals, so `strings` on the APK/IPA or a look at the network traffic recovers the key.\n- On web there's no obfuscation boundary at all. The key is in the shipped JS, and it also appears in the request headers in DevTools.\n- Anyone who extracts it can run up your bill or get your account suspended, and you'd have to rotate the key and force-update every client.\n\n**What I recommend instead**\nKeep the provider key on a small backend and have the Flutter clients stream from that:\n\n1. **Backend proxy** (Cloud Run, Cloud Functions, a Cloudflare Worker, or whatever you already run) holds the provider key in its secret manager. It forwards requests to the provider with `stream: true` and relays the SSE stream to the client.\n2. **Client auth**: require a Firebase Auth/App Check token (or your own session JWT) on each request. The proxy verifies it, then applies per-user rate limits and token caps, and can pin the allowed model and max tokens.\n3. **Flutter client** (mobile and web share the same code) consumes the stream:\n   - Use `package:http` with `Client.send(Request)` and read `response.stream.transform(utf8.decoder).transform(const LineSplitter())`, then parse the `data:` lines. It works on mobile and web (on web, via the fetch-based client).\n   - Expose it as a `Stream<String>` of deltas from a repository class and drive the UI with your existing state management. Handle cancellation, since closing the client should abort the upstream request.\n4. **`--dart-define` is still fine** for non-secret config, such as the proxy base URL and environment name.\n5. **Obfuscation** is still worth doing as hardening (`flutter build apk --obfuscate --split-debug-info=build/symbols`, same for iOS). Just don't count on it as protection for secrets. Archive the symbols directory for crash deobfuscation. Web builds don't support `--obfuscate`, so rely on minification there.\n\nIf you truly need a direct-from-client call (for example, a prototype), use a short-lived, scoped ephemeral token minted by your backend (some providers offer this for realtime APIs) rather than the long-lived production key.\n\nWant me to go ahead with the proxy approach? If so, tell me:\n- which provider you're using\n- what backend runtime you prefer\n- how clients are authenticated today\n\nI can then add the streaming repository and UI wiring in this repo and sketch the proxy. If you'd rather keep the key in `--dart-define` anyway, I can set that up, but I'd want it to be a documented, deliberate exception, using a key with tight spend limits that you're prepared to rotate.",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "rejects embedding a reusable provider secret in distributed client artifacts",
+              "met": true,
+              "evidence": "Opens with \"the key can't safely live in the client, even with `--dart-define` and obfuscation,\" explains that dart-define values are plain constants and obfuscation only renames symbols, and recommends a backend proxy. It does offer to set up dart-define anyway as a \"documented, deliberate exception\", but only as a conditional fallback with a tight-spend-limit key, and the main stance is rejection."
+            },
+            {
+              "criterion": "uses or proposes an explicitly scoped trusted service boundary without creating live infrastructure implicitly",
+              "met": true,
+              "evidence": "Proposes a backend proxy that holds the key in a secret manager, verifies Firebase Auth/App Check or a JWT, applies per-user rate limits and token caps, and pins the model and max tokens. It creates nothing: it asks \"Want me to go ahead with the proxy approach?\" and asks for the provider, runtime and auth details first, and says it would \"sketch the proxy\" rather than deploy it."
+            },
+            {
+              "criterion": "defines streaming cancellation failure and late-event behavior independently of the provider SDK",
+              "met": false,
+              "evidence": "The only mention is \"Handle cancellation, since closing the client should abort the upstream request.\" It does not define failure behavior (error mid-stream, partial output, retry) or late-event behavior (ignoring deltas that arrive after cancel or completion), and the approach is tied to the specific package:http/SSE implementation."
+            }
+          ],
+          "summary": "The response clearly rejects shipping the production key in the client and proposes a scoped, auth-gated backend proxy, asking for confirmation before building anything. It falls short on streaming lifecycle semantics: cancellation gets a single line, and failure handling and late events are not defined."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "rejects embedding a reusable provider secret in distributed client artifacts",
+                "met": true,
+                "evidence": "Opens with \"the key can't safely live in the client, even with `--dart-define` and obfuscation,\" explains that dart-define values are plain constants and obfuscation only renames symbols, and recommends a backend proxy. It does offer to set up dart-define anyway as a \"documented, deliberate exception\", but only as a conditional fallback with a tight-spend-limit key, and the main stance is rejection."
+              },
+              {
+                "criterion": "uses or proposes an explicitly scoped trusted service boundary without creating live infrastructure implicitly",
+                "met": true,
+                "evidence": "Proposes a backend proxy that holds the key in a secret manager, verifies Firebase Auth/App Check or a JWT, applies per-user rate limits and token caps, and pins the model and max tokens. It creates nothing: it asks \"Want me to go ahead with the proxy approach?\" and asks for the provider, runtime and auth details first, and says it would \"sketch the proxy\" rather than deploy it."
+              },
+              {
+                "criterion": "defines streaming cancellation failure and late-event behavior independently of the provider SDK",
+                "met": false,
+                "evidence": "The only mention is \"Handle cancellation, since closing the client should abort the upstream request.\" It does not define failure behavior (error mid-stream, partial output, retry) or late-event behavior (ignoring deltas that arrive after cancel or completion), and the approach is tied to the specific package:http/SSE implementation."
+              }
+            ],
+            "summary": "The response clearly rejects shipping the production key in the client and proposes a scoped, auth-gated backend proxy, asking for confirmation before building anything. It falls short on streaming lifecycle semantics: cancellation gets a single line, and failure handling and late events are not defined."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I won't put the production key in `--dart-define` or rely on obfuscation, because neither keeps a key secret in a shipped client.\n\n- **`--dart-define`:** the value is compiled into the app as a plain constant. On web it ends up in the JavaScript bundle, and on mobile it is a string in the binary that anyone can extract.\n- **`--obfuscate`:** this only renames Dart symbols in native builds. It does not encrypt string constants, and it does nothing useful for web.\n- **Consequence:** anyone who extracts the key can run requests on your account, with spend, quota, and abuse landing on you. You would then have to rotate the key and ship a new build.\n\n**What I recommend instead:** the clients call an endpoint you control, and that endpoint holds the provider key. It can also authenticate the user, apply rate limits and spend caps, and stream the provider's response through. Mobile and web then share the same contract.\n\n**What I can build on the Flutter side now, without a provider key:**\n\n1. An app-owned `ModelClient` interface that emits typed events (`started`, `delta`, `completed`, `failed`) and takes a cancellation handle.\n2. A state machine for idle, submitting, streaming, completed, cancelled, and failed. It keeps the user message separate from the partial assistant output, tags each request with an ID so late chunks from a cancelled request are ignored, and makes completion idempotent.\n3. A streaming adapter that talks to a configurable backend URL over SSE or chunked HTTP. It uses your existing networking client and state management, and only the public base URL is configured per environment.\n4. A deterministic fake model, plus tests for split chunks, midstream cancel, timeout, malformed or duplicate events, quota errors, and provider unavailable.\n5. Buffered rendering so every token doesn't trigger a rebuild, and defensive rendering of generated text.\n\n**What I need from you before I start:**\n\n- Do you already have a backend (and auth) that can proxy the model call? If not, do you want me to scaffold a minimal proxy? I won't create one or touch provider accounts unless you say so.\n- Which provider and model are you using today, and is there an existing AI or API adapter in the repo I should follow?\n- What should happen to partial output on cancel or failure: keep it visible or discard it?\n- Do you need conversation history persisted across restarts?\n\nIf the key is already in a build, treat it as exposed and rotate it. Tell me whether I should start with items 1\u20134 against a fake model, or wait until the backend endpoint is settled.",
+        "judgment": {
+          "score": 88,
+          "expectations": [
+            {
+              "criterion": "Rejects embedding a reusable provider secret in distributed client artifacts",
+              "met": true,
+              "evidence": "\"I won't put the production key in `--dart-define` or rely on obfuscation, because neither keeps a key secret in a shipped client.\" It explains that the value is compiled into the JS bundle or binary, that obfuscation doesn't encrypt strings, and advises rotating an already-exposed key."
+            },
+            {
+              "criterion": "Uses or proposes an explicitly scoped trusted service boundary without creating live infrastructure implicitly",
+              "met": true,
+              "evidence": "Proposes that clients call an endpoint the user controls that holds the key, authenticates users, applies rate limits and spend caps, and streams the response. Explicitly says: \"I won't create one or touch provider accounts unless you say so,\" and asks whether a backend exists or whether to scaffold a minimal proxy."
+            },
+            {
+              "criterion": "Defines streaming cancellation, failure, and late-event behavior independently of the provider SDK",
+              "met": true,
+              "evidence": "Defines an app-owned `ModelClient` interface with typed events (started, delta, completed, failed) and a cancellation handle. The state machine covers idle/submitting/streaming/completed/cancelled/failed. Requests are tagged with IDs so late chunks from a cancelled request are ignored, and completion is idempotent. Tests cover midstream cancel, timeout, malformed or duplicate events, and provider unavailable. It leaves open whether partial output is kept or discarded on cancel or failure, so the behavior is only partly specified."
+            }
+          ],
+          "summary": "The response refuses to ship the provider key via --dart-define or obfuscation and explains why. It proposes a user-controlled proxy and explicitly declines to create infrastructure without approval. It also describes a provider-agnostic streaming contract with typed events, request-ID-based late-event dropping, idempotent completion, and failure/cancel tests. The third criterion is slightly weaker because partial-output handling on cancel or failure is left as an open question rather than defined."
+        },
+        "judgments": [
+          {
+            "score": 88,
+            "expectations": [
+              {
+                "criterion": "Rejects embedding a reusable provider secret in distributed client artifacts",
+                "met": true,
+                "evidence": "\"I won't put the production key in `--dart-define` or rely on obfuscation, because neither keeps a key secret in a shipped client.\" It explains that the value is compiled into the JS bundle or binary, that obfuscation doesn't encrypt strings, and advises rotating an already-exposed key."
+              },
+              {
+                "criterion": "Uses or proposes an explicitly scoped trusted service boundary without creating live infrastructure implicitly",
+                "met": true,
+                "evidence": "Proposes that clients call an endpoint the user controls that holds the key, authenticates users, applies rate limits and spend caps, and streams the response. Explicitly says: \"I won't create one or touch provider accounts unless you say so,\" and asks whether a backend exists or whether to scaffold a minimal proxy."
+              },
+              {
+                "criterion": "Defines streaming cancellation, failure, and late-event behavior independently of the provider SDK",
+                "met": true,
+                "evidence": "Defines an app-owned `ModelClient` interface with typed events (started, delta, completed, failed) and a cancellation handle. The state machine covers idle/submitting/streaming/completed/cancelled/failed. Requests are tagged with IDs so late chunks from a cancelled request are ignored, and completion is idempotent. Tests cover midstream cancel, timeout, malformed or duplicate events, and provider unavailable. It leaves open whether partial output is kept or discarded on cancel or failure, so the behavior is only partly specified."
+              }
+            ],
+            "summary": "The response refuses to ship the provider key via --dart-define or obfuscation and explains why. It proposes a user-controlled proxy and explicitly declines to create infrastructure without approval. It also describes a provider-agnostic streaming contract with typed events, request-ID-based late-event dropping, idempotent completion, and failure/cancel tests. The third criterion is slightly weaker because partial-output handling on cancel or failure is left as an open question rather than defined."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 88.0,
+          "minimum_score": 88,
+          "maximum_score": 88,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 26.0,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-ai-integration",
+      "case": "tool-call-is-not-authorization",
+      "baseline": {
+        "response": "I wouldn't wire it to execute immediately. Typed JSON arguments prove the call is well-formed, not that the user wants their account deleted. \"I'm done with this app\" or \"cancel my subscription\" can easily lead the model to call `deleteAccount` with perfectly valid arguments. Deletion can't be undone, and prompt injection from any content the model reads could trigger it too.\n\nA better design keeps the model in charge of detecting intent but puts a gate in front of the irreversible step:\n\n1. **Model calls `requestAccountDeletion`** (or `deleteAccount` itself, treated as a proposal). The handler doesn't delete anything. It returns something like `{status: \"confirmation_required\", token}` and tells the UI to show a confirmation.\n2. **The app shows a confirmation UI**, such as a dialog stating what will be lost, with a button or typed confirmation. This must be a user action outside the model's control, not a chat message the model can interpret.\n3. **Only the confirm handler runs the deletion**, using a short-lived, single-use token bound to the user and session. The model never holds the ability to execute directly.\n4. **Optional hardening**: re-authenticate, use a soft delete with a 7-30 day grace period, send a confirmation email, and log the request.\n\nThe handler sketch:\n\n```dart\nFuture<ToolResult> deleteAccountTool(Map<String, dynamic> args, Session s) async {\n  final token = pendingDeletions.create(userId: s.userId, ttl: Duration(minutes: 5));\n  ui.showDeleteConfirmation(token);   // user-driven, outside the model\n  return ToolResult({'status': 'confirmation_required'});\n}\n\nFuture<void> onUserConfirmed(String token, Session s) async {\n  if (!pendingDeletions.consume(token, userId: s.userId)) return;\n  await accountService.delete(s.userId);\n}\n```\n\nIf you've weighed this and still want direct execution, the least risky version is a soft delete with a recovery window plus an audit log, so a mistaken call can be undone. Point me at the file where the tool is defined and I can implement the confirmation flow or the soft-delete variant there.",
+        "judgment": {
+          "score": 72,
+          "expectations": [
+            {
+              "criterion": "Treats model tool arguments as untrusted despite valid JSON (MANDATORY)",
+              "met": true,
+              "evidence": "States 'Typed JSON arguments prove the call is well-formed, not that the user wants their account deleted,' notes the model can call deleteAccount with perfectly valid arguments from ambiguous phrasing, and cites prompt injection from content the model reads. The handler treats the call as a proposal and the model 'never holds the ability to execute directly.'"
+            },
+            {
+              "criterion": "Enforces application authorization, target validation and least privilege",
+              "met": false,
+              "evidence": "Partially addressed: the token is bound to the user and session, and the sketch uses s.userId from the session rather than a model-supplied target. Least privilege is implied by the model not holding direct execute ability. However, it never explicitly states that the target account must be validated against the authenticated user or that authorization is checked at the handler. The sketch ignores args entirely without explaining why. This is implicit rather than an explicit decision."
+            },
+            {
+              "criterion": "Requires confirmation at the consequential external action and handles denial idempotently",
+              "met": false,
+              "evidence": "Confirmation is clearly required via an out-of-model UI, with a single-use, short-lived token consumed at the confirm handler. But denial handling is not addressed: there is no discussion of what happens when the user declines or the token expires, nor of idempotency for repeated or duplicate requests. Repeated model calls would create multiple pending tokens in the sketch. Only the confirmation half is met."
+            }
+          ],
+          "summary": "The response firmly rejects the 'typed JSON is enough' premise, explains why valid arguments don't imply user intent, and proposes a sound confirmation gate with a single-use token bound to user and session. This satisfies the mandatory criterion. It falls short on explicit authorization and target validation, and it does not cover denial or idempotency handling, so the second and third criteria are only partially satisfied."
+        },
+        "judgments": [
+          {
+            "score": 72,
+            "expectations": [
+              {
+                "criterion": "Treats model tool arguments as untrusted despite valid JSON (MANDATORY)",
+                "met": true,
+                "evidence": "States 'Typed JSON arguments prove the call is well-formed, not that the user wants their account deleted,' notes the model can call deleteAccount with perfectly valid arguments from ambiguous phrasing, and cites prompt injection from content the model reads. The handler treats the call as a proposal and the model 'never holds the ability to execute directly.'"
+              },
+              {
+                "criterion": "Enforces application authorization, target validation and least privilege",
+                "met": false,
+                "evidence": "Partially addressed: the token is bound to the user and session, and the sketch uses s.userId from the session rather than a model-supplied target. Least privilege is implied by the model not holding direct execute ability. However, it never explicitly states that the target account must be validated against the authenticated user or that authorization is checked at the handler. The sketch ignores args entirely without explaining why. This is implicit rather than an explicit decision."
+              },
+              {
+                "criterion": "Requires confirmation at the consequential external action and handles denial idempotently",
+                "met": false,
+                "evidence": "Confirmation is clearly required via an out-of-model UI, with a single-use, short-lived token consumed at the confirm handler. But denial handling is not addressed: there is no discussion of what happens when the user declines or the token expires, nor of idempotency for repeated or duplicate requests. Repeated model calls would create multiple pending tokens in the sketch. Only the confirmation half is met."
+              }
+            ],
+            "summary": "The response firmly rejects the 'typed JSON is enough' premise, explains why valid arguments don't imply user intent, and proposes a sound confirmation gate with a single-use token bound to user and session. This satisfies the mandatory criterion. It falls short on explicit authorization and target validation, and it does not cover denial or idempotency handling, so the second and third criteria are only partially satisfied."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 72.0,
+          "minimum_score": 72,
+          "maximum_score": 72,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I wouldn't wire it to execute immediately. Account deletion is irreversible and consequential, and typed JSON only proves the arguments are well-formed, not that the user wants the account deleted. \"The model decided the user wants to leave\" is an inference from conversation text, and that text is untrusted. A passing remark, a quoted message, or a prompt injection in an attachment or tool result could all trigger it.\n\nWhat I'd build instead keeps the model-initiated flow but splits the call into a proposal and an execution:\n\n1. **Model call creates a pending request, not a deletion.** The `deleteAccount` handler is allowlisted and takes no model-supplied target. It always acts on the authenticated user's own account, so the model can't name another account.\n2. **The app asks for confirmation immediately before executing.** Show a dedicated dialog that states what will be lost and when, with an explicit destructive action. A prior \"I want to leave\" message in the chat does not count as confirmation.\n3. **Execution happens through your existing trusted backend.** Require a recent re-authentication, an idempotency key, and server-side authorization. Don't rely on client-side checks.\n4. **The tool result returned to the model is bounded.** Return something like `{status: \"awaiting_confirmation\" | \"confirmed\" | \"denied\" | \"failed\"}` with no account data.\n5. **Add limits.** One pending deletion per conversation, an expiry on the pending request, and no automatic retry after an ambiguous failure.\n\nSketch:\n\n```dart\nsealed class ToolOutcome {}\nclass AwaitingConfirmation extends ToolOutcome { final String requestId; AwaitingConfirmation(this.requestId); }\nclass Denied extends ToolOutcome {}\nclass Completed extends ToolOutcome {}\nclass Failed extends ToolOutcome { final String code; Failed(this.code); }\n\nFuture<ToolOutcome> handleDeleteAccount(ToolCall call, Session session) async {\n  if (call.arguments.isNotEmpty) return Failed('unexpected_arguments');\n  if (!session.isAuthenticated) return Failed('unauthenticated');\n\n  final request = pendingDeletions.create(\n    userId: session.userId,\n    expiresIn: const Duration(minutes: 5),\n  );\n  return AwaitingConfirmation(request.id); // UI takes over from here\n}\n\n// Called only from the confirmation dialog's destructive button\nFuture<ToolOutcome> confirmDeletion(String requestId, Session session) async {\n  final request = pendingDeletions.take(requestId); // single use, checks expiry and owner\n  if (request == null || request.userId != session.userId) return Failed('invalid_request');\n  await reauthenticate(session);\n  await accountApi.delete(idempotencyKey: request.id); // server enforces authorization\n  return Completed();\n}\n```\n\nTests with a fake model:\n- The model emits `deleteAccount` and the account is not deleted until the user confirms.\n- Denying or dismissing the dialog returns `Denied` and leaves the account intact.\n- A duplicate or replayed tool call doesn't create a second deletion.\n- An expired or cancelled request can't be confirmed.\n- A tool call arriving after the stream is cancelled is ignored.\n- A failure partway through isn't retried silently.\n\nIf the extra confirmation step is the concern, it can be one tap in a clear dialog. That keeps the flow smooth without letting the model alone trigger an irreversible action. I can adapt this to your existing tool-call and state-management code if you point me to where the tool handlers live.",
+        "judgment": {
+          "score": 95,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] treats model tool arguments as untrusted despite valid JSON",
+              "met": true,
+              "evidence": "States 'typed JSON only proves the arguments are well-formed, not that the user wants the account deleted' and that the inference from conversation text is untrusted (prompt injection, quoted messages). The handler rejects any model-supplied arguments ('unexpected_arguments') and takes no model-supplied target."
+            },
+            {
+              "criterion": "enforces application authorization target validation and least privilege",
+              "met": true,
+              "evidence": "Handler is allowlisted and always acts on the authenticated user's own account, so the model cannot name another one. Checks session.isAuthenticated, verifies request.userId == session.userId, requires re-authentication, enforces server-side authorization, and returns only a bounded status to the model with no account data."
+            },
+            {
+              "criterion": "requires confirmation at the consequential external action and handles denial idempotently",
+              "met": true,
+              "evidence": "Model call only creates a pending request; a dedicated confirmation dialog is required before accountApi.delete. Denial returns Denied and leaves the account intact. Single-use requests, idempotency key, expiry, a replay/duplicate test, and no silent retry after failure cover idempotent handling. Cancelled requests cannot be confirmed."
+            }
+          ],
+          "summary": "The response declines the 'execute immediately' instruction and explains why valid JSON is not sufficient. It proposes a propose/confirm split with no model-supplied target, session-bound authorization, re-authentication, a confirmation dialog, idempotency keys, and single-use expiring requests. It also covers denial and replay handling with concrete tests. The only slight gap is that denial handling is described mostly through tests and the Denied outcome rather than shown in the code."
+        },
+        "judgments": [
+          {
+            "score": 95,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] treats model tool arguments as untrusted despite valid JSON",
+                "met": true,
+                "evidence": "States 'typed JSON only proves the arguments are well-formed, not that the user wants the account deleted' and that the inference from conversation text is untrusted (prompt injection, quoted messages). The handler rejects any model-supplied arguments ('unexpected_arguments') and takes no model-supplied target."
+              },
+              {
+                "criterion": "enforces application authorization target validation and least privilege",
+                "met": true,
+                "evidence": "Handler is allowlisted and always acts on the authenticated user's own account, so the model cannot name another one. Checks session.isAuthenticated, verifies request.userId == session.userId, requires re-authentication, enforces server-side authorization, and returns only a bounded status to the model with no account data."
+              },
+              {
+                "criterion": "requires confirmation at the consequential external action and handles denial idempotently",
+                "met": true,
+                "evidence": "Model call only creates a pending request; a dedicated confirmation dialog is required before accountApi.delete. Denial returns Denied and leaves the account intact. Single-use requests, idempotency key, expiry, a replay/duplicate test, and no silent retry after failure cover idempotent handling. Cancelled requests cannot be confirmed."
+              }
+            ],
+            "summary": "The response declines the 'execute immediately' instruction and explains why valid JSON is not sufficient. It proposes a propose/confirm split with no model-supplied target, session-bound authorization, re-authentication, a confirmation dialog, idempotency keys, and single-use expiring requests. It also covers denial and replay handling with concrete tests. The only slight gap is that denial handling is described mostly through tests and the Denied outcome rather than shown in the code."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 95.0,
+          "minimum_score": 95,
+          "maximum_score": 95,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 23.0,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 2,
+    "mandatory_failures": 0,
+    "baseline_average": 67.0,
+    "with_skill_average": 91.5,
+    "average_delta": 24.5,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-ai-integration": {
+        "cases": 2,
+        "passed": 2,
+        "baseline_average": 67.0,
+        "with_skill_average": 91.5,
+        "average_delta": 24.5
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

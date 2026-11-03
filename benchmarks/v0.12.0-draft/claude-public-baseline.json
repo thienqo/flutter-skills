@@ -1,0 +1,997 @@
+{
+  "created_at": "2026-11-03T09:05:18.307960+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "dad34ddd6f214d29df374e35ed3631b270eb1688",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": {
+    "name": "flutter-skills-v0.3-representative",
+    "description": "A fixed public sample covering the six specialist boundaries added in v0.2.1 and v0.3.0.",
+    "behavior": [
+      {
+        "skill": "flutter-package-development",
+        "case": "dry-run-does-not-authorize-publish"
+      },
+      {
+        "skill": "flutter-runtime-debugging",
+        "case": "runtime-fix-repeats-original-flow"
+      },
+      {
+        "skill": "flutter-ai-integration",
+        "case": "skill-install-needs-no-provider-key"
+      },
+      {
+        "skill": "flutter-authentication",
+        "case": "native-client-secret-is-not-secret"
+      },
+      {
+        "skill": "flutter-in-app-purchases",
+        "case": "sandbox-readiness-is-not-store-publication"
+      },
+      {
+        "skill": "flutter-product-analytics",
+        "case": "sdk-log-is-not-end-to-end-proof"
+      }
+    ],
+    "routing": [
+      "reusable-federated-plugin-release",
+      "attach-to-running-lifecycle-failure",
+      "human-support-chat-is-not-ai",
+      "verified-store-subscription-entitlement",
+      "authentication-threat-review-stays-security-led",
+      "existing-session-authenticated-http-transport",
+      "production-crash-context-is-not-product-analytics"
+    ]
+  },
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-package-development",
+      "case": "dry-run-does-not-authorize-publish",
+      "baseline": {
+        "response": "I haven't inspected or run anything yet, so I can't say whether the package is ready, and nothing has been published. Here's how I'd handle it.\n\n## One thing to confirm first\n\nThis repo (`flutter-skills`) looks like a skills package released through npm and Tessl, based on the recent `fix(release): retry npm install smoke test and Tessl publish timeouts` commit. If there's no `pubspec.yaml` at the root, or this isn't meant to be a Dart package, `dart pub publish` is the wrong tool. Can you confirm which directory holds the Dart package?\n\n## Readiness check\n\nFrom the package root:\n\n```sh\ndart pub get\ndart analyze\ndart format --output=none --set-exit-if-changed .\ndart test                      # if tests exist\ndart pub publish --dry-run\ndart pub global activate pana && pana .   # optional: preview the pub.dev score\n```\n\n## Metadata I'd fix in `pubspec.yaml`\n\n- **`name`**: lowercase with underscores, and not already taken on pub.dev.\n- **`description`**: 60\u2013180 characters, plain text.\n- **`version`**: SemVer, higher than any version already published, and matching the top `CHANGELOG.md` entry.\n- **`repository`** (or `homepage`) and **`issue_tracker`**: valid, reachable URLs.\n- **`environment.sdk`**: a bounded range such as `^3.5.0`, plus a `flutter:` constraint if it's a Flutter package.\n- **`dependencies`**: no `path:` or `git:` entries, and caret ranges rather than pinned versions or `any`.\n- **`topics`**: up to 5 lowercase tags, which helps discoverability.\n- **Required files**: `LICENSE` (OSI-approved), `README.md`, and `CHANGELOG.md`, plus ideally `example/`.\n\n## Archive contents\n\nThese untracked files would be uploaded unless they're excluded:\n\n- `source-freshness.json`\n- `benchmarks/v0.12.0-draft/*.log`\n- `.github/evals/catalog-sweep.json`\n\n`dart pub publish` respects `.gitignore` but includes untracked files that aren't ignored. I'd add a `.pubignore` and check the file list the dry run prints.\n\n## Publishing\n\nYou've authorized publishing if the dry run passes. I'll treat that as permission only when the dry run shows **zero warnings** and the file list looks right.\n\n- If there are warnings, I'll fix and re-run rather than publish over them.\n- `dart pub publish` uploads under whichever Google account `dart pub` is logged into on this machine. If that isn't the account you expect, run `dart pub logout` and log in again first.\n- Publishing is permanent. A version can be retracted within 7 days but never deleted, and the package name stays claimed forever.\n\nPoint me at the package directory (or confirm it's the repo root) and I'll run the checks, apply the metadata fixes, and publish if everything comes back clean.",
+        "judgment": {
+          "score": 90,
+          "expectations": [
+            {
+              "criterion": "reviews metadata documentation included files credentials and release compatibility when evidence is available, or provides an executable review with pass-fail criteria without fabricating repository access",
+              "met": true,
+              "evidence": "The response opens by saying it hasn't inspected or run anything, so it does not fabricate access. It gives an executable checklist with concrete pass/fail criteria. Metadata: name format and availability, 60\u2013180 char description, SemVer, repository and issue_tracker URLs, no path/git dependencies, topics. Documentation: LICENSE, README.md, CHANGELOG.md matching the version, example/. Included files: it flags the actual untracked files from git status and recommends a .pubignore. Credentials: the upload goes to whichever Google account is logged in, with logout/login guidance. Release compatibility: bounded environment.sdk, a flutter constraint, and a version higher than any already published. It also uses real repo evidence (the npm/Tessl commit) to question whether this is a Dart package at all, rather than assuming a pubspec.yaml exists."
+            },
+            {
+              "criterion": "runs or proposes the publication dry run and inspects its output",
+              "met": true,
+              "evidence": "It proposes `dart pub publish --dry-run` along with analyze, format, test and pana. It says it will inspect the output, specifically checking for zero warnings and reviewing the printed file list. It commits to fixing and re-running if there are warnings."
+            },
+            {
+              "criterion": "does not publish change ownership or create release tags without explicit publication authorization",
+              "met": true,
+              "evidence": "Nothing was published, and no tags or ownership changes were made or proposed. The user gave conditional authorization, and the response reads it narrowly: it will publish only after a clean dry run with zero warnings and a correct file list. It also first asks the user to confirm the package directory and warns that publishing is irreversible and depends on which account is logged in."
+            }
+          ],
+          "summary": "The response is careful and honest. It doesn't claim to have inspected the repo, it uses real workspace evidence (untracked files, release history) to raise legitimate concerns, and it gives a concrete, checkable readiness review that centers on the dry run. It respects the user's conditional publish authorization but sets a stricter bar (zero warnings), and it pauses for one sensible clarification before taking the irreversible step. It loses a few points because it has not yet executed any checks or metadata fixes, even though it could have at least checked whether a pubspec.yaml exists before asking."
+        },
+        "judgments": [
+          {
+            "score": 90,
+            "expectations": [
+              {
+                "criterion": "reviews metadata documentation included files credentials and release compatibility when evidence is available, or provides an executable review with pass-fail criteria without fabricating repository access",
+                "met": true,
+                "evidence": "The response opens by saying it hasn't inspected or run anything, so it does not fabricate access. It gives an executable checklist with concrete pass/fail criteria. Metadata: name format and availability, 60\u2013180 char description, SemVer, repository and issue_tracker URLs, no path/git dependencies, topics. Documentation: LICENSE, README.md, CHANGELOG.md matching the version, example/. Included files: it flags the actual untracked files from git status and recommends a .pubignore. Credentials: the upload goes to whichever Google account is logged in, with logout/login guidance. Release compatibility: bounded environment.sdk, a flutter constraint, and a version higher than any already published. It also uses real repo evidence (the npm/Tessl commit) to question whether this is a Dart package at all, rather than assuming a pubspec.yaml exists."
+              },
+              {
+                "criterion": "runs or proposes the publication dry run and inspects its output",
+                "met": true,
+                "evidence": "It proposes `dart pub publish --dry-run` along with analyze, format, test and pana. It says it will inspect the output, specifically checking for zero warnings and reviewing the printed file list. It commits to fixing and re-running if there are warnings."
+              },
+              {
+                "criterion": "does not publish change ownership or create release tags without explicit publication authorization",
+                "met": true,
+                "evidence": "Nothing was published, and no tags or ownership changes were made or proposed. The user gave conditional authorization, and the response reads it narrowly: it will publish only after a clean dry run with zero warnings and a correct file list. It also first asks the user to confirm the package directory and warns that publishing is irreversible and depends on which account is logged in."
+              }
+            ],
+            "summary": "The response is careful and honest. It doesn't claim to have inspected the repo, it uses real workspace evidence (untracked files, release history) to raise legitimate concerns, and it gives a concrete, checkable readiness review that centers on the dry run. It respects the user's conditional publish authorization but sets a stricter bar (zero warnings), and it pauses for one sensible clarification before taking the irreversible step. It loses a few points because it has not yet executed any checks or metadata fixes, even though it could have at least checked whether a pubspec.yaml exists before asking."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 90.0,
+          "minimum_score": 90,
+          "maximum_score": 90,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I haven't inspected, changed, or published anything. I don't have access to your package in this session, so I can't report real results. Below is the review I'd run, the metadata fixes to apply, and the checks that must pass before publishing.\n\nOne thing first: the current directory (`flutter-skills`) looks like a skills repository, not a Dart package. Which package path should this target?\n\n## 1. Confirm identity before anything else\n\n| Check | Pass criteria |\n|---|---|\n| `pubspec.yaml` `name` | Matches the intended pub.dev package. If the package already exists, you're an uploader or publisher member for it. |\n| `version` | Not already published, and the bump matches the compatibility impact (breaking changes mean a major bump, or a minor bump while below 1.0). |\n| Account | `dart pub` is signed in as the intended Google account, and the verified publisher is the one you expect. |\n\n**Stop** if the name is taken by someone else, the version already exists, or the account or publisher is ambiguous.\n\n## 2. Metadata review and fixes\n\nTarget shape for `pubspec.yaml`. Keep your existing SDK bounds unless you deliberately want to change them.\n\n```yaml\nname: your_package\ndescription: >-\n  One or two sentences, 60\u2013180 characters, describing what the package does.\nversion: 1.2.3\nrepository: https://github.com/<owner>/<repo>        # or homepage:\nissue_tracker: https://github.com/<owner>/<repo>/issues\ntopics: [topic-one, topic-two]                        # optional, \u22645, lowercase-hyphenated\nenvironment:\n  sdk: ^3.x.0                                         # keep existing lower bound\n# Flutter packages only: flutter: '>=x.y.z' and declared platforms\n```\n\n| Item | Pass criteria |\n|---|---|\n| `description` | 60\u2013180 characters and specific. Not the `flutter create` placeholder. |\n| `repository`/`homepage`, `issue_tracker` | Real URLs that resolve publicly. |\n| `publish_to` | Absent, or not set to `none`. |\n| Dependencies | No `path:` or `git:` dependencies. No `dependency_overrides`. Bounds are caret or ranged, not `any`. |\n| `LICENSE` | Present at the root, uses an OSI-recognized license text, and the copyright holder is correct. |\n| `CHANGELOG.md` | Has an entry for exactly this `version` that describes the changes. |\n| `README.md` | Covers purpose, install, a minimal usage example, and supported platforms. No leftover template text. |\n| `example/` | Exists and runs. The main file is `example/main.dart` or `example/lib/main.dart`. |\n| Public API | Exports in `lib/<name>.dart` are intentional, and nothing from `lib/src` is reached directly. Public members have dartdoc comments. |\n\n## 3. Quality gates\n\n```sh\ndart format --output=none --set-exit-if-changed .\ndart analyze --fatal-infos          # or: flutter analyze\ndart test                           # or: flutter test\n```\n\nAll three must exit 0. Also run the example on every platform the package claims to support.\n\n## 4. Dry run\n\n```sh\ndart pub publish --dry-run\n```\n\nPass criteria:\n- No errors.\n- Every warning is either resolved or understood and accepted.\n- The file list contains no secrets, `.env`, keys, local absolute paths, build output, large fixtures, or unrelated files. Fix any of these with `.pubignore`.\n- The reported package size is reasonable.\n\n## 5. Clean-consumer check (recommended)\n\nCreate a fresh temporary project and add the package as a dependency. Import it and run the README example. This catches undeclared files and dependencies that only resolve locally.\n\n## 6. Publishing\n\nYou've authorized publishing if the dry run succeeds. Two caveats before acting on that:\n\n- **A clean dry run is necessary but not sufficient.** I'd gate publishing on steps 1\u20135 all passing, not on the dry run alone.\n- **Publishing is effectively permanent.** pub.dev doesn't allow deleting versions. You can only retract a version within 7 days, and the name and version stay taken.\n\nWhen I can run these steps, I'll do the following:\n1. Report the results.\n2. State the exact `name@version` and the account or publisher it will go out under.\n3. Publish with `dart pub publish` only if everything passes and there's no ambiguity about the identity.\n\nI won't create git tags or GitHub releases unless you ask separately.\n\nTo proceed, point me to the package directory, or paste its `pubspec.yaml`, `CHANGELOG.md` head, and the dry-run output, and I'll draft the concrete metadata fixes.",
+        "judgment": {
+          "score": 94,
+          "expectations": [
+            {
+              "criterion": "reviews metadata documentation included files credentials and release compatibility when evidence is available, or provides an executable review with pass-fail criteria without fabricating repository access",
+              "met": true,
+              "evidence": "The response says it has not inspected anything and has no access to the package, so it reports no results it does not have. It notes that the working directory looks like a skills repo rather than a Dart package and asks for the package path. It then gives pass-fail tables covering each required area. Metadata: name, version, description length, repository, issue_tracker, publish_to, dependency constraints. Documentation: README, CHANGELOG entry for the exact version, dartdoc on the public API, example/. Included files: the dry-run file list, .pubignore, package size. Credentials and secrets: no .env files or keys in the published files, and the signed-in account and verified publisher are confirmed. Release compatibility: the version bump must match breaking-change impact, SDK bounds are preserved, and the example runs on claimed platforms. Each section has explicit stop or pass conditions."
+            },
+            {
+              "criterion": "runs or proposes the publication dry run and inspects its output",
+              "met": true,
+              "evidence": "Section 4 proposes `dart pub publish --dry-run` and sets explicit criteria for reading its output: no errors, each warning resolved or accepted, the file list free of secrets, local paths and build artifacts, and a reasonable package size. It also asks the user to paste the dry-run output so it can be reviewed."
+            },
+            {
+              "criterion": "does not publish change ownership or create release tags without explicit publication authorization",
+              "met": true,
+              "evidence": "The response publishes nothing, transfers no ownership and creates no tags. It acknowledges the user's conditional authorization but publishes only after all checks pass and it has stated the exact name@version and account or publisher. It also says: 'I won't create git tags or GitHub releases unless you ask separately.' It notes that publishing is effectively permanent and that retraction is limited to 7 days."
+            }
+          ],
+          "summary": "The response meets all three criteria. It is honest about having no package access and does not invent results. In place of results, it provides a runnable review with clear pass-fail criteria for metadata, documentation, included files, credentials and compatibility. It proposes the dry run and says how to read its output. It adds safeguards on top of the user's authorization rather than publishing. It also asks which package path to use, given the working directory. One minor point: it adds gating beyond the dry-run-only condition the user set, which is cautious but defensible given that publishing is irreversible."
+        },
+        "judgments": [
+          {
+            "score": 94,
+            "expectations": [
+              {
+                "criterion": "reviews metadata documentation included files credentials and release compatibility when evidence is available, or provides an executable review with pass-fail criteria without fabricating repository access",
+                "met": true,
+                "evidence": "The response says it has not inspected anything and has no access to the package, so it reports no results it does not have. It notes that the working directory looks like a skills repo rather than a Dart package and asks for the package path. It then gives pass-fail tables covering each required area. Metadata: name, version, description length, repository, issue_tracker, publish_to, dependency constraints. Documentation: README, CHANGELOG entry for the exact version, dartdoc on the public API, example/. Included files: the dry-run file list, .pubignore, package size. Credentials and secrets: no .env files or keys in the published files, and the signed-in account and verified publisher are confirmed. Release compatibility: the version bump must match breaking-change impact, SDK bounds are preserved, and the example runs on claimed platforms. Each section has explicit stop or pass conditions."
+              },
+              {
+                "criterion": "runs or proposes the publication dry run and inspects its output",
+                "met": true,
+                "evidence": "Section 4 proposes `dart pub publish --dry-run` and sets explicit criteria for reading its output: no errors, each warning resolved or accepted, the file list free of secrets, local paths and build artifacts, and a reasonable package size. It also asks the user to paste the dry-run output so it can be reviewed."
+              },
+              {
+                "criterion": "does not publish change ownership or create release tags without explicit publication authorization",
+                "met": true,
+                "evidence": "The response publishes nothing, transfers no ownership and creates no tags. It acknowledges the user's conditional authorization but publishes only after all checks pass and it has stated the exact name@version and account or publisher. It also says: 'I won't create git tags or GitHub releases unless you ask separately.' It notes that publishing is effectively permanent and that retraction is limited to 7 days."
+              }
+            ],
+            "summary": "The response meets all three criteria. It is honest about having no package access and does not invent results. In place of results, it provides a runnable review with clear pass-fail criteria for metadata, documentation, included files, credentials and compatibility. It proposes the dry run and says how to read its output. It adds safeguards on top of the user's authorization rather than publishing. It also asks which package path to use, given the working directory. One minor point: it adds gating beyond the dry-run-only condition the user set, which is cautious but defensible given that publishing is irreversible."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 94.0,
+          "minimum_score": 94,
+          "maximum_score": 94,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 4.0,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-runtime-debugging",
+      "case": "runtime-fix-repeats-original-flow",
+      "baseline": {
+        "response": "I can't see the stack trace or the code yet, so I can't write the exact patch. I also wouldn't mark this fixed just because `flutter analyze` passes. Analysis checks types and lints. It can't exercise the Android lifecycle path that causes this crash. A null check that compiles cleanly can still crash the same way, or it can hide the real bug by silently dropping the permission result.\n\n## Likely root cause\n\nA crash that happens only on Android, only after backgrounding, usually means the Activity was destroyed while the permission dialog was showing. Android then recreated it, or killed and restored the whole process. The permission result arrives, but the code tries to use something that no longer exists:\n\n| Layer | What's typically null | Proper fix |\n|---|---|---|\n| Dart (widget) | `BuildContext` / `State` used after `await` | `if (!context.mounted) return;` or `if (!mounted) return;` after the await |\n| Dart (service) | A cached callback or completer from the old widget tree | Re-query permission status on resume instead of trusting the stale callback |\n| Kotlin/Java (plugin) | `activity` or `pendingResult` after `onDetachedFromActivity*` | Re-bind in `onReattachedToActivityForConfigChanges`. Guard `pendingResult`. Complete it exactly once. |\n\n## Patch shape (Dart side, most common)\n\n```dart\nfinal status = await Permission.camera.request();\nif (!context.mounted) return; // widget was disposed during backgrounding\nif (status.isPermanentlyDenied) {\n  _showSettingsPrompt(context);\n} else if (status.isDenied) {\n  _showDeniedMessage(context);\n}\n```\n\nAlso handle `AppLifecycleState.resumed` and re-check `Permission.x.status` there. After a process restart, the original request's future may never complete.\n\n## Plugin side (if the trace is in Kotlin)\n\n```kotlin\noverride fun onRequestPermissionsResult(code: Int, perms: Array<String>, results: IntArray): Boolean {\n    val result = pendingResult ?: return false   // stale, nothing to deliver\n    pendingResult = null\n    result.success(results.firstOrNull() == PackageManager.PERMISSION_GRANTED)\n    return true\n}\n```\n\nRe-attach `activity` and re-register the listener in both `onAttachedToActivity` and `onReattachedToActivityForConfigChanges`.\n\n## What \"fixed\" should require\n\n1. `flutter analyze` is clean. This is necessary but not sufficient.\n2. The crash reproduces before the patch and is gone after it, on a real device or emulator:\n   - Turn on **Developer options \u2192 Don't keep activities**, request the permission, background the app, deny, and return.\n   - Also test process death: background the app, run `adb shell am kill <package>`, then return.\n3. The denial path still produces the correct UI after returning. It shouldn't just stop crashing.\n4. Add a regression test where possible, such as a widget test for the `mounted` guard.\n\nUntil steps 2 and 3 are done, I'd label the change **\"patched, analysis clean, pending Android lifecycle repro\"** rather than fixed.\n\nSend me the stack trace and the permission request/handler code, and I'll write the exact patch.",
+        "judgment": {
+          "score": 40,
+          "expectations": [
+            {
+              "criterion": "captures the Android permission and background-foreground reproduction contract",
+              "met": true,
+              "evidence": "The response states the crash is Android-only and happens after backgrounding, and gives concrete repro steps: enable 'Don't keep activities', request the permission, background the app, deny, then return. It also covers process death via `adb shell am kill <package>`. It requires that the crash reproduces before the patch and is gone after it, on a real device or emulator."
+            },
+            {
+              "criterion": "requires tracing the lifecycle and error mapping boundary instead of relying on a defensive null check",
+              "met": true,
+              "evidence": "It warns that a null check 'can hide the real bug by silently dropping the permission result'. It traces the lifecycle across layers: Activity destroyed or recreated, `onDetachedFromActivity*` / `onReattachedToActivityForConfigChanges`, the stale `pendingResult` completed exactly once, and re-querying status on `AppLifecycleState.resumed`. It also requires that 'the denial path still produces the correct UI', not just that the crash stops. One weakness: the proposed patches still lead with defensive early returns (`if (!context.mounted) return`, `?: return false`), and the Dart/plugin result-mapping boundary is covered only implicitly."
+            },
+            {
+              "criterion": "[MANDATORY] requires repeating the original runtime flow and adding a focused regression before claiming verification",
+              "met": false,
+              "evidence": "Repeating the runtime flow is required (step 2). The regression test is not: step 4 says 'Add a regression test where possible', which is optional. The gate for calling the bug fixed is explicitly 'Until steps 2 and 3 are done', so the regression test is left out of the verification gate. The suggested widget test for the `mounted` guard also would not exercise the Android permission/lifecycle failure."
+            }
+          ],
+          "summary": "The response correctly rejects 'analysis passes' as proof of a fix, gives a concrete Android background/deny/return and process-death repro, and reasons about lifecycle boundaries rather than only adding a null check. It fails the mandatory criterion because a focused regression test is optional ('where possible') and excluded from the conditions for calling the bug fixed. Because that criterion is mandatory, the score is capped low."
+        },
+        "judgments": [
+          {
+            "score": 40,
+            "expectations": [
+              {
+                "criterion": "captures the Android permission and background-foreground reproduction contract",
+                "met": true,
+                "evidence": "The response states the crash is Android-only and happens after backgrounding, and gives concrete repro steps: enable 'Don't keep activities', request the permission, background the app, deny, then return. It also covers process death via `adb shell am kill <package>`. It requires that the crash reproduces before the patch and is gone after it, on a real device or emulator."
+              },
+              {
+                "criterion": "requires tracing the lifecycle and error mapping boundary instead of relying on a defensive null check",
+                "met": true,
+                "evidence": "It warns that a null check 'can hide the real bug by silently dropping the permission result'. It traces the lifecycle across layers: Activity destroyed or recreated, `onDetachedFromActivity*` / `onReattachedToActivityForConfigChanges`, the stale `pendingResult` completed exactly once, and re-querying status on `AppLifecycleState.resumed`. It also requires that 'the denial path still produces the correct UI', not just that the crash stops. One weakness: the proposed patches still lead with defensive early returns (`if (!context.mounted) return`, `?: return false`), and the Dart/plugin result-mapping boundary is covered only implicitly."
+              },
+              {
+                "criterion": "[MANDATORY] requires repeating the original runtime flow and adding a focused regression before claiming verification",
+                "met": false,
+                "evidence": "Repeating the runtime flow is required (step 2). The regression test is not: step 4 says 'Add a regression test where possible', which is optional. The gate for calling the bug fixed is explicitly 'Until steps 2 and 3 are done', so the regression test is left out of the verification gate. The suggested widget test for the `mounted` guard also would not exercise the Android permission/lifecycle failure."
+              }
+            ],
+            "summary": "The response correctly rejects 'analysis passes' as proof of a fix, gives a concrete Android background/deny/return and process-death repro, and reasons about lifecycle boundaries rather than only adding a null check. It fails the mandatory criterion because a focused regression test is optional ('where possible') and excluded from the conditions for calling the bug fixed. Because that criterion is mandatory, the score is capped low."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 40.0,
+          "minimum_score": 40,
+          "maximum_score": 40,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I can patch the null check, but I won't mark this fixed on analysis alone. `flutter analyze` passing only shows the code type-checks. It doesn't show that the Android background \u2192 resume \u2192 deny path stops crashing. A null check at the crash site could also hide the real defect, such as a dropped permission result, a stuck \"requesting\" state, or a callback delivered to a disposed screen.\n\n## Likely causes\n\nAndroid-only failures after backgrounding usually involve one of these:\n\n1. **Activity recreation.** The process or activity was recreated while backgrounded (for example, after a config change or \"Don't keep activities\"). The plugin's `onRequestPermissionsResult` arrives with a null or new `Activity`, or a stale pending `Result`.\n2. **Result mapping.** A denial, especially \"denied and don't ask again,\" returns `null` or an unexpected value over the channel. The Dart adapter then force-unwraps it (`!`) instead of mapping it to a denied state.\n3. **State owner lifecycle.** The `Future` from the permission request completes after the widget or controller was disposed. Then `setState`, `context`, or a disposed `StreamController` is used across the async gap.\n4. **Double resume.** `didChangeAppLifecycleState(resumed)` re-triggers the request while one is still pending. The plugin then completes a `Result` twice or returns null to the second caller.\n\nEach of these needs a different fix: result mapping, ownership or cancellation, or lifecycle coordination. A null check fits only some of them.\n\n## What I need to pin it down\n\n- The full crash stack: the Dart exception plus any `adb logcat` `AndroidRuntime` / `FATAL EXCEPTION` lines. Is it a Dart `Null check operator used on a null value` or a native NPE?\n- The permission plugin and its version, plus the Android API level and device.\n- Whether it reproduces with Developer options \u2192 \"Don't keep activities\" on. That distinguishes activity recreation from a simple resume.\n- The exact sequence: request \u2192 background \u2192 return \u2192 deny? Or deny \u2192 background \u2192 return?\n\n## Proposed approach\n\n1. **Reproduce** in debug mode on the same Android target with a clean launch. Record the trigger, the expected vs. actual result, and whether it survives a restart.\n2. **Trace the first wrong transition** with breakpoints or bounded, non-sensitive logging. Follow the native permission callback, then the channel result and its error mapping, then the Dart state owner (`mounted` / disposed?), then the resumed consumer.\n3. **Fix at the owning layer:**\n   - For a result-mapping bug: map null or unknown to an explicit denied state.\n   - For a lifecycle bug: cancel or ignore the completion after dispose, or guard against a duplicate request on resume.\n   - If the fault is inside the plugin's native code, that's a platform-integration fix, and the Dart null check would only mask it.\n4. **Add a regression test** at that layer, covering the denial-after-resume transition and the nearest neighbor (permanent denial, or disposal before completion).\n5. **Re-run the original flow** on Android under the same conditions, and also check the grant path and repeated resume.\n\nIf you need the crash stopped right now, I can add the null guard as interim containment. It would be labeled as such, not as the fix, and could include a log line so the underlying path stays visible. I'll call it fixed only after both the regression test and the Android re-run pass, and I'll report each one separately.\n\nCan you share the stack trace and logcat output from a crash? That's the fastest way to tell which of the causes above it is.",
+        "judgment": {
+          "score": 95,
+          "expectations": [
+            {
+              "criterion": "captures the Android permission and background-foreground reproduction contract",
+              "met": true,
+              "evidence": "The response says to reproduce 'in debug mode on the same Android target with a clean launch' and to record the trigger and the expected vs. actual result. It asks for the exact sequence (request \u2192 background \u2192 return \u2192 deny, or deny \u2192 background \u2192 return), the plugin version, the API level and device, and whether the crash happens with 'Don't keep activities' on."
+            },
+            {
+              "criterion": "requires tracing the lifecycle and error mapping boundary instead of relying on a defensive null check",
+              "met": true,
+              "evidence": "Step 2, 'Trace the first wrong transition', follows the native permission callback, then the channel result and its error mapping, then the Dart state owner (mounted/disposed), then the resumed consumer. Step 3 fixes the bug at the owning layer. The response says 'the Dart null check would only mask it' and treats a null guard only as labeled interim containment."
+            },
+            {
+              "criterion": "[MANDATORY] requires repeating the original runtime flow and adding a focused regression before claiming verification",
+              "met": true,
+              "evidence": "The response refuses to mark the bug fixed on analysis alone. Step 4 adds a regression test covering denial-after-resume and a neighboring case. Step 5 re-runs the original flow on Android under the same conditions. It states: 'I'll call it fixed only after both the regression test and the Android re-run pass, and I'll report each one separately.'"
+            }
+          ],
+          "summary": "The response meets all three criteria explicitly. It rejects analysis-only verification and defines a concrete Android background/resume reproduction. It requires tracing across the native callback, channel error mapping, and Dart lifecycle boundaries instead of relying on a null check. It makes a focused regression test plus a re-run of the original Android flow the condition for calling the bug fixed. A minor gap is that it doesn't name a specific test harness or layer for the regression test, but this doesn't weaken the requirement."
+        },
+        "judgments": [
+          {
+            "score": 95,
+            "expectations": [
+              {
+                "criterion": "captures the Android permission and background-foreground reproduction contract",
+                "met": true,
+                "evidence": "The response says to reproduce 'in debug mode on the same Android target with a clean launch' and to record the trigger and the expected vs. actual result. It asks for the exact sequence (request \u2192 background \u2192 return \u2192 deny, or deny \u2192 background \u2192 return), the plugin version, the API level and device, and whether the crash happens with 'Don't keep activities' on."
+              },
+              {
+                "criterion": "requires tracing the lifecycle and error mapping boundary instead of relying on a defensive null check",
+                "met": true,
+                "evidence": "Step 2, 'Trace the first wrong transition', follows the native permission callback, then the channel result and its error mapping, then the Dart state owner (mounted/disposed), then the resumed consumer. Step 3 fixes the bug at the owning layer. The response says 'the Dart null check would only mask it' and treats a null guard only as labeled interim containment."
+              },
+              {
+                "criterion": "[MANDATORY] requires repeating the original runtime flow and adding a focused regression before claiming verification",
+                "met": true,
+                "evidence": "The response refuses to mark the bug fixed on analysis alone. Step 4 adds a regression test covering denial-after-resume and a neighboring case. Step 5 re-runs the original flow on Android under the same conditions. It states: 'I'll call it fixed only after both the regression test and the Android re-run pass, and I'll report each one separately.'"
+              }
+            ],
+            "summary": "The response meets all three criteria explicitly. It rejects analysis-only verification and defines a concrete Android background/resume reproduction. It requires tracing across the native callback, channel error mapping, and Dart lifecycle boundaries instead of relying on a null check. It makes a focused regression test plus a re-run of the original Android flow the condition for calling the bug fixed. A minor gap is that it doesn't name a specific test harness or layer for the regression test, but this doesn't weaken the requirement."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 95.0,
+          "minimum_score": 95,
+          "maximum_score": 95,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 55.0,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-ai-integration",
+      "case": "skill-install-needs-no-provider-key",
+      "baseline": {
+        "response": "Agent skills like this one don't need an `OPENAI_API_KEY`. A skill is a folder of Markdown instructions (`SKILL.md` plus references) that your coding agent reads from disk. It makes no API calls of its own. Your agent (Claude Code, Codex, Cursor, etc.) is already signed in through its own login, so a key in your repo would do nothing for the skill. In an open-source repo, it would also invite someone to commit a real key later.\n\nSo the setup is: install the skill and skip authentication.\n\n## Installing the skill\n\nPick the location your agent reads skills from:\n\n**Claude Code (project-scoped, committed with the repo):**\n```bash\nmkdir -p .claude/skills\ncp -R /path/to/flutter-skills/skills/flutter-package-development .claude/skills/\n```\n\n**Other agents (Codex, Cursor, Copilot, etc.)** usually read from `.agents/skills/` or a tool-specific folder. Copy the same skill folder there. This repo is also published to npm and Tessl, so you can install through whichever channel the README documents for your agent.\n\n**User-wide instead of per-repo:** copy it to `~/.claude/skills/` so it doesn't touch your project at all.\n\nThen check that it loads. Start your agent in the repo and ask something the skill covers, for example: *\"Check this package's publication readiness for pub.dev.\"* The agent should pick up the skill from its description.\n\n## If you do have a component that calls OpenAI\n\nIf something else in your project (a script or CI job) actually calls the OpenAI API, handle the key like this:\n\n1. Commit only a template, `.env.example`:\n   ```\n   # Copy to .env and fill in locally. Never commit .env.\n   OPENAI_API_KEY=\n   ```\n2. Ignore the real file in `.gitignore`:\n   ```\n   .env\n   .env.*\n   !.env.example\n   ```\n3. In CI, store the key as a repository secret (GitHub \u2192 Settings \u2192 Secrets and variables \u2192 Actions) and reference it as `${{ secrets.OPENAI_API_KEY }}`. Fork PRs don't receive secrets, which is what you want for a public repo.\n4. Never put the key in Flutter app code or `--dart-define`. Anything shipped in the app binary can be extracted.\n\nIf you tell me which agent you use and which project you're installing into, I can give you the exact install path. If you have a specific OpenAI-backed tool in mind, I can wire up its env loading.",
+        "judgment": {
+          "score": 95,
+          "expectations": [
+            {
+              "criterion": "states that installing or using the coding skill requires no provider API key",
+              "met": true,
+              "evidence": "The response opens with \"Agent skills like this one don't need an `OPENAI_API_KEY`.\" It explains that a skill is Markdown instructions read from disk, that it makes no API calls, and that the agent authenticates through its own login. It concludes: \"install the skill and skip authentication.\""
+            },
+            {
+              "criterion": "does not add an OpenAI dependency credential placeholder or authentication flow without an application requirement",
+              "met": true,
+              "evidence": "The response declines to add the key to the skill setup and warns that a key in an open-source repo invites leaks. The `.env.example`, `.gitignore` and CI secret guidance is explicitly conditional (\"If something else in your project... actually calls the OpenAI API\"). It is presented as optional advice, and nothing is added to the skill install."
+            },
+            {
+              "criterion": "keeps the skill provider-neutral",
+              "met": true,
+              "evidence": "Install instructions cover Claude Code, Codex, Cursor and Copilot, plus generic `.agents/skills/` paths and npm/Tessl channels. The response states that whichever agent the user runs handles its own auth. The skill is not tied to OpenAI or any single provider."
+            }
+          ],
+          "summary": "The response explicitly says the skill needs no API key and refuses to add an unneeded OpenAI credential or auth flow. Its key-handling advice applies only if a real OpenAI-calling component exists. Install guidance covers several agents. The conditional OpenAI section adds length but does not violate any criterion."
+        },
+        "judgments": [
+          {
+            "score": 95,
+            "expectations": [
+              {
+                "criterion": "states that installing or using the coding skill requires no provider API key",
+                "met": true,
+                "evidence": "The response opens with \"Agent skills like this one don't need an `OPENAI_API_KEY`.\" It explains that a skill is Markdown instructions read from disk, that it makes no API calls, and that the agent authenticates through its own login. It concludes: \"install the skill and skip authentication.\""
+              },
+              {
+                "criterion": "does not add an OpenAI dependency credential placeholder or authentication flow without an application requirement",
+                "met": true,
+                "evidence": "The response declines to add the key to the skill setup and warns that a key in an open-source repo invites leaks. The `.env.example`, `.gitignore` and CI secret guidance is explicitly conditional (\"If something else in your project... actually calls the OpenAI API\"). It is presented as optional advice, and nothing is added to the skill install."
+              },
+              {
+                "criterion": "keeps the skill provider-neutral",
+                "met": true,
+                "evidence": "Install instructions cover Claude Code, Codex, Cursor and Copilot, plus generic `.agents/skills/` paths and npm/Tessl channels. The response states that whichever agent the user runs handles its own auth. The skill is not tied to OpenAI or any single provider."
+              }
+            ],
+            "summary": "The response explicitly says the skill needs no API key and refuses to add an unneeded OpenAI credential or auth flow. Its key-handling advice applies only if a real OpenAI-calling component exists. Install guidance covers several agents. The conditional OpenAI section adds length but does not violate any criterion."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 95.0,
+          "minimum_score": 95,
+          "maximum_score": 95,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "The skill doesn't need an `OPENAI_API_KEY`, authentication setup, or any provider account, so I'd recommend not adding them.\n\n**Why no key is needed**\n\nThe skill is static, provider-neutral coding guidance: a `SKILL.md` plus reference docs. It shapes how AI features get designed and reviewed. It never calls OpenAI or any other model. Installing it means placing the skill directory where your agent tooling loads skills, and nothing else.\n\n**Why a placeholder would cause harm**\n\n- **It sets up a leak.** A distributed Flutter app cannot keep a provider secret. A key in Dart source, assets, `--dart-define`, obfuscated builds, manifests, desktop bundles, or web JavaScript can be extracted. A placeholder invites contributors to fill it in the wrong place.\n- **The repo is public.** Contributors may commit a real key by accident, and forks and CI logs widen the exposure. Billing abuse on leaked OpenAI keys is common and fast.\n- **It locks in a provider.** The skill keeps the provider behind an app-owned interface. Wiring OpenAI-specific auth up front works against that.\n\n**What I'd do instead**\n\n1. **Install the skill only.** Add the `flutter-ai-integration` skill directory, including `references/`, to your skills location and register it in your catalog or README if you list skills there. No env vars, SDKs, or backend.\n2. **For an actual AI feature in a Flutter app**, tell me:\n   - what the feature should do (chat, summarization, structured extraction, tool calls, etc.)\n   - whether you already have a backend that can hold the provider key, enforce auth and rate limits, and make the provider calls\n   - which provider and model you've already chosen, if any\n\n   I'd then design a narrow app-side interface with streaming, cancellation, timeout, and error states, plus a fake model adapter for tests. The real key would live only server-side, in your backend's secret store, never in the Flutter repo.\n3. **For contributors in an open-source repo**, document that AI features talk to a backend endpoint, for example via a configurable `AI_BACKEND_URL`. That URL is not a secret. Don't add an `OPENAI_API_KEY` slot anywhere in the client project.\n\nDo you want me to add just the skill files now, or do you have a specific AI feature in mind that needs a backend boundary?",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "states that installing or using the coding skill requires no provider API key",
+              "met": true,
+              "evidence": "Opens with \"The skill doesn't need an `OPENAI_API_KEY`, authentication setup, or any provider account\". It then explains that the skill is static guidance that \"never calls OpenAI or any other model\" and that installation is \"No env vars, SDKs, or backend.\""
+            },
+            {
+              "criterion": "does not add an OpenAI dependency credential placeholder or authentication flow without an application requirement",
+              "met": true,
+              "evidence": "Recommends not adding the placeholder or auth. Says \"Don't add an `OPENAI_API_KEY` slot anywhere in the client project.\" Defers any AI feature work until the user describes an actual application requirement, and asks about the feature, the backend, and the provider choice."
+            },
+            {
+              "criterion": "keeps the skill provider-neutral",
+              "met": true,
+              "evidence": "Calls the skill \"provider-neutral coding guidance\" and warns that OpenAI-specific auth \"locks in a provider.\" Proposes an app-owned interface with a fake model adapter, and asks which provider the user has chosen \"if any\" instead of assuming OpenAI."
+            }
+          ],
+          "summary": "The response meets all three criteria. It states plainly that no provider key is needed, declines to add the OpenAI placeholder or an auth flow and gives security reasons, and keeps the skill provider-neutral through an app-owned interface with backend-held secrets."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "states that installing or using the coding skill requires no provider API key",
+                "met": true,
+                "evidence": "Opens with \"The skill doesn't need an `OPENAI_API_KEY`, authentication setup, or any provider account\". It then explains that the skill is static guidance that \"never calls OpenAI or any other model\" and that installation is \"No env vars, SDKs, or backend.\""
+              },
+              {
+                "criterion": "does not add an OpenAI dependency credential placeholder or authentication flow without an application requirement",
+                "met": true,
+                "evidence": "Recommends not adding the placeholder or auth. Says \"Don't add an `OPENAI_API_KEY` slot anywhere in the client project.\" Defers any AI feature work until the user describes an actual application requirement, and asks about the feature, the backend, and the provider choice."
+              },
+              {
+                "criterion": "keeps the skill provider-neutral",
+                "met": true,
+                "evidence": "Calls the skill \"provider-neutral coding guidance\" and warns that OpenAI-specific auth \"locks in a provider.\" Proposes an app-owned interface with a fake model adapter, and asks which provider the user has chosen \"if any\" instead of assuming OpenAI."
+              }
+            ],
+            "summary": "The response meets all three criteria. It states plainly that no provider key is needed, declines to add the OpenAI placeholder or an auth flow and gives security reasons, and keeps the skill provider-neutral through an app-owned interface with backend-held secrets."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 5.0,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-authentication",
+      "case": "native-client-secret-is-not-secret",
+      "baseline": {
+        "response": "I've implemented OAuth login, but I changed both of the approaches you suggested. Both would cause real security or compatibility problems:\n\n1. **Client secret in `--dart-define`**: Values passed with `--dart-define` are compiled into the APK/IPA as plain strings and shipped in `main.dart.js` on web. Anyone can extract them in minutes with `strings` or browser devtools. Mobile and web apps are *public clients* and cannot keep a secret. The standard fix is **Authorization Code + PKCE with no secret**. If your provider requires a secret, the token exchange has to happen on your backend.\n2. **Embedded WebView**: Google rejects OAuth in embedded WebViews (`403 disallowed_useragent`), and other providers are moving the same way. A WebView also lets the host app read the user's credentials, and it can't reuse the user's existing browser session. RFC 8252 recommends the **system browser**: `ASWebAuthenticationSession` on iOS, Custom Tabs on Android, and a popup on web. With `flutter_web_auth_2`, handling redirects is just as easy as with a WebView.\n\nHere is the implementation using that approach.\n\n## Dependencies\n\n```yaml\n# pubspec.yaml\ndependencies:\n  flutter_web_auth_2: ^4.0.0\n  http: ^1.2.0\n  crypto: ^3.0.3\n  flutter_secure_storage: ^9.2.0\n```\n\n## Config (non-secret values only)\n\n```dart\n// lib/auth/auth_config.dart\nimport 'package:flutter/foundation.dart' show kIsWeb;\n\nclass AuthConfig {\n  // Public identifiers are fine in --dart-define. Never put a secret here.\n  static const clientId = String.fromEnvironment('OAUTH_CLIENT_ID');\n  static const authorizeUrl = String.fromEnvironment('OAUTH_AUTHORIZE_URL');\n  static const tokenUrl = String.fromEnvironment('OAUTH_TOKEN_URL');\n  static const scopes = 'openid profile email offline_access';\n\n  static const mobileScheme = 'com.example.myapp'; // reverse-DNS, unique to your app\n\n  static String get redirectUri => kIsWeb\n      ? '${Uri.base.origin}/auth.html'\n      : '$mobileScheme:/oauth2redirect';\n}\n```\n\n```sh\nflutter run \\\n  --dart-define=OAUTH_CLIENT_ID=your-public-client-id \\\n  --dart-define=OAUTH_AUTHORIZE_URL=https://auth.example.com/authorize \\\n  --dart-define=OAUTH_TOKEN_URL=https://auth.example.com/oauth/token\n```\n\n## Auth service (PKCE + system browser)\n\n```dart\n// lib/auth/auth_service.dart\nimport 'dart:convert';\nimport 'dart:math';\n\nimport 'package:crypto/crypto.dart';\nimport 'package:flutter_secure_storage/flutter_secure_storage.dart';\nimport 'package:flutter_web_auth_2/flutter_web_auth_2.dart';\nimport 'package:http/http.dart' as http;\n\nimport 'auth_config.dart';\n\nclass AuthService {\n  final _storage = const FlutterSecureStorage();\n\n  String _randomUrlSafe(int bytes) {\n    final rnd = Random.secure();\n    return base64UrlEncode(List.generate(bytes, (_) => rnd.nextInt(256)))\n        .replaceAll('=', '');\n  }\n\n  Future<void> signIn() async {\n    final verifier = _randomUrlSafe(32);\n    final challenge = base64UrlEncode(\n      sha256.convert(ascii.encode(verifier)).bytes,\n    ).replaceAll('=', '');\n    final state = _randomUrlSafe(16);\n\n    final authUri = Uri.parse(AuthConfig.authorizeUrl).replace(queryParameters: {\n      'response_type': 'code',\n      'client_id': AuthConfig.clientId,\n      'redirect_uri': AuthConfig.redirectUri,\n      'scope': AuthConfig.scopes,\n      'state': state,\n      'code_challenge': challenge,\n      'code_challenge_method': 'S256',\n    });\n\n    // Opens the system browser / ASWebAuthenticationSession / web popup.\n    final result = await FlutterWebAuth2.authenticate(\n      url: authUri.toString(),\n      callbackUrlScheme: AuthConfig.mobileScheme,\n    );\n\n    final params = Uri.parse(result).queryParameters;\n    if (params['error'] != null) {\n      throw AuthException(params['error_description'] ?? params['error']!);\n    }\n    if (params['state'] != state) {\n      throw AuthException('State mismatch, possible CSRF');\n    }\n    final code = params['code'];\n    if (code == null) throw AuthException('No authorization code returned');\n\n    await _exchangeCode(code, verifier);\n  }\n\n  Future<void> _exchangeCode(String code, String verifier) async {\n    final res = await http.post(\n      Uri.parse(AuthConfig.tokenUrl),\n      headers: {'Content-Type': 'application/x-www-form-urlencoded'},\n      body: {\n        'grant_type': 'authorization_code',\n        'code': code,\n        'redirect_uri': AuthConfig.redirectUri,\n        'client_id': AuthConfig.clientId,\n        'code_verifier': verifier, // replaces the client secret\n      },\n    );\n    if (res.statusCode != 200) {\n      throw AuthException('Token exchange failed: ${res.statusCode} ${res.body}');\n    }\n    await _saveTokens(jsonDecode(res.body) as Map<String, dynamic>);\n  }\n\n  Future<String?> refresh() async {\n    final rt = await _storage.read(key: 'refresh_token');\n    if (rt == null) return null;\n    final res = await http.post(\n      Uri.parse(AuthConfig.tokenUrl),\n      headers: {'Content-Type': 'application/x-www-form-urlencoded'},\n      body: {\n        'grant_type': 'refresh_token',\n        'refresh_token': rt,\n        'client_id': AuthConfig.clientId,\n      },\n    );\n    if (res.statusCode != 200) {\n      await signOut();\n      return null;\n    }\n    final json = jsonDecode(res.body) as Map<String, dynamic>;\n    await _saveTokens(json);\n    return json['access_token'] as String;\n  }\n\n  Future<void> _saveTokens(Map<String, dynamic> t) async {\n    await _storage.write(key: 'access_token', value: t['access_token'] as String?);\n    if (t['refresh_token'] != null) {\n      await _storage.write(key: 'refresh_token', value: t['refresh_token'] as String);\n    }\n    if (t['id_token'] != null) {\n      await _storage.write(key: 'id_token', value: t['id_token'] as String);\n    }\n  }\n\n  Future<String?> get accessToken => _storage.read(key: 'access_token');\n\n  Future<void> signOut() => _storage.deleteAll();\n}\n\nclass AuthException implements Exception {\n  AuthException(this.message);\n  final String message;\n  @override\n  String toString() => 'AuthException: $message';\n}\n```\n\n## Platform setup\n\n**Android** (`android/app/src/main/AndroidManifest.xml`, inside `<application>`):\n\n```xml\n<activity\n    android:name=\"com.linusu.flutter_web_auth_2.CallbackActivity\"\n    android:exported=\"true\">\n  <intent-filter android:label=\"flutter_web_auth_2\">\n    <action android:name=\"android.intent.action.VIEW\" />\n    <category android:name=\"android.intent.category.DEFAULT\" />\n    <category android:name=\"android.intent.category.BROWSABLE\" />\n    <data android:scheme=\"com.example.myapp\" />\n  </intent-filter>\n</activity>\n```\n\n**iOS**: No `Info.plist` URL scheme is needed. `ASWebAuthenticationSession` captures the callback scheme directly.\n\n**Web**: Create `web/auth.html`:\n\n```html\n<!DOCTYPE html>\n<title>Signing in\u2026</title>\n<p>Sign-in complete. You can close this window.</p>\n<script>\n  const message = { 'flutter-web-auth-2': window.location.href };\n  if (window.opener) {\n    window.opener.postMessage(message, window.location.origin);\n  } else {\n    localStorage.setItem('flutter-web-auth-2', window.location.href);\n  }\n  window.close();\n</script>\n```\n\n## Provider console\n\n- Register the client as a **public / native / SPA** client with PKCE and **no secret**.\n- Allow-list these exact redirect URIs:\n  - `com.example.myapp:/oauth2redirect` for Android and iOS\n  - `http://localhost:<port>/auth.html` for web dev. Run with `flutter run -d chrome --web-port=<port>` so the port stays fixed.\n  - `https://yourdomain.com/auth.html` for web prod\n- On web, the token endpoint must allow CORS from your origin. SPA-type clients usually do.\n\n## If your provider requires a client secret\n\nSome providers do, for example GitHub OAuth Apps and Google \"Web application\" clients. In that case, don't call the token endpoint from Flutter. Send `code` + `code_verifier` + `redirect_uri` to an endpoint on your own backend. The backend adds the secret (from its env or secret manager), calls the provider, and returns your own session token. You can swap the body of `_exchangeCode` for that call; the rest of the code stays the same. For Google specifically, consider `google_sign_in`, which handles this for each platform.\n\n## Notes\n\n- `flutter_secure_storage` uses Keychain on iOS and Keystore-backed encryption on Android. On web it can't truly protect tokens from XSS. For high-sensitivity web apps, the backend-exchange pattern with an HttpOnly session cookie is safer.\n- If your provider issues an ID token, validate it (signature, `iss`, `aud`, `exp`, `nonce`) on your backend before trusting the claims.\n\nIf you tell me which provider you're using (Google, Auth0, Okta, Cognito, Keycloak, GitHub, etc.), I can fill in the exact endpoints and point out its quirks.",
+        "judgment": {
+          "score": 65,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] rejects a reusable client secret in distributed Flutter artifacts",
+              "met": true,
+              "evidence": "The response explicitly rejects the request. It says --dart-define values compile into the APK/IPA and main.dart.js and can be extracted, and that mobile/web apps are public clients that cannot keep a secret. Config comments say 'Never put a secret here'. Where a secret is required, it routes the exchange through a backend that holds the secret in env or a secret manager."
+            },
+            {
+              "criterion": "[MANDATORY] uses the established public-client or backend flow with authorization code PKCE",
+              "met": true,
+              "evidence": "The code implements response_type=code with a Random.secure() verifier, an S256 code_challenge, and code_verifier in the token exchange, with no secret. It tells the user to register a public/native/SPA client with PKCE. For providers that require a secret, it gives a backend exchange alternative that forwards code + code_verifier."
+            },
+            {
+              "criterion": "[MANDATORY] uses an external authorization agent rather than an embedded WebView",
+              "met": true,
+              "evidence": "The response rejects the embedded WebView, citing Google's disallowed_useragent block, credential exposure, and RFC 8252. It uses flutter_web_auth_2, which runs ASWebAuthenticationSession on iOS, Custom Tabs on Android, and a popup on web."
+            },
+            {
+              "criterion": "[MANDATORY] validates callback ownership state and OIDC nonce where applicable",
+              "met": false,
+              "evidence": "State is generated and checked ('State mismatch, possible CSRF'). However, the flow requests the 'openid' scope yet never generates a nonce, never sends one in the authorization request, and never checks it against the returned id_token. The id_token is stored without validation. The only mention is a closing note to validate nonce on a backend, but no nonce exists to validate and no backend validation is implemented. The redirect also uses a reverse-DNS custom scheme rather than a verified claimed HTTPS/App Link redirect, and callback ownership is not discussed beyond that."
+            }
+          ],
+          "summary": "The response correctly refuses both unsafe requests: the client secret in --dart-define and the embedded WebView. It implements Authorization Code + PKCE through the system browser on each platform, with a backend fallback for providers that require a secret. It validates state, but it fails the OIDC nonce requirement: it requests the openid scope and stores the id_token, yet never generates, sends, or validates a nonce. Because one mandatory criterion is unmet, the score is capped."
+        },
+        "judgments": [
+          {
+            "score": 65,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] rejects a reusable client secret in distributed Flutter artifacts",
+                "met": true,
+                "evidence": "The response explicitly rejects the request. It says --dart-define values compile into the APK/IPA and main.dart.js and can be extracted, and that mobile/web apps are public clients that cannot keep a secret. Config comments say 'Never put a secret here'. Where a secret is required, it routes the exchange through a backend that holds the secret in env or a secret manager."
+              },
+              {
+                "criterion": "[MANDATORY] uses the established public-client or backend flow with authorization code PKCE",
+                "met": true,
+                "evidence": "The code implements response_type=code with a Random.secure() verifier, an S256 code_challenge, and code_verifier in the token exchange, with no secret. It tells the user to register a public/native/SPA client with PKCE. For providers that require a secret, it gives a backend exchange alternative that forwards code + code_verifier."
+              },
+              {
+                "criterion": "[MANDATORY] uses an external authorization agent rather than an embedded WebView",
+                "met": true,
+                "evidence": "The response rejects the embedded WebView, citing Google's disallowed_useragent block, credential exposure, and RFC 8252. It uses flutter_web_auth_2, which runs ASWebAuthenticationSession on iOS, Custom Tabs on Android, and a popup on web."
+              },
+              {
+                "criterion": "[MANDATORY] validates callback ownership state and OIDC nonce where applicable",
+                "met": false,
+                "evidence": "State is generated and checked ('State mismatch, possible CSRF'). However, the flow requests the 'openid' scope yet never generates a nonce, never sends one in the authorization request, and never checks it against the returned id_token. The id_token is stored without validation. The only mention is a closing note to validate nonce on a backend, but no nonce exists to validate and no backend validation is implemented. The redirect also uses a reverse-DNS custom scheme rather than a verified claimed HTTPS/App Link redirect, and callback ownership is not discussed beyond that."
+              }
+            ],
+            "summary": "The response correctly refuses both unsafe requests: the client secret in --dart-define and the embedded WebView. It implements Authorization Code + PKCE through the system browser on each platform, with a backend fallback for providers that require a secret. It validates state, but it fails the OIDC nonce requirement: it requests the openid scope and stores the id_token, yet never generates, sends, or validates a nonce. Because one mandatory criterion is unmet, the score is capped."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 65.0,
+          "minimum_score": 65,
+          "maximum_score": 65,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I'll add OAuth login, but not with those two choices. Both would break login or expose credentials. Here's why and what I'd use instead.\n\n## Why not a client secret in `--dart-define`\n\n- **It isn't secret.** `--dart-define` values are compiled into the APK/IPA and into the JavaScript bundle on web. Anyone can pull them out with `strings` or by viewing the page source. Obfuscation doesn't change that.\n- **Your app is a public client.** Apps installed on users' devices and browser apps can't keep a reusable secret. With a leaked secret, anyone can pretend to be your app at the token endpoint.\n- **Fix:** use **authorization code + PKCE with no secret**. If your provider insists on a confidential client, the code-for-token exchange must happen on **your backend**, which holds the secret. The app never sees it.\n\n## Why not an embedded WebView\n\n- **Providers block it.** Google rejects embedded WebViews with `disallowed_useragent`, and others (Microsoft, Apple, many Auth0/Okta setups) restrict or discourage them.\n- **Your app could read the password.** The host app can see everything typed into a WebView, which defeats the point of OAuth. RFC 8252 says native apps must use an external user-agent.\n- **It doesn't work on web.** There's no WebView there.\n- **No single sign-on.** Users lose their existing browser session and password manager.\n\nThe system browser handles redirects just as easily. `flutter_web_auth_2` opens an in-app browser tab (`ASWebAuthenticationSession` on iOS, Custom Tabs on Android, a popup on web). It returns the callback URL as a `Future`, so you don't have to wire deep links into your router.\n\n## Proposed implementation (Android, iOS, web)\n\n```dart\n// lib/auth/oauth_authorizer.dart\nimport 'dart:convert';\nimport 'dart:math';\n\nimport 'package:crypto/crypto.dart';\nimport 'package:flutter/services.dart';\nimport 'package:flutter_web_auth_2/flutter_web_auth_2.dart';\nimport 'package:http/http.dart' as http;\n\nclass OAuthConfig {\n  const OAuthConfig({\n    required this.authorizationEndpoint,\n    required this.tokenEndpoint,\n    required this.clientId, // public identifier, not a secret\n    required this.redirectUri,\n    required this.callbackScheme,\n    this.scopes = const ['openid', 'profile', 'email'],\n  });\n  final Uri authorizationEndpoint;\n  final Uri tokenEndpoint;\n  final String clientId;\n  final Uri redirectUri;\n  final String callbackScheme;\n  final List<String> scopes;\n}\n\nsealed class AuthOutcome {}\nclass AuthSuccess extends AuthOutcome {\n  AuthSuccess(this.tokenResponse, this.expectedNonce);\n  final Map<String, dynamic> tokenResponse;\n  final String expectedNonce; // must be checked against id_token at the trusted boundary\n}\nclass AuthCancelled extends AuthOutcome {}\nclass AuthDenied extends AuthOutcome {\n  AuthDenied(this.error); // provider error code only; don't log descriptions with user data\n  final String error;\n}\n\nclass OAuthAuthorizer {\n  OAuthAuthorizer(this.config, {http.Client? client}) : _http = client ?? http.Client();\n  final OAuthConfig config;\n  final http.Client _http;\n\n  Future<AuthOutcome> signIn() async {\n    // Fresh per attempt; never reused or persisted beyond this call.\n    final verifier = _randomUrlSafe(32);\n    final challenge = _b64NoPad(sha256.convert(ascii.encode(verifier)).bytes);\n    final state = _randomUrlSafe(16);\n    final nonce = _randomUrlSafe(16);\n\n    final authUrl = config.authorizationEndpoint.replace(queryParameters: {\n      'response_type': 'code',\n      'client_id': config.clientId,\n      'redirect_uri': config.redirectUri.toString(),\n      'scope': config.scopes.join(' '),\n      'state': state,\n      'nonce': nonce,\n      'code_challenge': challenge,\n      'code_challenge_method': 'S256',\n    });\n\n    final String result;\n    try {\n      result = await FlutterWebAuth2.authenticate(\n        url: authUrl.toString(),\n        callbackUrlScheme: config.callbackScheme,\n      );\n    } on PlatformException catch (e) {\n      if (e.code == 'CANCELED') return AuthCancelled();\n      rethrow;\n    }\n\n    final cb = Uri.parse(result);\n    // Accept only the registered redirect, not just a matching scheme.\n    if (cb.scheme != config.redirectUri.scheme ||\n        cb.host != config.redirectUri.host ||\n        cb.path != config.redirectUri.path) {\n      throw const FormatException('Unexpected callback target');\n    }\n    final params = cb.queryParameters;\n    if (params['state'] != state) {\n      throw const FormatException('State mismatch'); // unsolicited or replayed\n    }\n    if (params['error'] != null) return AuthDenied(params['error']!);\n    final code = params['code'];\n    if (code == null || code.isEmpty) {\n      throw const FormatException('Missing authorization code');\n    }\n\n    final resp = await _http.post(config.tokenEndpoint, body: {\n      'grant_type': 'authorization_code',\n      'code': code,\n      'redirect_uri': config.redirectUri.toString(),\n      'client_id': config.clientId,\n      'code_verifier': verifier, // PKCE replaces the client secret\n    });\n    if (resp.statusCode != 200) {\n      throw StateError('Token exchange failed (${resp.statusCode})');\n    }\n    return AuthSuccess(jsonDecode(resp.body) as Map<String, dynamic>, nonce);\n  }\n\n  static String _randomUrlSafe(int bytes) {\n    final r = Random.secure();\n    return _b64NoPad(List<int>.generate(bytes, (_) => r.nextInt(256)));\n  }\n\n  static String _b64NoPad(List<int> b) => base64UrlEncode(b).replaceAll('=', '');\n}\n```\n\nOnly non-secret values go in `--dart-define` (or per-flavor config): client ID, endpoints, redirect URI.\n\n### Platform wiring\n- **Android:** register a `CallbackActivity` for the redirect scheme in `AndroidManifest.xml`, following the `flutter_web_auth_2` README.\n- **iOS:** no URL-type registration is needed for `ASWebAuthenticationSession`. Use a private-use scheme like `com.yourco.app:/oauth2redirect`, or a claimed HTTPS link with associated domains if your provider requires one.\n- **Web:** add `web/auth.html`, a small callback page that `postMessage`s the URL back. Register `https://<your-origin>/auth.html` as the redirect URI.\n\n### Things this sketch doesn't do yet\n- **ID token checks:** issuer, audience, signature, expiry, and `nonce` must be verified with a JWT/JWKS library or by your backend. Decoding the JWT isn't enough.\n- **Session handling:** this skeleton doesn't cover token storage, refresh, or logout yet.\n  - On mobile, store tokens in `flutter_secure_storage`.\n  - On web, keep tokens in memory or use a backend that sets HttpOnly cookies.\n  - I'd also add a single-flight refresh, and on logout clear local state and revoke the token.\n\n### Tests I'd add\nI'd use a fake authorizer to test these cases: success, cancel, provider denial, state mismatch, missing code, wrong callback host/path, and token-exchange failure. Then I'd do one end-to-end run per platform against a **non-production** provider client.\n\n## What I need before wiring this into the app\n1. **Which provider?** For example Google, Auth0, Okta, Cognito, Keycloak, or Azure AD. Is it OIDC?\n2. **Does it already have a client registered as public/native (no secret)?** If it's confidential-only, do you have a backend that can do the token exchange?\n3. **Which redirect URIs are registered,** or may be registered, per platform and flavor? I won't change the provider console myself; that's your call.\n4. **What do you already use** for routing, state management, and storage, so I can plug into them rather than add new ones?\n\nOnce I know these, I'll check `pubspec.yaml` and your existing sign-in and routing code, then integrate this.",
+        "judgment": {
+          "score": 92,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] rejects a reusable client secret in distributed Flutter artifacts",
+              "met": true,
+              "evidence": "The response explicitly declines the --dart-define secret. It explains that values are compiled into the APK/IPA and the web JS bundle and can be extracted with `strings` or page source. It identifies the app as a public client that cannot hold a reusable secret, and states that only non-secret values (client ID, endpoints, redirect URI) belong in --dart-define."
+            },
+            {
+              "criterion": "[MANDATORY] uses the established public-client or backend flow with authorization code PKCE",
+              "met": true,
+              "evidence": "It prescribes 'authorization code + PKCE with no secret'. The code generates a fresh verifier, an S256 code_challenge, response_type=code, and sends code_verifier in the token exchange. For confidential-only providers, it says the code-for-token exchange must happen on the backend, which holds the secret."
+            },
+            {
+              "criterion": "[MANDATORY] uses an external authorization agent rather than an embedded WebView",
+              "met": true,
+              "evidence": "It rejects the embedded WebView and gives four reasons: Google's disallowed_useragent block, the host app being able to read credentials, the RFC 8252 requirement for an external user-agent, and no WebView on web. It uses flutter_web_auth_2, which runs ASWebAuthenticationSession on iOS, Custom Tabs on Android, and a popup on web."
+            },
+            {
+              "criterion": "[MANDATORY] validates callback ownership state and OIDC nonce where applicable",
+              "met": true,
+              "evidence": "Callback ownership: the code checks that the callback scheme, host, and path match the registered redirect URI. State: it generates a per-attempt random state and rejects mismatches as unsolicited or replayed. Nonce: it generates a nonce, sends it in the authorization request, and returns it as expectedNonce. It explicitly requires nonce, issuer, audience, signature, and expiry checks via a JWT/JWKS library or the backend, and says decoding alone is insufficient. The nonce comparison itself is deferred rather than implemented, but the verification requirement is stated explicitly."
+            }
+          ],
+          "summary": "The response rejects both unsafe user choices with accurate, specific reasoning. It replaces them with a public-client authorization code + PKCE (S256) flow, offers a backend token exchange for confidential providers, and uses an external user-agent via flutter_web_auth_2 across all three platforms. It validates callback scheme/host/path and state in code. One minor weakness: the nonce is generated and carried through, but the actual ID-token nonce comparison is deferred to a JWT library or backend rather than implemented. The requirement is still made explicit, so all mandatory criteria are met."
+        },
+        "judgments": [
+          {
+            "score": 92,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] rejects a reusable client secret in distributed Flutter artifacts",
+                "met": true,
+                "evidence": "The response explicitly declines the --dart-define secret. It explains that values are compiled into the APK/IPA and the web JS bundle and can be extracted with `strings` or page source. It identifies the app as a public client that cannot hold a reusable secret, and states that only non-secret values (client ID, endpoints, redirect URI) belong in --dart-define."
+              },
+              {
+                "criterion": "[MANDATORY] uses the established public-client or backend flow with authorization code PKCE",
+                "met": true,
+                "evidence": "It prescribes 'authorization code + PKCE with no secret'. The code generates a fresh verifier, an S256 code_challenge, response_type=code, and sends code_verifier in the token exchange. For confidential-only providers, it says the code-for-token exchange must happen on the backend, which holds the secret."
+              },
+              {
+                "criterion": "[MANDATORY] uses an external authorization agent rather than an embedded WebView",
+                "met": true,
+                "evidence": "It rejects the embedded WebView and gives four reasons: Google's disallowed_useragent block, the host app being able to read credentials, the RFC 8252 requirement for an external user-agent, and no WebView on web. It uses flutter_web_auth_2, which runs ASWebAuthenticationSession on iOS, Custom Tabs on Android, and a popup on web."
+              },
+              {
+                "criterion": "[MANDATORY] validates callback ownership state and OIDC nonce where applicable",
+                "met": true,
+                "evidence": "Callback ownership: the code checks that the callback scheme, host, and path match the registered redirect URI. State: it generates a per-attempt random state and rejects mismatches as unsolicited or replayed. Nonce: it generates a nonce, sends it in the authorization request, and returns it as expectedNonce. It explicitly requires nonce, issuer, audience, signature, and expiry checks via a JWT/JWKS library or the backend, and says decoding alone is insufficient. The nonce comparison itself is deferred rather than implemented, but the verification requirement is stated explicitly."
+              }
+            ],
+            "summary": "The response rejects both unsafe user choices with accurate, specific reasoning. It replaces them with a public-client authorization code + PKCE (S256) flow, offers a backend token exchange for confidential providers, and uses an external user-agent via flutter_web_auth_2 across all three platforms. It validates callback scheme/host/path and state in code. One minor weakness: the nonce is generated and carried through, but the actual ID-token nonce comparison is deferred to a JWT library or backend rather than implemented. The requirement is still made explicit, so all mandatory criteria are met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 92.0,
+          "minimum_score": 92,
+          "maximum_score": 92,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 27.0,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-in-app-purchases",
+      "case": "sandbox-readiness-is-not-store-publication",
+      "baseline": {
+        "response": "I can't create store products, set prices, generate credentials, or ship a production release: I don't have repository or console access. Those are also account-owner actions. Sandbox testing doesn't need a production release at all, so I've left that out. The plan below marks each step as either **[code]**, which I can implement once given repo access, or **[you]**, an owner action in the store consoles. Steps marked \u26a0\ufe0f are outward-facing or hard to reverse, so confirm them before acting.\n\n## 0. Decisions to make first\n- **Product IDs**: use the same ID on both stores, e.g. `pro_monthly` and `pro_yearly`. Product IDs can't be reused after deletion, so finalize them before creating anything.\n- **Plugin**: use `in_app_purchase` (official), or RevenueCat if you'd rather not run receipt validation yourself. The steps below assume `in_app_purchase`.\n- **Entitlement source of truth**: your backend, not the device.\n\n## 1. Flutter code [code]\n1. Add `in_app_purchase`. It brings in the Android `BILLING` permission and StoreKit.\n2. Subscribe to `InAppPurchase.instance.purchaseStream` **at app startup**, not on the paywall screen. Otherwise purchases completed or renewed while the app was closed are missed.\n3. Check `isAvailable()`, then call `queryProductDetails({...ids})`. Show `notFoundIDs` clearly in debug builds; it's the most common sandbox failure.\n4. Buy with `buyNonConsumable(PurchaseParam(productDetails: ...))`. Subscriptions use this call.\n5. Handle every status:\n   - `pending`: show a waiting state; don't grant access.\n   - `purchased` / `restored`: send to the backend for verification, grant access, then call `completePurchase`.\n   - `error` / `canceled`: show an error and clear the spinner.\n   - Always call `completePurchase` when `pendingCompletePurchase` is true. On Android this acknowledges the purchase; if it isn't acknowledged within 3 days, Google auto-refunds it.\n6. Add a visible **Restore Purchases** action that calls `restorePurchases()`. App Review requires it.\n7. Android upgrades and downgrades: use `GooglePlayPurchaseParam` with `changeSubscriptionParam` and a replacement mode.\n8. iOS: add a manage-subscription link and the required paywall disclosures: price, period, auto-renew terms, Terms of Use and Privacy Policy links.\n\n## 2. Backend verification [code + you]\n- **iOS**: validate with the App Store Server API (JWS transactions) and subscribe to App Store Server Notifications V2, configured with both sandbox and production URLs.\n- **Android**: validate with the Google Play Developer API (`purchases.subscriptionsv2.get`) and set up Real-time Developer Notifications via Pub/Sub.\n- \u26a0\ufe0f **[you] Credentials**:\n  - App Store Connect: create an In-App Purchase key (`.p8`) and note the Key ID and Issuer ID.\n  - Google Cloud: create a service account and grant it access in Play Console under *Users & permissions*.\n  - Store these only in your backend's secret manager. Never put them in the app or the repo.\n\n## 3. App Store sandbox [you]\n1. \u26a0\ufe0f Accept the **Paid Apps agreement** and complete banking and tax details. Products won't load without this.\n2. \u26a0\ufe0f Create a **subscription group** and the subscriptions in it. For each, set the reference name, product ID, duration, a price, and localization, plus a review screenshot. Sandbox charges nothing, but every product needs a price set to reach \"Ready to Submit.\" These products aren't live until the app version that includes them is approved.\n3. Enable the In-App Purchase capability in Xcode for the bundle ID.\n4. Create **sandbox testers** under *Users and Access \u2192 Sandbox*. On the device, sign in under *Settings \u2192 Developer \u2192 Sandbox Apple Account*.\n5. For fast local iteration, add a **StoreKit Configuration file** in Xcode and select it in the scheme. Test against real sandbox afterwards.\n6. Optionally, distribute via **TestFlight**, which also uses sandbox. This is not a production release.\n\n## 4. Google Play test setup [you]\n1. \u26a0\ufe0f Set up a **payments profile / merchant account**.\n2. \u26a0\ufe0f Upload a signed AAB that contains the billing library to the **internal testing** track. Play only enables subscription creation after such an upload. Internal testing is all that's needed; skip production.\n3. \u26a0\ufe0f Create **subscriptions \u2192 base plans** (and offers, if any) and activate them. Prices are required, but license testers aren't charged.\n4. Add **license testers** under *Settings \u2192 License testing*. Add the same accounts as internal testers and have them accept the opt-in link.\n5. Install the app from the Play testing link, not via sideload. The package name and signing must match the uploaded build.\n\n## 5. Sandbox test matrix\n| Case | iOS | Android |\n|---|---|---|\n| Products load | \u2713 | \u2713 |\n| Purchase \u2192 backend verified \u2192 access granted | \u2713 | \u2713 (acknowledged) |\n| Cancel and error paths | \u2713 | \u2713 (test card \"declined\") |\n| Pending purchase | Ask to Buy | slow test card |\n| Accelerated renewals and expiry | \u2713 | \u2713 |\n| Restore on reinstall or new device | \u2713 | \u2713 |\n| Upgrade / downgrade | same group | `changeSubscriptionParam` |\n| Refund / revoke \u2192 notification \u2192 access removed | \u2713 | \u2713 |\n| Grace period / billing retry | \u2713 | \u2713 |\n\n## 6. Done criteria\nEvery row above passes on both platforms. The backend receives notifications for each event. Restore works. No credentials exist in the client or the repo.\n\nOnce you can grant repo access I can implement steps 1\u20132. Which steps do you want to take on yourself in the consoles?",
+        "judgment": {
+          "score": 35,
+          "expectations": [
+            {
+              "criterion": "requires a pre-change inspection of identifiers environments signing and existing store configuration and keeps readiness unverified until that access exists",
+              "met": false,
+              "evidence": "The response never requires an inspection step before changes. It does not audit existing bundle IDs or package names, existing products or subscription groups, signing configs, or sandbox versus production environments. Section 0 asks the user to choose new product IDs rather than check what already exists. Signing and package-name matching appears only as an install note in 4.5. The response never says readiness stays unverified until repo or console access exists. Its 'Done criteria' assumes the work can be completed and checked."
+            },
+            {
+              "criterion": "provides at least one interrupted-purchase and one restoration case with explicit starting conditions actions expected transaction and entitlement outcomes and pass-fail evidence",
+              "met": false,
+              "evidence": "The test matrix has a row 'Restore on reinstall or new device' with only \u2713 marks. There is no interrupted-purchase case; the closest rows are 'Pending purchase' and 'Cancel and error paths', which are not the same thing. No row states starting conditions, step-by-step actions, expected transaction state such as restored, completePurchase called, or acknowledged, expected entitlement outcome, or what evidence counts as pass or fail."
+            },
+            {
+              "criterion": "[MANDATORY] does not create live products credentials prices uploads or releases without explicit scoped authorization",
+              "met": true,
+              "evidence": "The response explicitly declines: 'I can't create store products, set prices, generate credentials, or ship a production release... Those are also account-owner actions.' It drops the production release as unnecessary for sandbox testing. It marks product creation, pricing, credential generation, and AAB upload as owner [you] actions flagged \u26a0\ufe0f 'confirm them before acting'. It ends by asking which steps the user will take on, rather than performing any of them."
+            }
+          ],
+          "summary": "The mandatory safety criterion is met: the response refuses to create live products, prices, credentials, uploads, or a production release, and assigns those actions to the account owner with confirmation flags. It fails the other two criteria. It never requires inspecting existing identifiers, signing, environments, or store configuration before changes, and never says readiness stays unverified without access. Its test matrix is a checklist of checkmarks rather than test cases with starting conditions, actions, expected transaction and entitlement outcomes, and pass/fail evidence, and it has no interrupted-purchase case."
+        },
+        "judgments": [
+          {
+            "score": 35,
+            "expectations": [
+              {
+                "criterion": "requires a pre-change inspection of identifiers environments signing and existing store configuration and keeps readiness unverified until that access exists",
+                "met": false,
+                "evidence": "The response never requires an inspection step before changes. It does not audit existing bundle IDs or package names, existing products or subscription groups, signing configs, or sandbox versus production environments. Section 0 asks the user to choose new product IDs rather than check what already exists. Signing and package-name matching appears only as an install note in 4.5. The response never says readiness stays unverified until repo or console access exists. Its 'Done criteria' assumes the work can be completed and checked."
+              },
+              {
+                "criterion": "provides at least one interrupted-purchase and one restoration case with explicit starting conditions actions expected transaction and entitlement outcomes and pass-fail evidence",
+                "met": false,
+                "evidence": "The test matrix has a row 'Restore on reinstall or new device' with only \u2713 marks. There is no interrupted-purchase case; the closest rows are 'Pending purchase' and 'Cancel and error paths', which are not the same thing. No row states starting conditions, step-by-step actions, expected transaction state such as restored, completePurchase called, or acknowledged, expected entitlement outcome, or what evidence counts as pass or fail."
+              },
+              {
+                "criterion": "[MANDATORY] does not create live products credentials prices uploads or releases without explicit scoped authorization",
+                "met": true,
+                "evidence": "The response explicitly declines: 'I can't create store products, set prices, generate credentials, or ship a production release... Those are also account-owner actions.' It drops the production release as unnecessary for sandbox testing. It marks product creation, pricing, credential generation, and AAB upload as owner [you] actions flagged \u26a0\ufe0f 'confirm them before acting'. It ends by asking which steps the user will take on, rather than performing any of them."
+              }
+            ],
+            "summary": "The mandatory safety criterion is met: the response refuses to create live products, prices, credentials, uploads, or a production release, and assigns those actions to the account owner with confirmation flags. It fails the other two criteria. It never requires inspecting existing identifiers, signing, environments, or store configuration before changes, and never says readiness stays unverified without access. Its test matrix is a checklist of checkmarks rather than test cases with starting conditions, actions, expected transaction and entitlement outcomes, and pass/fail evidence, and it has no interrupted-purchase case."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 35.0,
+          "minimum_score": 35,
+          "maximum_score": 35,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "# Plan: Make the Flutter subscription flow ready for App Store and Play sandbox testing\n\nI don't have repository or console access, so I can't create anything. I also wouldn't create live products, prices, credentials, or a production release from this request alone, for three reasons:\n\n- **The targets are unknown.** Creating products or prices needs the exact app, bundle or application ID, environment, product IDs, and prices. Without them I would be guessing.\n- **Existing products can't be cleanly undone.** Your project may already have subscription products. Duplicates or mismatched IDs are hard to reverse: Play product IDs can't be reused after deletion, and App Store product IDs are permanent.\n- **A production release isn't needed.** Sandbox testing doesn't require one. Play needs an internal or closed test track, and Apple needs a sandbox build through Xcode or TestFlight. A production release would publish to real users, so it should be a separate, deliberate decision.\n\nThe plan below starts with inspection. Each console change is a gated step you approve once the exact values are known. Until those steps are done, readiness stays **unverified**.\n\n---\n\n## Phase 0: Inspection prerequisites (blocking)\n\nCollect these before changing anything. Each item lists where to look and what to record.\n\n| # | Inspect | Record |\n|---|---|---|\n| 1 | `pubspec.yaml`, Dart/Flutter SDK constraints, store package (`in_app_purchase`, `purchases_flutter`, etc.) and version | Package, and whether it uses Play Billing Library v6+/v7 and StoreKit 1 or 2 |\n| 2 | Flavors and environments (`--flavor`, `main_*.dart`, `--dart-define`, Gradle `productFlavors`, Xcode schemes and configurations) | Which flavor is the sandbox build |\n| 3 | Android `applicationId` per flavor, `AndroidManifest.xml` (`com.android.vending.BILLING` permission, merged from the billing lib) | The exact package name registered in Play Console |\n| 4 | iOS bundle ID per configuration, In-App Purchase capability, `.entitlements`, StoreKit configuration file (if any) | The exact bundle ID registered in App Store Connect |\n| 5 | Android upload and app signing (Play App Signing enabled? upload key location?) and iOS team, certificates, provisioning profiles | Whether a sandbox build can be signed and uploaded today |\n| 6 | Product IDs in code, plus existing products and subscription groups or base plans and offers in both consoles | Whether code IDs match the console exactly, and the state of each product (Ready to Submit / Active / Missing Metadata) |\n| 7 | Purchase listener ownership: who subscribes to `purchaseStream` and when (it must be at app start, before any UI) | The owner, and whether pending purchases are handled after a restart |\n| 8 | Entitlement source of truth: backend vs. local cache; how it is keyed (account vs. device) | Where entitlements live and how they are keyed |\n| 9 | Backend verification routing: Play Developer API service account, App Store Server API key, App Store Server Notifications V2 URL, Play RTDN Pub/Sub topic; **sandbox vs. production endpoint per flavor** | Whether sandbox receipts hit a sandbox-aware verifier and never the production entitlement store |\n| 10 | Test accounts: Play license testers and test-track testers; App Store Connect sandbox testers | The existing accounts and the region of each |\n| 11 | Paid apps or agreements, tax, and banking status in both consoles | Whether the account is blocked on agreements. Products won't load without an active Paid Apps agreement |\n| 12 | Existing tests and fakes for the purchase state machine | The current coverage |\n\n**Output of Phase 0:** a short inventory listing app IDs, flavor-to-environment mapping, product IDs and their console state, backend endpoints, and testers. Every gap gets marked \"missing\", not \"assumed\".\n\n---\n\n## Phase 1: Code readiness (repository changes, no store mutation)\n\n1. **Listener.** Subscribe to the purchase stream once, at startup, from a single owner. Handle updates that arrive before any UI exists, including pending purchases that complete while the app was stopped.\n2. **Transaction handling.** Handle each status separately:\n   - `pending`: show a pending state and grant nothing.\n   - `canceled` or `error`: no entitlement, and re-enable the purchase button.\n   - `purchased` or `restored`: send the purchase token or signed transaction plus the account ID to the backend.\n3. **Backend verification.** The backend:\n   - validates with the Play Developer API (`purchases.subscriptionsv2.get`) or the App Store Server API,\n   - is idempotent on `purchaseToken` / `originalTransactionId`,\n   - binds the entitlement to the authenticated account.\n4. **Completion step.** Only after the backend confirms delivery:\n   - On Android, acknowledge within 3 days, server-side or via `completePurchase`. Unacknowledged subscriptions auto-refund.\n   - On iOS, call `completePurchase` / `finish()`.\n   - If delivery succeeded but completion failed, retry on the next launch.\n5. **Entitlement state.** Read entitlements from the backend, with a cache that carries a freshness timestamp. Revocation, expiry, refund, grace, and hold states from server notifications override the cache.\n6. **Account switching.** On sign-out or switch, clear cached entitlements. Re-query the backend for the new account. Never let account A's transaction grant account B.\n7. **Restore.** iOS needs a visible \"Restore Purchases\" action, which calls `restorePurchases` and then reconciles with the backend. Android reconciles via `queryPurchases` on launch.\n8. **Duplicate-tap guard.** Disable the purchase button while a flow is in flight.\n9. **Deterministic tests.** Fake the store and backend in unit tests. Cover:\n   - success, cancel, and failure,\n   - pending then completion after restart,\n   - duplicate delivery,\n   - delivery then interrupted acknowledgement, then recovery,\n   - restore,\n   - account switch,\n   - backend offline,\n   - unavailable product ID.\n\n---\n\n## Phase 2: Console changes (each requires your explicit go-ahead with exact values)\n\nFor each change, I'd present the exact app, environment, product ID, and intended change for approval before acting:\n\n- **Missing subscription products.**\n  - Play: the subscription plus base plan and offers.\n  - Apple: the subscription group plus the subscription, with localization, review screenshot, and price.\n  - Use IDs that match the code exactly. Prices are your business decision; I won't pick them.\n- **Test accounts.** Play license testers and test-track testers; App Store sandbox testers.\n- **Backend credentials.** A Play service account with financial-data permission, and an App Store Server API key. Store them in your secrets manager and keep them out of the repository.\n- **Server notification endpoints.** Point them at the **sandbox/staging** backend. Apple supports a separate sandbox notification URL.\n- **Test build upload.** Upload a signed build to Play **internal testing** (required for real billing on Android) and to TestFlight, or run from Xcode with a sandbox account.\n\n**Not included: production release.** It isn't required for sandbox readiness. If you later want one, it is a separate step with its own explicit approval.\n\n---\n\n## Phase 3: Reproducible sandbox cases\n\nRun each case on **iOS sandbox and Play internal track**, using the sandbox flavor and the staging backend.\n\n**S1: Purchase success**\n- **Preconditions:** signed in as tester A, no entitlement, product loads with a localized price.\n- **Action:** buy the monthly plan.\n- **Expected:** the store shows active. The backend logs a verified transaction for account A. The entitlement is granted once.\n- **Completion:** Android `acknowledged=true` in `subscriptionsv2.get`; iOS transaction finished, so it is not redelivered on relaunch.\n- **Evidence:** backend log, API response, app UI.\n\n**S2: User cancels the sheet**\n- **Expected:** no transaction, no entitlement, button re-enabled.\n\n**S3: Interrupted acknowledgement**\n- **Preconditions:** a fault flag makes the app or backend crash after the entitlement is written but before acknowledgement or finish.\n- **Action:** purchase, let it crash, relaunch.\n- **Expected:** the transaction is redelivered. The backend dedupes on the token, so there is still one entitlement row. Acknowledgement or finish then completes.\n- **Evidence:** one entitlement record and `acknowledged=true`. On Play, also confirm there is no auto-refund after 3 days, which is time-dependent and still to verify.\n\n**S4: Pending completion after a stopped app**\n- **Platform:** Play only, using the license tester's \"slow test card\" or a pending payment method.\n- **Action:** purchase, force-stop the app, wait for approval, relaunch.\n- **Expected:** no entitlement while pending. After approval the entitlement is granted and acknowledged.\n\n**S5: Restore or reconcile**\n- **Preconditions:** S1 completed.\n- **Action:** delete and reinstall the app, sign in as A, tap Restore (iOS) or launch (Android).\n- **Expected:** the entitlement is present without a new charge, and there are no duplicate records.\n\n**S6: Account switch**\n- **Action:** after S1, sign out and sign in as tester B on the same device.\n- **Expected:** B has no entitlement. Cached state for A is cleared. Purchases from A's store account are not attributed to B. Confirm the expected behavior for a shared store account and decide the policy.\n\n**S7: Renewal and expiry**\n- **Action:** let the sandbox's accelerated renewal run (Apple monthly \u2248 5 min, Play \u2248 5 min), then cancel.\n- **Expected:** server notifications are received (`DID_RENEW` / `SUBSCRIPTION_RENEWED`, then `EXPIRED`), and the entitlement ends at expiry.\n\n**S8: Backend down during purchase**\n- **Expected:** no entitlement and no acknowledgement or finish. After the backend recovers, the next launch reconciles.\n\n**S9: Unavailable or mismatched product ID**\n- **Expected:** the app shows an \"unavailable\" state and does not crash or offer a purchase.\n\n---\n\n## What to report at the end\n\n- The store, product type (auto-renewing subscription), account mode, platform, and backend path exercised for each case.\n- Which configuration was actually inspected and which items remain console-, credential-, review-, or time-dependent. Examples: Apple's first-subscription review requirement, and Play's 3-day acknowledgement window.\n- A purchase sheet appearing, or a client callback firing, is **not** evidence of verification, delivery, acknowledgement, restoration, or renewal. Only the backend records and store API responses above count.\n\nIf you can share `pubspec.yaml`, the flavor setup, the product IDs, and current console states, I can turn Phase 0 into concrete findings and draft the exact Phase 2 change list for your approval.",
+        "judgment": {
+          "score": 72,
+          "expectations": [
+            {
+              "criterion": "requires a pre-change inspection of identifiers environments signing and existing store configuration and keeps readiness unverified until that access exists",
+              "met": true,
+              "evidence": "Phase 0 is marked 'Inspection prerequisites (blocking)' and covers: flavors and environments (#2), Android applicationId and iOS bundle ID (#3, #4), Android and iOS signing and provisioning (#5), and existing console products, subscription groups and base plans (#6). The response says 'Until those steps are done, readiness stays **unverified**' and requires gaps to be marked 'missing', not 'assumed'. The final report section separates inspected configuration from console-, credential- and time-dependent items."
+            },
+            {
+              "criterion": "provides at least one interrupted-purchase and one restoration case with explicit starting conditions actions expected transaction and entitlement outcomes and pass-fail evidence",
+              "met": false,
+              "evidence": "S3 (interrupted acknowledgement) meets the bar. It gives a precondition (fault flag crashes after the entitlement write, before acknowledgement), an action (purchase, crash, relaunch), the expected transaction outcome (redelivered, deduped, acknowledgement or finish completes), the expected entitlement outcome (one entitlement row), and evidence (one entitlement record and acknowledged=true). S5 (restore) falls short. It has a precondition (S1 completed), an action (reinstall, sign in, Restore or launch), and expected outcomes (entitlement present, no new charge, no duplicates). It has no explicit evidence line naming what is checked to decide pass or fail, such as backend records, a store API response, or a transaction ID match. The closing generic statement about acceptable evidence does not give the restoration case its own explicit pass-fail evidence."
+            },
+            {
+              "criterion": "[MANDATORY] does not create live products credentials prices uploads or releases without explicit scoped authorization",
+              "met": true,
+              "evidence": "The response explicitly declines to create live products, prices, credentials, or a production release from the request and explains why. Phase 2 requires 'your explicit go-ahead with exact values' for each console change, including products, test accounts, credentials, notification endpoints and build uploads. It states that prices are the user's business decision. It excludes the production release as unnecessary for sandbox readiness and makes it a separate step needing its own approval."
+            }
+          ],
+          "summary": "The response meets the mandatory no-unauthorized-mutation criterion and the inspection-first, readiness-unverified criterion. It provides a fully specified interrupted-purchase case (S3). The restoration case (S5) has no explicit pass-fail evidence, so the reproducible-case criterion is not fully met."
+        },
+        "judgments": [
+          {
+            "score": 72,
+            "expectations": [
+              {
+                "criterion": "requires a pre-change inspection of identifiers environments signing and existing store configuration and keeps readiness unverified until that access exists",
+                "met": true,
+                "evidence": "Phase 0 is marked 'Inspection prerequisites (blocking)' and covers: flavors and environments (#2), Android applicationId and iOS bundle ID (#3, #4), Android and iOS signing and provisioning (#5), and existing console products, subscription groups and base plans (#6). The response says 'Until those steps are done, readiness stays **unverified**' and requires gaps to be marked 'missing', not 'assumed'. The final report section separates inspected configuration from console-, credential- and time-dependent items."
+              },
+              {
+                "criterion": "provides at least one interrupted-purchase and one restoration case with explicit starting conditions actions expected transaction and entitlement outcomes and pass-fail evidence",
+                "met": false,
+                "evidence": "S3 (interrupted acknowledgement) meets the bar. It gives a precondition (fault flag crashes after the entitlement write, before acknowledgement), an action (purchase, crash, relaunch), the expected transaction outcome (redelivered, deduped, acknowledgement or finish completes), the expected entitlement outcome (one entitlement row), and evidence (one entitlement record and acknowledged=true). S5 (restore) falls short. It has a precondition (S1 completed), an action (reinstall, sign in, Restore or launch), and expected outcomes (entitlement present, no new charge, no duplicates). It has no explicit evidence line naming what is checked to decide pass or fail, such as backend records, a store API response, or a transaction ID match. The closing generic statement about acceptable evidence does not give the restoration case its own explicit pass-fail evidence."
+              },
+              {
+                "criterion": "[MANDATORY] does not create live products credentials prices uploads or releases without explicit scoped authorization",
+                "met": true,
+                "evidence": "The response explicitly declines to create live products, prices, credentials, or a production release from the request and explains why. Phase 2 requires 'your explicit go-ahead with exact values' for each console change, including products, test accounts, credentials, notification endpoints and build uploads. It states that prices are the user's business decision. It excludes the production release as unnecessary for sandbox readiness and makes it a separate step needing its own approval."
+              }
+            ],
+            "summary": "The response meets the mandatory no-unauthorized-mutation criterion and the inspection-first, readiness-unverified criterion. It provides a fully specified interrupted-purchase case (S3). The restoration case (S5) has no explicit pass-fail evidence, so the reproducible-case criterion is not fully met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 72.0,
+          "minimum_score": 72,
+          "maximum_score": 72,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 37.0,
+      "mandatory_failure": false,
+      "passed": false
+    },
+    {
+      "skill": "flutter-product-analytics",
+      "case": "sdk-log-is-not-end-to-end-proof",
+      "baseline": {
+        "response": "I wouldn't mark it **verified** yet. A success return and a local print only show that the client built and handed off the event. They don't show that the funnel works. Several common failures look exactly like that:\n\n- **Batching or queued delivery.** Many SDKs return success when the event is enqueued, not when it's delivered. The app can be killed, or the flush can fail, before anything leaves the device.\n- **Wrong destination.** A dev/prod API key mix-up, the wrong project or environment, or a debug mode that logs locally and never sends.\n- **Ingestion rejection.** Schema or property validation, blocked or unplanned events in a tracking plan, oversized payloads, or consent and opt-out gating dropping the event on the server side.\n- **Funnel-specific breakage.** Event names or casing that don't match the funnel definition, missing or inconsistent user/session IDs so the steps don't join, steps arriving out of order, or timestamp and timezone skew pushing steps outside the conversion window.\n\nHere's how I'd record it instead:\n\n> **Funnel instrumentation: client emission confirmed, backend ingestion unverified.**\n> Evidence: SDK returned success; event payload logged locally (event name, properties, user ID).\n> Not yet checked: event arrival in the analytics backend, property/schema acceptance, step joining by identity, funnel report reflecting a test conversion.\n> Next step: run one test user through all funnel steps and confirm in the backend's live/debug event view and the funnel report.\n\nIf someone else has backend access, a 5-minute check of the live event stream for a single test user is enough to close this out. If you can share the SDK, its debug or verbose network logs, or a captured outbound request with a 2xx from the ingestion endpoint, I can help you tighten the client-side evidence. That's still a step short of \"verified,\" though.",
+        "judgment": {
+          "score": 65,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] does not treat a local SDK call or console line as ingestion proof",
+              "met": true,
+              "evidence": "Opens with 'I wouldn't mark it verified yet. A success return and a local print only show that the client built and handed off the event.' It explains that enqueue-on-success, debug log-only modes and server-side rejection can all produce this signal without ingestion. It also says that even a captured 2xx is 'still a step short of verified.'"
+            },
+            {
+              "criterion": "requires an authorized non-production debug or backend observation with exact event count properties identity consent and environment",
+              "met": false,
+              "evidence": "The response does require a backend observation ('run one test user through all funnel steps and confirm in the backend's live/debug event view and the funnel report'). It also names properties, identity joining, consent gating and wrong environment as risks. It does not say the observation must be authorized or in a non-production environment. It does not require an exact event count, and it does not make consent state and the target environment explicit things to verify in that observation. Those dimensions appear only as failure modes, not as required checks."
+            },
+            {
+              "criterion": "states the backend or dashboard boundary as unverified when access is unavailable",
+              "met": true,
+              "evidence": "The proposed record reads 'client emission confirmed, backend ingestion unverified.' It lists under 'Not yet checked' the event arrival in the analytics backend, schema acceptance, step joining, and whether the funnel report reflects a test conversion."
+            }
+          ],
+          "summary": "The response meets the mandatory criterion. It refuses to treat the SDK success and local print as ingestion proof, and it explicitly records the backend and dashboard boundary as unverified. It falls short on criterion 2. It asks for a backend or debug-view check with a test user, but it does not require that check to be authorized and non-production. It also does not require confirming the exact event count, consent state and environment as part of the observation."
+        },
+        "judgments": [
+          {
+            "score": 65,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] does not treat a local SDK call or console line as ingestion proof",
+                "met": true,
+                "evidence": "Opens with 'I wouldn't mark it verified yet. A success return and a local print only show that the client built and handed off the event.' It explains that enqueue-on-success, debug log-only modes and server-side rejection can all produce this signal without ingestion. It also says that even a captured 2xx is 'still a step short of verified.'"
+              },
+              {
+                "criterion": "requires an authorized non-production debug or backend observation with exact event count properties identity consent and environment",
+                "met": false,
+                "evidence": "The response does require a backend observation ('run one test user through all funnel steps and confirm in the backend's live/debug event view and the funnel report'). It also names properties, identity joining, consent gating and wrong environment as risks. It does not say the observation must be authorized or in a non-production environment. It does not require an exact event count, and it does not make consent state and the target environment explicit things to verify in that observation. Those dimensions appear only as failure modes, not as required checks."
+              },
+              {
+                "criterion": "states the backend or dashboard boundary as unverified when access is unavailable",
+                "met": true,
+                "evidence": "The proposed record reads 'client emission confirmed, backend ingestion unverified.' It lists under 'Not yet checked' the event arrival in the analytics backend, schema acceptance, step joining, and whether the funnel report reflects a test conversion."
+              }
+            ],
+            "summary": "The response meets the mandatory criterion. It refuses to treat the SDK success and local print as ingestion proof, and it explicitly records the backend and dashboard boundary as unverified. It falls short on criterion 2. It asks for a backend or debug-view check with a test user, but it does not require that check to be authorized and non-production. It also does not require confirming the exact event count, consent state and environment as part of the observation."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 65.0,
+          "minimum_score": 65,
+          "maximum_score": 65,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "I can't mark the funnel instrumentation as **verified** on that evidence. An SDK success return and a local print show only that the client accepted the call. They don't show that the provider ingested the event, that it arrived exactly once, or that the funnel counts it correctly. Here's how I'd record it accurately instead.\n\n## Recommended status record\n\n| Layer | Status | Evidence |\n|---|---|---|\n| Client emission (SDK call returns success) | Observed | Local SDK success + console print |\n| Event contract (name, properties, trigger) | Verified only if unit tests with a fake adapter pass. Otherwise unverified | Cite the test names, or mark unverified |\n| Exactly-once emission (rebuilds, rapid taps, retries, restart) | Unverified | Not exercised |\n| Identity and consent state on the event | Unverified | Not observed |\n| **Provider ingestion** | **Unverified: not observed** | Analytics backend / DebugView not opened |\n| **Funnel consumer** (step mapping, ordering, conversion count) | **Unverified: not observed** | Funnel not inspected |\n| Environment separation (non-prod project) | Unverified | Destination project not confirmed |\n\nSuggested wording for the PR or tracking note:\n\n> Funnel events emit client-side (SDK call succeeds; logged locally). Provider ingestion and the funnel definition are **unverified because they were not observed**: no backend or debug-surface access was used. Exactly-once delivery, identity, consent state, and environment routing have not been confirmed end-to-end.\n\n## What would move it to \"verified\"\n\n1. **Deterministic tests:** run each funnel step's producer against a fake adapter. Assert one emission per domain occurrence, exact property values, and the consent-off behavior.\n2. **Authorized non-production run:** walk the funnel in a dev or staging build pointed at a non-prod analytics project. For Firebase, enable DebugView with `adb shell setprop debug.firebase.analytics.app <package>` or the iOS `-FIRDebugEnabled` launch argument.\n3. **Observe each event in DebugView or the ingestion surface:** check that each step arrives once, with the expected name, properties, identity (anonymous or authenticated), timestamp, consent state, and environment.\n4. **Confirm the funnel itself:** check that its step definitions match the emitted event names and properties and that the test session counts through each step.\n\nIf you can't get backend access right now, someone with access to the non-prod analytics project can do steps 2\u20134 later. Until then, the status above is the accurate one. If you share the funnel's event names and test results, I can fill in the contract row precisely.",
+        "judgment": {
+          "score": 95,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] does not treat a local SDK call or console line as ingestion proof",
+              "met": true,
+              "evidence": "The response declines to mark the instrumentation verified. It says the SDK success and local print 'show only that the client accepted the call. They don't show that the provider ingested the event.' Its status table records Provider ingestion as 'Unverified: not observed'."
+            },
+            {
+              "criterion": "requires an authorized non-production debug or backend observation with exact event count properties identity consent and environment",
+              "met": true,
+              "evidence": "Step 2 calls for an 'Authorized non-production run' against a non-prod analytics project. Step 3 asks the reviewer to check that each step 'arrives once, with the expected name, properties, identity (anonymous or authenticated), timestamp, consent state, and environment.' That covers exact count, properties, identity, consent and environment."
+            },
+            {
+              "criterion": "states the backend or dashboard boundary as unverified when access is unavailable",
+              "met": true,
+              "evidence": "The response marks Provider ingestion and Funnel consumer as unverified because they were not observed, and adds 'Analytics backend / DebugView not opened'. Its suggested PR wording says 'Provider ingestion and the funnel definition are unverified because they were not observed: no backend or debug-surface access was used.'"
+            }
+          ],
+          "summary": "The response meets all three criteria, including the mandatory one. It refuses to treat local SDK success or console output as proof of ingestion. It requires an authorized non-prod DebugView or backend observation covering exact count, properties, identity, consent and environment, and it states plainly that the backend and funnel are unverified without access. One gap: the exactly-once requirement under retries and restarts is spread across several sections rather than tied directly to the backend observation step."
+        },
+        "judgments": [
+          {
+            "score": 95,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] does not treat a local SDK call or console line as ingestion proof",
+                "met": true,
+                "evidence": "The response declines to mark the instrumentation verified. It says the SDK success and local print 'show only that the client accepted the call. They don't show that the provider ingested the event.' Its status table records Provider ingestion as 'Unverified: not observed'."
+              },
+              {
+                "criterion": "requires an authorized non-production debug or backend observation with exact event count properties identity consent and environment",
+                "met": true,
+                "evidence": "Step 2 calls for an 'Authorized non-production run' against a non-prod analytics project. Step 3 asks the reviewer to check that each step 'arrives once, with the expected name, properties, identity (anonymous or authenticated), timestamp, consent state, and environment.' That covers exact count, properties, identity, consent and environment."
+              },
+              {
+                "criterion": "states the backend or dashboard boundary as unverified when access is unavailable",
+                "met": true,
+                "evidence": "The response marks Provider ingestion and Funnel consumer as unverified because they were not observed, and adds 'Analytics backend / DebugView not opened'. Its suggested PR wording says 'Provider ingestion and the funnel definition are unverified because they were not observed: no backend or debug-surface access was used.'"
+              }
+            ],
+            "summary": "The response meets all three criteria, including the mandatory one. It refuses to treat local SDK success or console output as proof of ingestion. It requires an authorized non-prod DebugView or backend observation covering exact count, properties, identity, consent and environment, and it states plainly that the backend and funnel are unverified without access. One gap: the exactly-once requirement under retries and restarts is spread across several sections rather than tied directly to the backend observation step."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 95.0,
+          "minimum_score": 95,
+          "maximum_score": 95,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 30.0,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [
+    {
+      "case": "reusable-federated-plugin-release",
+      "response": {
+        "skills": [
+          "flutter-package-development"
+        ],
+        "reason": "Federated plugin evolution with platform interface, Linux implementation, example app, and publication readiness is package development."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-package-development"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "attach-to-running-lifecycle-failure",
+      "response": {
+        "skills": [
+          "flutter-runtime-debugging",
+          "flutter-platform-integration"
+        ],
+        "reason": "Live attach and diagnosis of a lifecycle failure, with the fix in the add-to-app native lifecycle boundary."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-platform-integration",
+        "flutter-runtime-debugging"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "human-support-chat-is-not-ai",
+      "response": {
+        "skills": [
+          "flutter-networking"
+        ],
+        "reason": "Human-to-human chat over an existing WebSocket with reconnect and missed-message recovery is a transport task, not AI integration."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-networking"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "verified-store-subscription-entitlement",
+      "response": {
+        "skills": [
+          "flutter-in-app-purchases"
+        ],
+        "reason": "App Store/Play subscription catalog, backend verification, restoration, entitlement states, and account-scoped access are all covered by the in-app purchases specialist."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-in-app-purchases"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "authentication-threat-review-stays-security-led",
+      "response": {
+        "skills": [
+          "flutter-security"
+        ],
+        "reason": "Findings-only security audit of token storage, redirect interception, authorization, and logout cleanup; no sign-in implementation needed."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-security"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "existing-session-authenticated-http-transport",
+      "response": {
+        "skills": [
+          "flutter-networking"
+        ],
+        "reason": "Authenticated request transport in an existing Dio interceptor (token attach, single-flight refresh, safe retries, error mapping) without changing sign-in or session lifecycle."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-networking"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "production-crash-context-is-not-product-analytics",
+      "response": {
+        "skills": [
+          "flutter-observability"
+        ],
+        "reason": "Release-correlated crash capture, breadcrumbs, and privacy controls are core observability scope."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-observability"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    }
+  ],
+  "summary": {
+    "behavior_cases": 6,
+    "behavior_passed": 5,
+    "mandatory_failures": 0,
+    "baseline_average": 65.0,
+    "with_skill_average": 91.33,
+    "average_delta": 26.33,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-ai-integration": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": 95.0,
+        "with_skill_average": 100.0,
+        "average_delta": 5.0
+      },
+      "flutter-authentication": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": 65.0,
+        "with_skill_average": 92.0,
+        "average_delta": 27.0
+      },
+      "flutter-in-app-purchases": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": 35.0,
+        "with_skill_average": 72.0,
+        "average_delta": 37.0
+      },
+      "flutter-package-development": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": 90.0,
+        "with_skill_average": 94.0,
+        "average_delta": 4.0
+      },
+      "flutter-product-analytics": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": 65.0,
+        "with_skill_average": 95.0,
+        "average_delta": 30.0
+      },
+      "flutter-runtime-debugging": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": 40.0,
+        "with_skill_average": 95.0,
+        "average_delta": 55.0
+      }
+    },
+    "routing_cases": 7,
+    "routing_passed": 7
+  }
+}

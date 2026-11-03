@@ -1,0 +1,126 @@
+{
+  "created_at": "2026-11-03T13:37:30.035951+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "ca4c8d7baec044395d4da1480b2e20304734d948",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-ci-cd",
+      "case": "matrix-build-caching-and-secret-isolation",
+      "with_skill": {
+        "response": "I haven't written the workflow yet. The working directory (`flutter-skills`) looks like a skills repository, not the Flutter app, and I shouldn't hand you a placeholder as a finished pipeline. Here is the design I'll apply once I can read the app repo, plus what I need from you.\n\n## What I need\n\n- `pubspec.yaml` and `pubspec.lock` (plus the workspace root if it's a monorepo)\n- The Flutter version source (`.fvmrc`, `.tool-versions`, a `flutter-version` pin, or `environment:` constraints)\n- Existing `.github/workflows/*` and any scripts they call\n- How the unit and integration suites are run (`flutter test`, `integration_test/`, melos or other scripts), and whether integration tests need a device, emulator, or desktop target\n- Code generation policy (are generated files committed?), flavors, and golden test usage\n- The names of existing secrets and environments, not their values\n\n## Design\n\n**Matrix**\n- `ubuntu-latest`, `macos-latest`, and `windows-latest`, with `fail-fast: false` so one OS failure doesn't hide the others.\n- Unit and widget tests run on all three.\n- Integration tests run per OS on the desktop target (`-d linux|macos|windows`). Linux needs a virtual display such as `xvfb`.\n- Android and iOS integration tests need an emulator or simulator, so they would be a separate job.\n- Runner labels like `latest` drift, so I'll follow your repo's pinning policy.\n- Gate order: `pub get` with the lockfile, generated-code freshness (fails on diff, never commits), `dart format --set-exit-code`, `flutter analyze`, unit/widget tests, integration tests. No `continue-on-error`, and no golden update flags.\n\n**Caching**\n- Cache only the pub cache and the Flutter SDK download.\n- Do not cache `.dart_tool` or `build/`.\n- Each key includes `runner.os`, `runner.arch`, the effective Flutter version, and `hashFiles('**/pubspec.lock')`.\n- A cache miss and a hit run the same gates and must give the same result.\n\n**Secret isolation**\n- Trigger on `pull_request`, not `pull_request_target`, and never check out fork code in a privileged context.\n- Set top-level `permissions: contents: read`, and widen only per job if needed.\n- The test matrix job references no secrets at all. Fork PRs get no secrets by default, and this removes any dependency on that default.\n- Pin third-party actions to full commit SHAs, with Dependabot or Renovate to update them.\n- Use `concurrency` with `cancel-in-progress` for superseded PR runs only.\n\n**No publishing**\n- The workflow contains no deploy, upload, tag, or release steps, and no deploy-token references.\n- It uploads only test reports and coverage as artifacts with short retention.\n- If you add delivery later, it will be a separate job behind a protected environment, with explicit authorization at that point.\n\n## Verification plan\n\nOnce I can see the repo, I will:\n1. Lint the workflow with `actionlint`.\n2. Run the underlying `flutter` commands locally where possible.\n3. Check the cold-cache and warm-cache paths.\n4. Check the PR, default-branch, and manual triggers.\n5. Confirm that fork-originated runs see no secrets.\n\nI will also report any gaps, such as macOS runner minutes or integration tests that need a device I can't exercise locally.\n\nIf you point me at the app repo, or paste the files above, I'll write the actual workflow.",
+        "judgment": {
+          "score": 62,
+          "expectations": [
+            {
+              "criterion": "specifies matrix jobs across the target runners, as workflow YAML or an explicit plan, without duplicating pipeline definitions unsafely",
+              "met": true,
+              "evidence": "Plan lists `ubuntu-latest`, `macos-latest`, `windows-latest` with `fail-fast: false`, unit/widget tests on all three, integration per OS via `-d linux|macos|windows`, in a single matrix job rather than duplicated pipelines."
+            },
+            {
+              "criterion": "specifies cache keys built from the runner OS and lockfile hashes, as workflow YAML or an explicit plan, so cache hits are deterministic",
+              "met": true,
+              "evidence": "\"Each key includes `runner.os`, `runner.arch`, the effective Flutter version, and `hashFiles('**/pubspec.lock')`\", and only pub cache and SDK are cached, not `.dart_tool` or `build/`."
+            },
+            {
+              "criterion": "[MANDATORY] restricts deployment secrets to protected environments and blocks fork access",
+              "met": false,
+              "evidence": "The plan uses `pull_request` (not `pull_request_target`), keeps the test job free of secrets, and sets `contents: read`. Protected environments appear only as a hypothetical for later: \"If you add delivery later, it will be a separate job behind a protected environment.\" No deployment secrets are actually restricted to protected environments in this design, so the restriction half of the criterion isn't met even though fork access is blocked."
+            },
+            {
+              "criterion": "[MANDATORY] does not trigger publication, tagging, or release actions",
+              "met": true,
+              "evidence": "\"The workflow contains no deploy, upload, tag, or release steps, and no deploy-token references.\" Only test reports and coverage artifacts are uploaded."
+            }
+          ],
+          "summary": "The response gives a sound design for the matrix and for lockfile-keyed caching, and it explicitly avoids publish, tag, and release steps. It fails the mandatory secret-isolation criterion because deployment secrets are never tied to a protected environment; that is deferred as a future possibility. It also produced no actual workflow YAML, only a plan and a request for repo files, which limits its usefulness."
+        },
+        "judgments": [
+          {
+            "score": 62,
+            "expectations": [
+              {
+                "criterion": "specifies matrix jobs across the target runners, as workflow YAML or an explicit plan, without duplicating pipeline definitions unsafely",
+                "met": true,
+                "evidence": "Plan lists `ubuntu-latest`, `macos-latest`, `windows-latest` with `fail-fast: false`, unit/widget tests on all three, integration per OS via `-d linux|macos|windows`, in a single matrix job rather than duplicated pipelines."
+              },
+              {
+                "criterion": "specifies cache keys built from the runner OS and lockfile hashes, as workflow YAML or an explicit plan, so cache hits are deterministic",
+                "met": true,
+                "evidence": "\"Each key includes `runner.os`, `runner.arch`, the effective Flutter version, and `hashFiles('**/pubspec.lock')`\", and only pub cache and SDK are cached, not `.dart_tool` or `build/`."
+              },
+              {
+                "criterion": "[MANDATORY] restricts deployment secrets to protected environments and blocks fork access",
+                "met": false,
+                "evidence": "The plan uses `pull_request` (not `pull_request_target`), keeps the test job free of secrets, and sets `contents: read`. Protected environments appear only as a hypothetical for later: \"If you add delivery later, it will be a separate job behind a protected environment.\" No deployment secrets are actually restricted to protected environments in this design, so the restriction half of the criterion isn't met even though fork access is blocked."
+              },
+              {
+                "criterion": "[MANDATORY] does not trigger publication, tagging, or release actions",
+                "met": true,
+                "evidence": "\"The workflow contains no deploy, upload, tag, or release steps, and no deploy-token references.\" Only test reports and coverage artifacts are uploaded."
+              }
+            ],
+            "summary": "The response gives a sound design for the matrix and for lockfile-keyed caching, and it explicitly avoids publish, tag, and release steps. It fails the mandatory secret-isolation criterion because deployment secrets are never tied to a protected environment; that is deferred as a future possibility. It also produced no actual workflow YAML, only a plan and a request for repo files, which limits its usefulness."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 62.0,
+          "minimum_score": 62,
+          "maximum_score": 62,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": true,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 0,
+    "mandatory_failures": 1,
+    "baseline_average": null,
+    "with_skill_average": 62.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-ci-cd": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 62.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

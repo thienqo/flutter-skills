@@ -1,0 +1,126 @@
+{
+  "created_at": "2026-11-03T13:36:33.787352+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "ca4c8d7baec044395d4da1480b2e20304734d948",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-ci-cd",
+      "case": "matrix-build-caching-and-secret-isolation",
+      "with_skill": {
+        "response": "I haven't read the repository yet, so I'm not writing a workflow file. A generic YAML would guess at your Flutter version source, test layout, and existing pipeline. Here is the design I'll implement once I've seen the files below.\n\n## What I need to see\n\n- `pubspec.yaml`, `pubspec.lock`, and any workspace/melos config\n- The Flutter version source (`.fvmrc`, `.tool-versions`, `fvm_config.json`, or a pinned version in the existing workflow)\n- Existing `.github/workflows/*` and any reusable workflows or composite actions\n- Where integration tests live (`integration_test/`?), which device or target they need, and any repo scripts that wrap test runs\n- Whether generated code is committed, and which flavors or `--dart-define` values tests need\n- Names of existing secrets and environments, without values\n\nIf you can paste recent run logs or timings, I'll use them for cache and runtime decisions.\n\n## Design invariants\n\n**Triggers and token**\n- Use `pull_request` for fork-facing validation, never `pull_request_target`, so fork code never runs with secrets or a writable token.\n- Also run on `push` to the default branch.\n- Set workflow-level `permissions: contents: read` and widen per job only if something proves it needs more.\n- Use `concurrency` with `cancel-in-progress` for superseded PR runs only, not for the default branch.\n\n**Matrix**\n- Run `ubuntu`, `macos`, and `windows` runners with `fail-fast: false`, so one OS failure doesn't hide the others.\n- Pin runner images and Flutter versions according to your repo's update policy, rather than relying on `latest` labels.\n- Treat each OS as a different risk surface. Unit tests likely run on all three. Integration tests need a real target per OS: desktop runners for Linux (with a virtual display), macOS, and Windows. Mobile device or emulator tests are a separate job. I'll confirm this against your `integration_test/` setup before assuming it.\n- macOS minutes are expensive, so I'll keep that leg to what needs Apple tooling or what you want covered cross-platform.\n\n**Gate order per leg**\n1. Resolve dependencies from the lockfile.\n2. Check generated-code freshness (only if generated files are committed). Run the established generator and fail on any diff, without committing or hiding it.\n3. Run `dart format --output=none --set-exit-code`, so it never rewrites the checkout.\n4. Run `flutter analyze` with your existing fatal-warning policy.\n5. Run unit and widget tests.\n6. Run integration tests as a separate step or job, so failures are attributable.\n\nNothing gets `continue-on-error`, and no retries cover deterministic failures.\n\n**Caching**\n- Cache only the pub package cache and the Flutter SDK or tool download. Don't cache `build/` or `.dart_tool`, since stale mutable output can mask errors.\n- Every concrete key includes `runner.os`, `runner.arch`, the effective Flutter and Dart version, and `hashFiles('**/pubspec.lock')`. In a workspace or monorepo, that covers every package lockfile.\n- Restore keys must not fall back across OS or Flutter version.\n- A hit and a miss must run the same gates and give the same result. I'll verify this with one cold run and one warm run.\n\n**Secret isolation**\n- The matrix test jobs get no secrets at all, and tests that need credentials get fakes or are skipped.\n- Because you asked for no publishing, I won't add a deploy job. If one exists already, I'll leave it unchanged. It must stay in a separate workflow or job gated to the default branch or tags, behind a protected environment with required reviewers, and unreachable from `pull_request` events.\n- Deploy tokens live only as environment-scoped secrets on that protected environment, not repo-wide, so no test job can read them.\n- Third-party actions get pinned to full commit SHAs, with Dependabot or Renovate keeping them updated.\n- No `set -x` or environment dumps near any secret.\n\n**No publishing**\n- The workflow will contain no tagging, release creation, `pub publish`, store upload, or deployment steps.\n- Artifacts are limited to test reports and coverage with bounded retention.\n- Coverage is uploaded as evidence only, with no numeric threshold unless your repo already defines one.\n\n## Verification once written\n\n- Lint the workflow with `actionlint`.\n- Run each underlying repo command locally (format check, analyze, unit tests, and integration tests where this machine can host them).\n- Confirm cold and warm cache behavior.\n- Check the PR, fork-PR, and default-branch conditions separately.\n- Report any gap I can't exercise locally, such as Windows or Linux integration runs and macOS runner quota.\n\nSend me the files above, or tell me to read them from this repo, and I'll write the actual workflow against your setup.",
+        "judgment": {
+          "score": 72,
+          "expectations": [
+            {
+              "criterion": "specifies matrix jobs across the target runners, as workflow YAML or an explicit plan, without duplicating pipeline definitions unsafely",
+              "met": true,
+              "evidence": "Plan states: \"Run `ubuntu`, `macos`, and `windows` runners with `fail-fast: false`\", with a single per-leg gate order (deps, format, analyze, unit tests, integration tests) rather than separate duplicated pipelines."
+            },
+            {
+              "criterion": "specifies cache keys built from the runner OS and lockfile hashes, as workflow YAML or an explicit plan, so cache hits are deterministic",
+              "met": true,
+              "evidence": "\"Every concrete key includes `runner.os`, `runner.arch`, the effective Flutter and Dart version, and `hashFiles('**/pubspec.lock')`\" and \"Restore keys must not fall back across OS or Flutter version.\""
+            },
+            {
+              "criterion": "[MANDATORY] restricts deployment secrets to protected environments and blocks fork access",
+              "met": true,
+              "evidence": "\"Use `pull_request`... never `pull_request_target`\"; \"The matrix test jobs get no secrets at all\"; deploy tokens \"live only as environment-scoped secrets on that protected environment\" with required reviewers, \"unreachable from `pull_request` events\"."
+            },
+            {
+              "criterion": "[MANDATORY] does not trigger publication, tagging, or release actions",
+              "met": true,
+              "evidence": "\"The workflow will contain no tagging, release creation, `pub publish`, store upload, or deployment steps.\" Artifacts limited to test reports and coverage."
+            }
+          ],
+          "summary": "The response gives an explicit plan that covers all four criteria: a three-OS matrix, cache keys with OS and lockfile hashes, secret isolation with protected environments and no pull_request_target, and no publishing. It is a design only, with no workflow YAML written and no repo files read, so it is less actionable than it could have been. The criteria are met through the plan, which is why the score is not higher."
+        },
+        "judgments": [
+          {
+            "score": 72,
+            "expectations": [
+              {
+                "criterion": "specifies matrix jobs across the target runners, as workflow YAML or an explicit plan, without duplicating pipeline definitions unsafely",
+                "met": true,
+                "evidence": "Plan states: \"Run `ubuntu`, `macos`, and `windows` runners with `fail-fast: false`\", with a single per-leg gate order (deps, format, analyze, unit tests, integration tests) rather than separate duplicated pipelines."
+              },
+              {
+                "criterion": "specifies cache keys built from the runner OS and lockfile hashes, as workflow YAML or an explicit plan, so cache hits are deterministic",
+                "met": true,
+                "evidence": "\"Every concrete key includes `runner.os`, `runner.arch`, the effective Flutter and Dart version, and `hashFiles('**/pubspec.lock')`\" and \"Restore keys must not fall back across OS or Flutter version.\""
+              },
+              {
+                "criterion": "[MANDATORY] restricts deployment secrets to protected environments and blocks fork access",
+                "met": true,
+                "evidence": "\"Use `pull_request`... never `pull_request_target`\"; \"The matrix test jobs get no secrets at all\"; deploy tokens \"live only as environment-scoped secrets on that protected environment\" with required reviewers, \"unreachable from `pull_request` events\"."
+              },
+              {
+                "criterion": "[MANDATORY] does not trigger publication, tagging, or release actions",
+                "met": true,
+                "evidence": "\"The workflow will contain no tagging, release creation, `pub publish`, store upload, or deployment steps.\" Artifacts limited to test reports and coverage."
+              }
+            ],
+            "summary": "The response gives an explicit plan that covers all four criteria: a three-OS matrix, cache keys with OS and lockfile hashes, secret isolation with protected environments and no pull_request_target, and no publishing. It is a design only, with no workflow YAML written and no repo files read, so it is less actionable than it could have been. The criteria are met through the plan, which is why the score is not higher."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 72.0,
+          "minimum_score": 72,
+          "maximum_score": 72,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 0,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 72.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-ci-cd": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 72.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

@@ -1,0 +1,297 @@
+{
+  "created_at": "2026-11-03T13:31:51.374835+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "ca4c8d7baec044395d4da1480b2e20304734d948",
+    "dirty": false,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-text-rendering",
+      "case": "fixes-unconstrained-text-overflow-in-row",
+      "baseline": {
+        "response": "The cause: a `Row` gives its children unbounded width along the main axis, so a non-flexible `Text` lays out at its full intrinsic width. If that exceeds the available space, you get the overflow stripe.\n\nThe fix is to wrap the username in `Expanded` (or `Flexible`) and tell the `Text` what to do when it runs out of room.\n\n```dart\nRow(\n  children: [\n    const CircleAvatar(child: Icon(Icons.person)),\n    const SizedBox(width: 12),\n    Expanded(\n      child: Text(\n        username,\n        maxLines: 1,\n        overflow: TextOverflow.ellipsis,\n        softWrap: false, // optional; with maxLines: 1 it's mostly redundant\n      ),\n    ),\n    const SizedBox(width: 12),\n    Text(timestamp),\n  ],\n)\n```\n\n**Why this works**\n- `Expanded` gives the `Text` a bounded max width (the remaining space after the avatar, gaps, and timestamp), so it can wrap or truncate instead of overflowing.\n- `overflow: TextOverflow.ellipsis` with `maxLines: 1` truncates to `Very long user\u2026`.\n- The avatar and timestamp stay fixed-size, so they are never pushed off-screen.\n\n**Expanded vs. Flexible**\n- `Expanded` makes the username fill all leftover space, which pushes the timestamp to the far right edge. That's usually what you want in a tile.\n- `Flexible` (default `fit: FlexFit.loose`) lets the username take only the space it needs, up to the remaining space. Use it if you want the timestamp to sit right next to a short username.\n\n**Other options**\n- Allow wrapping instead of truncation: drop `maxLines: 1` (or set it to 2) and keep `Expanded`.\n- If the username and timestamp should be stacked, put them in a `Column` inside the `Expanded`.\n- If this is really a list item, `ListTile` with `leading`, `title`, and `trailing` handles this layout for you, and `title` already constrains its width. Set `maxLines`/`overflow` on the title `Text`.\n\n**What not to do**\n- Don't wrap the `Row` in a `SingleChildScrollView` to silence the error. That hides the problem and gives the Row unbounded width, so it won't truncate.\n- Don't hard-code a `SizedBox(width: ...)` around the text. It breaks on different screen sizes and text scales.\n\nIf you also see the error after adding `Expanded`, check that the `Row` itself isn't inside another unbounded-width parent (such as a horizontal `ListView` or another `Row` without `Expanded`). In that case, the constraint needs to be fixed one level up.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "wraps the Text widget in an Expanded or Flexible with loose fit to constrain its maximum available width",
+              "met": true,
+              "evidence": "Code wraps the username Text in Expanded. The response explains that Expanded gives the Text a bounded max width, and it describes Flexible (default FlexFit.loose) as the alternative."
+            },
+            {
+              "criterion": "configures overflow behavior with TextOverflow.ellipsis and an explicit maxLines",
+              "met": true,
+              "evidence": "Code sets maxLines: 1 and overflow: TextOverflow.ellipsis on the Text, and the response explains that this truncates the text."
+            },
+            {
+              "criterion": "identifies that Row initially provides unbounded horizontal constraints to non-flex children",
+              "met": true,
+              "evidence": "The opening sentence says a Row gives its children unbounded width along the main axis, so a non-flexible Text lays out at its full intrinsic width."
+            }
+          ],
+          "summary": "The response meets all three criteria. It wraps the username in Expanded and mentions Flexible with loose fit. It sets TextOverflow.ellipsis with maxLines: 1. It explains that a Row gives non-flex children unbounded main-axis width."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "wraps the Text widget in an Expanded or Flexible with loose fit to constrain its maximum available width",
+                "met": true,
+                "evidence": "Code wraps the username Text in Expanded. The response explains that Expanded gives the Text a bounded max width, and it describes Flexible (default FlexFit.loose) as the alternative."
+              },
+              {
+                "criterion": "configures overflow behavior with TextOverflow.ellipsis and an explicit maxLines",
+                "met": true,
+                "evidence": "Code sets maxLines: 1 and overflow: TextOverflow.ellipsis on the Text, and the response explains that this truncates the text."
+              },
+              {
+                "criterion": "identifies that Row initially provides unbounded horizontal constraints to non-flex children",
+                "met": true,
+                "evidence": "The opening sentence says a Row gives its children unbounded width along the main axis, so a non-flexible Text lays out at its full intrinsic width."
+              }
+            ],
+            "summary": "The response meets all three criteria. It wraps the username in Expanded and mentions Flexible with loose fit. It sets TextOverflow.ellipsis with maxLines: 1. It explains that a Row gives non-flex children unbounded main-axis width."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "**Why it happens:** A `Row` lays out its non-flex children with unbounded horizontal constraints. The username `Text` picks its intrinsic width, which can be wider than the space left beside the avatar and timestamp, so the row exceeds its incoming constraint and throws `RenderFlex overflowed`.\n\n**Fix:** Constrain the username, which is the competing branch, rather than every `Text`. Wrap it in `Expanded` so it gets only the remaining width, and choose truncation deliberately:\n\n```dart\nRow(\n  children: [\n    const Icon(Icons.account_circle),\n    const SizedBox(width: 8),\n    Expanded(\n      child: Text(\n        user.displayName,\n        maxLines: 1,\n        overflow: TextOverflow.ellipsis,\n      ),\n    ),\n    const SizedBox(width: 8),\n    Text(user.formattedTimestamp),\n  ],\n)\n```\n\nThe timestamp stays a normal non-flex child, so it keeps its natural width and the username absorbs the squeeze.\n\n**Choices worth knowing:**\n\n- **`Expanded` vs `Flexible(fit: FlexFit.loose)`:** `Expanded` makes the username fill all leftover space, which pushes the timestamp to the far edge. If you want the timestamp to sit right after a short name, use `Flexible` instead. It lets the text take only what it needs, up to the remaining width.\n- **Truncate or wrap:** `maxLines: 1` with `ellipsis` fits a tile where the name is a label. If the full name matters, drop `maxLines` and `overflow` and let it wrap, but the tile then grows taller. `TextOverflow.fade` is an alternative if you prefer a soft cutoff over `...`.\n- **Don't wrap everything:** Only the username competes for space here. Adding flex to the timestamp or avatar isn't needed.\n- **Only use `Expanded` where the Row's width is bounded.** In a Row inside a horizontal scroll view, for example, a flex child will throw a different error.\n\n**Make it hold up under text scaling and long locales:**\n\n- Don't put the tile in a fixed-height `SizedBox`. At 150-200% font scale the text will clip. Use padding or `minHeight`, for example `ConstrainedBox(constraints: BoxConstraints(minHeight: 56))`.\n- Localized strings can run 20-35% longer, so check the tile with those.\n\n**Verify with a widget test** that covers a short name, a realistic name, a very long name (including one with no spaces), a narrow width, and `TextScaler.linear(2.0)`:\n\n```dart\ntestWidgets('profile tile handles long username at 200% scale', (tester) async {\n  await tester.pumpWidget(\n    MaterialApp(\n      builder: (context, child) => MediaQuery(\n        data: MediaQuery.of(context)\n            .copyWith(textScaler: const TextScaler.linear(2.0)),\n        child: child!,\n      ),\n      home: const Scaffold(\n        body: SizedBox(\n          width: 280,\n          child: ProfileTile(username: 'Supercalifragilisticexpialidocious_User'),\n        ),\n      ),\n    ),\n  );\n\n  expect(tester.takeException(), isNull);\n});\n```\n\nIf you tell me which file the tile lives in, I can apply the change and add the test.",
+        "judgment": {
+          "score": 93,
+          "expectations": [
+            {
+              "criterion": "wraps the Text widget in an Expanded or Flexible with loose fit to constrain its maximum available width",
+              "met": true,
+              "evidence": "Code wraps the username Text in Expanded, stating it \"gets only the remaining width\", and mentions Flexible(fit: FlexFit.loose) as an alternative."
+            },
+            {
+              "criterion": "configures overflow behavior with TextOverflow.ellipsis and an explicit maxLines",
+              "met": true,
+              "evidence": "Code sets maxLines: 1 and overflow: TextOverflow.ellipsis on the Text widget."
+            },
+            {
+              "criterion": "identifies that Row initially provides unbounded horizontal constraints to non-flex children",
+              "met": true,
+              "evidence": "Opening line: \"A Row lays out its non-flex children with unbounded horizontal constraints.\""
+            }
+          ],
+          "summary": "The response wraps the username in Expanded, sets maxLines: 1 with TextOverflow.ellipsis, and explains that Row gives non-flex children unbounded horizontal constraints. All three criteria are met explicitly. The extras on text scaling and testing are accurate but go beyond what was asked."
+        },
+        "judgments": [
+          {
+            "score": 93,
+            "expectations": [
+              {
+                "criterion": "wraps the Text widget in an Expanded or Flexible with loose fit to constrain its maximum available width",
+                "met": true,
+                "evidence": "Code wraps the username Text in Expanded, stating it \"gets only the remaining width\", and mentions Flexible(fit: FlexFit.loose) as an alternative."
+              },
+              {
+                "criterion": "configures overflow behavior with TextOverflow.ellipsis and an explicit maxLines",
+                "met": true,
+                "evidence": "Code sets maxLines: 1 and overflow: TextOverflow.ellipsis on the Text widget."
+              },
+              {
+                "criterion": "identifies that Row initially provides unbounded horizontal constraints to non-flex children",
+                "met": true,
+                "evidence": "Opening line: \"A Row lays out its non-flex children with unbounded horizontal constraints.\""
+              }
+            ],
+            "summary": "The response wraps the username in Expanded, sets maxLines: 1 with TextOverflow.ellipsis, and explains that Row gives non-flex children unbounded horizontal constraints. All three criteria are met explicitly. The extras on text scaling and testing are accurate but go beyond what was asked."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 93.0,
+          "minimum_score": 93,
+          "maximum_score": 93,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": -7.0,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-text-rendering",
+      "case": "measures-dynamic-text-dimensions",
+      "baseline": {
+        "response": "Use `TextPainter` inside a `LayoutBuilder`. It lays out the text with the real style, locale, and available width, then tells you whether it overflowed `maxLines`.\n\n```dart\nclass ExpandableComment extends StatefulWidget {\n  const ExpandableComment({super.key, required this.text, this.style, this.maxLines = 3});\n\n  final String text;\n  final TextStyle? style;\n  final int maxLines;\n\n  @override\n  State<ExpandableComment> createState() => _ExpandableCommentState();\n}\n\nclass _ExpandableCommentState extends State<ExpandableComment> {\n  bool _expanded = false;\n\n  @override\n  Widget build(BuildContext context) {\n    final style = widget.style ?? DefaultTextStyle.of(context).style;\n\n    return LayoutBuilder(\n      builder: (context, constraints) {\n        final tp = TextPainter(\n          text: TextSpan(text: widget.text, style: style),\n          maxLines: widget.maxLines,\n          textDirection: Directionality.of(context),\n          textScaler: MediaQuery.textScalerOf(context),\n          locale: Localizations.maybeLocaleOf(context),\n        )..layout(maxWidth: constraints.maxWidth);\n\n        final exceeds = tp.didExceedMaxLines;\n        tp.dispose();\n\n        return Column(\n          crossAxisAlignment: CrossAxisAlignment.start,\n          children: [\n            Text(\n              widget.text,\n              style: style,\n              maxLines: _expanded ? null : widget.maxLines,\n              overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,\n            ),\n            if (exceeds)\n              TextButton(\n                onPressed: () => setState(() => _expanded = !_expanded),\n                child: Text(_expanded ? 'Show less' : 'Show more'),\n              ),\n          ],\n        );\n      },\n    );\n  }\n}\n```\n\n**Why this approach**\n\n- **`LayoutBuilder`** gives you the actual max width before painting, so the measurement matches what `Text` will render. Don't use `MediaQuery` width; padding and parent constraints will make it wrong.\n- **`didExceedMaxLines`** is the direct answer to \"is it more than 3 lines?\" It avoids computing line heights yourself.\n- **Match the `Text` inputs exactly.** The style (including the inherited `DefaultTextStyle`), `textScaler`, `textDirection`, `locale`, and also `strutStyle`, `textWidthBasis`, and `textHeightBehavior` if you set them on the `Text`. A mismatch is the most common cause of a button that shows when it shouldn't, or the reverse. Locale matters for CJK and other scripts that affect line breaking and font fallback.\n- **Dispose the painter.** `TextPainter` holds native paragraph resources in current Flutter.\n\n**Caveats**\n\n- **Expanded state:** the check should still run when expanded (as above), so \"Show less\" remains visible. It's computed against `maxLines`, independent of `_expanded`.\n- **Rebuild cost:** layout runs in every build. For long lists, cache the result keyed on `(text, width, textScale, locale)`, or you'll pay for it while scrolling.\n- **Rich text:** if comments contain mentions or links, build the same `TextSpan` tree for the painter as the `Text.rich` uses.\n- **Alternative with `computeLineMetrics()`:** call `tp.computeLineMetrics().length > maxLines` if you need the actual line count. That requires omitting `maxLines` from the painter, or it will cap at 3. For this use case, `didExceedMaxLines` is simpler.\n- **Avoid post-frame hacks:** measuring via `GlobalKey` and `addPostFrameCallback` causes a visible flicker and an extra frame, because the button appears after first layout. The `LayoutBuilder` + `TextPainter` approach resolves it in the same frame.\n\nIf locale or text can change at runtime, this handles it automatically since everything is derived in `build`. Changing the locale triggers a rebuild through `Localizations`, as long as you read it from context as shown.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "uses TextPainter with layout(maxWidth) to measure whether copy exceeds maxLines",
+              "met": true,
+              "evidence": "Creates TextPainter with maxLines: widget.maxLines, calls ..layout(maxWidth: constraints.maxWidth), and reads tp.didExceedMaxLines to decide whether to show the button."
+            },
+            {
+              "criterion": "disposes the TextPainter instance to avoid resource leaks",
+              "met": true,
+              "evidence": "Calls tp.dispose() right after reading didExceedMaxLines, and the 'Dispose the painter' bullet explains that TextPainter holds native paragraph resources."
+            },
+            {
+              "criterion": "passes the ambient Directionality, locale, and TextScaler into TextPainter for accurate localized layout simulation",
+              "met": true,
+              "evidence": "Passes textDirection: Directionality.of(context), textScaler: MediaQuery.textScalerOf(context), and locale: Localizations.maybeLocaleOf(context); the text also explains why matching these inputs matters."
+            }
+          ],
+          "summary": "The response meets all three mandatory criteria. It measures with TextPainter.layout(maxWidth) and didExceedMaxLines, disposes the painter, and passes the ambient Directionality, TextScaler and locale, explaining why each matters."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "uses TextPainter with layout(maxWidth) to measure whether copy exceeds maxLines",
+                "met": true,
+                "evidence": "Creates TextPainter with maxLines: widget.maxLines, calls ..layout(maxWidth: constraints.maxWidth), and reads tp.didExceedMaxLines to decide whether to show the button."
+              },
+              {
+                "criterion": "disposes the TextPainter instance to avoid resource leaks",
+                "met": true,
+                "evidence": "Calls tp.dispose() right after reading didExceedMaxLines, and the 'Dispose the painter' bullet explains that TextPainter holds native paragraph resources."
+              },
+              {
+                "criterion": "passes the ambient Directionality, locale, and TextScaler into TextPainter for accurate localized layout simulation",
+                "met": true,
+                "evidence": "Passes textDirection: Directionality.of(context), textScaler: MediaQuery.textScalerOf(context), and locale: Localizations.maybeLocaleOf(context); the text also explains why matching these inputs matters."
+              }
+            ],
+            "summary": "The response meets all three mandatory criteria. It measures with TextPainter.layout(maxWidth) and didExceedMaxLines, disposes the painter, and passes the ambient Directionality, TextScaler and locale, explaining why each matters."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "with_skill": {
+        "response": "Use `TextPainter` with the same width, style, direction, locale, and text scaler that the real `Text` will get, and read `didExceedMaxLines`. Wrap it in a `LayoutBuilder` so you measure against the actual available width.\n\n## Measurement helper\n\n```dart\nbool exceedsMaxLines({\n  required BuildContext context,\n  required String text,\n  required TextStyle style,\n  required double maxWidth,\n  int maxLines = 3,\n}) {\n  final painter = TextPainter(\n    text: TextSpan(text: text, style: style),\n    maxLines: maxLines,\n    textDirection: Directionality.of(context),\n    locale: Localizations.maybeLocaleOf(context),\n    textScaler: MediaQuery.textScalerOf(context),\n  )..layout(maxWidth: maxWidth);\n\n  final exceeded = painter.didExceedMaxLines;\n  painter.dispose(); // avoid leaking the underlying paragraph\n  return exceeded;\n}\n```\n\n## Using it in the widget\n\n```dart\nclass ExpandableComment extends StatefulWidget {\n  const ExpandableComment({super.key, required this.text});\n  final String text;\n\n  @override\n  State<ExpandableComment> createState() => _ExpandableCommentState();\n}\n\nclass _ExpandableCommentState extends State<ExpandableComment> {\n  bool _expanded = false;\n\n  @override\n  Widget build(BuildContext context) {\n    final style = DefaultTextStyle.of(context).style; // match what Text renders\n    return LayoutBuilder(\n      builder: (context, constraints) {\n        final overflows = exceedsMaxLines(\n          context: context,\n          text: widget.text,\n          style: style,\n          maxWidth: constraints.maxWidth,\n        );\n        return Column(\n          crossAxisAlignment: CrossAxisAlignment.start,\n          children: [\n            Text(\n              widget.text,\n              style: style,\n              maxLines: _expanded ? null : 3,\n              overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,\n            ),\n            if (overflows)\n              TextButton(\n                onPressed: () => setState(() => _expanded = !_expanded),\n                child: Text(_expanded ? 'Show less' : 'Show more'),\n              ),\n          ],\n        );\n      },\n    );\n  }\n}\n```\n\nNote that the overflow check always runs with `maxLines: 3`, independent of `_expanded`, so the \"Show less\" button stays visible after expanding.\n\n## Why these inputs matter\n\n- **`maxWidth` from `LayoutBuilder`:** the result is only valid for the width the text will actually render at. Don't use screen width.\n- **`textScaler`:** at 150-200% system font size, copy that fit in 3 lines at 1.0 will overflow. Omitting it gives wrong answers for exactly the users who most need the button.\n- **`locale` and `textDirection`:** they affect line breaking and shaping, so they matter for localized and RTL copy.\n- **Same `TextStyle`:** if you pass a different font size, weight, or height than the rendered `Text`, the measurement drifts. Resolve the style the same way the `Text` does (merge with `DefaultTextStyle`, or use the exact theme style for both).\n- **Inline spans:** if the comment uses `Text.rich` (mentions, links), pass the same `TextSpan` tree to the painter rather than a plain string, and keep `WidgetSpan` sizing in mind (use `placeholderDimensions` on the painter if you have them).\n\n## Practical notes\n\n- Measuring in `build` is fine for short comment lists, but in long `ListView`s consider caching the result keyed on `(text, maxWidth, textScaler, locale)` to avoid re-laying out on every rebuild.\n- Don't apply the non-breaking-space orphan trick here for non-space-delimited languages (CJK, Thai). It would change line breaks and make your measurement disagree with the real text unless you measure the same transformed string.\n- Test long unbroken strings (URLs, long German compounds) too. They can overflow in fewer \"words\" than you expect.\n\n## Test it\n\n```dart\ntestWidgets('shows \"Show more\" only when copy exceeds 3 lines at 2x scale', (tester) async {\n  Future<void> pump(String text) => tester.pumpWidget(\n        MaterialApp(\n          builder: (context, child) => MediaQuery(\n            data: MediaQuery.of(context)\n                .copyWith(textScaler: const TextScaler.linear(2.0)),\n            child: child!,\n          ),\n          home: Scaffold(\n            body: SizedBox(width: 200, child: ExpandableComment(text: text)),\n          ),\n        ),\n      );\n\n  await pump('Hi');\n  expect(find.text('Show more'), findsNothing);\n\n  await pump('A much longer localized comment ' * 10);\n  expect(find.text('Show more'), findsOneWidget);\n  expect(tester.takeException(), isNull);\n});\n```\n\nAlso run it at `TextScaler.linear(1.0)` and `1.5`, with a short, realistic, and long localized string, and in a narrow card width.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "uses TextPainter with layout(maxWidth) to measure whether copy exceeds maxLines",
+              "met": true,
+              "evidence": "Creates TextPainter with maxLines: maxLines and calls ..layout(maxWidth: maxWidth), then reads painter.didExceedMaxLines."
+            },
+            {
+              "criterion": "disposes the TextPainter instance to avoid resource leaks",
+              "met": true,
+              "evidence": "Calls painter.dispose(); with comment '// avoid leaking the underlying paragraph' after reading didExceedMaxLines."
+            },
+            {
+              "criterion": "passes the ambient Directionality, locale, and TextScaler into TextPainter for accurate localized layout simulation",
+              "met": true,
+              "evidence": "Passes textDirection: Directionality.of(context), locale: Localizations.maybeLocaleOf(context), textScaler: MediaQuery.textScalerOf(context), and explains why each matters."
+            }
+          ],
+          "summary": "The response satisfies all three mandatory criteria: it measures with TextPainter.layout(maxWidth) and didExceedMaxLines, disposes the painter explicitly, and passes ambient Directionality, locale, and TextScaler from context."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "uses TextPainter with layout(maxWidth) to measure whether copy exceeds maxLines",
+                "met": true,
+                "evidence": "Creates TextPainter with maxLines: maxLines and calls ..layout(maxWidth: maxWidth), then reads painter.didExceedMaxLines."
+              },
+              {
+                "criterion": "disposes the TextPainter instance to avoid resource leaks",
+                "met": true,
+                "evidence": "Calls painter.dispose(); with comment '// avoid leaking the underlying paragraph' after reading didExceedMaxLines."
+              },
+              {
+                "criterion": "passes the ambient Directionality, locale, and TextScaler into TextPainter for accurate localized layout simulation",
+                "met": true,
+                "evidence": "Passes textDirection: Directionality.of(context), locale: Localizations.maybeLocaleOf(context), textScaler: MediaQuery.textScalerOf(context), and explains why each matters."
+              }
+            ],
+            "summary": "The response satisfies all three mandatory criteria: it measures with TextPainter.layout(maxWidth) and didExceedMaxLines, disposes the painter explicitly, and passes ambient Directionality, locale, and TextScaler from context."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": 0.0,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 2,
+    "mandatory_failures": 0,
+    "baseline_average": 100.0,
+    "with_skill_average": 96.5,
+    "average_delta": -3.5,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-text-rendering": {
+        "cases": 2,
+        "passed": 2,
+        "baseline_average": 100.0,
+        "with_skill_average": 96.5,
+        "average_delta": -3.5
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

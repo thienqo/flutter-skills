@@ -35,7 +35,7 @@ Do not convert app-owned bridges into packages merely because code reuse is poss
 Format, analyze, run tests, and exercise the example fixture across all claimed platforms.
 When publication readiness is in scope:
 - Run `dart pub publish --dry-run` and inspect all output, warnings, and included files. A passing dry run proves neither compatibility nor authorization.
-- Never publish, tag, or create releases without explicit user authorization.
+- Never publish, tag, or create releases without explicit user authorization. A conditional go-ahead ("publish if the dry run passes") does not cover changes you made after it: show the final diff and dry-run result, then ask before publishing.
 - When tool or repository access is missing, provide an executable review plan with clear pass/fail criteria covering metadata, license, changelog, and dry-run output rather than fabricating results.
 
 ## Sources

@@ -1,0 +1,126 @@
+{
+  "created_at": "2026-11-03T10:26:46.334559+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "dad34ddd6f214d29df374e35ed3631b270eb1688",
+    "dirty": true,
+    "branch": "thiennc/skill-effectiveness-rerun"
+  },
+  "agent": "claude",
+  "agent_version": "2.1.317 (Claude Code)",
+  "model": null,
+  "judge_agent": "claude",
+  "judge_agent_version": "2.1.317 (Claude Code)",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "claude",
+      "version": "2.1.317 (Claude Code)",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.12.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-performance",
+      "case": "resizes-images-before-clearing-cache",
+      "with_skill": {
+        "response": "Before adding a \"clear when memory is high\" handler, confirm the cause. Clearing the cache would likely mask the problem rather than fix it, and it adds re-decode jank while scrolling.\n\n## 1. Confirm the cause first (profile mode, real device)\n\nRun `flutter run --profile` on a representative device. Use the same grid, the same dataset, and the same scroll pattern each time, for example top to bottom and back three times.\n\nTrack these during the scroll:\n\n```dart\n// Temporary instrumentation, e.g. in a periodic Timer or a debug overlay\nfinal cache = PaintingBinding.instance.imageCache;\ndebugPrint('cacheBytes=${cache.currentSizeBytes} '\n    'live=${cache.liveImageCount} pending=${cache.pendingImageCount}');\n```\n\nAlso check the **DevTools Memory view**. Take a snapshot after a steady baseline and another after repeated scrolls. Compare the decoded image dimensions with the thumbnail's on-screen size.\n\n**How to read it:**\n- **Full-res decoding is confirmed** if decoded images are far larger than display size (e.g. 4000\u00d73000 for a 120\u00d7120 tile), and memory plateaus near the cache limit (default ~100 MB) plus live images.\n- **There is a real leak** if memory keeps growing past the cache limit and `liveImageCount` climbs without dropping. Look for retained `ImageStream` listeners, controllers, or closures that hold tile state. Clearing the cache would not fix that.\n\nRecord the device, Flutter version, the flow, and peak/steady memory. This is your baseline.\n\n## 2. Fix at the source: decode at display size\n\nIf full-res decoding is confirmed, decode each thumbnail at the size it is shown:\n\n```dart\nLayoutBuilder(\n  builder: (context, constraints) {\n    final dpr = MediaQuery.devicePixelRatioOf(context);\n    final px = (constraints.maxWidth * dpr).round();\n    return Image.network(\n      url,\n      fit: BoxFit.cover,\n      cacheWidth: px, // decode at display resolution; aspect ratio preserved\n      // cacheHeight: px, // set one or both depending on fit/crop needs\n    );\n  },\n)\n```\n\nWith `cached_network_image`, use `memCacheWidth` / `memCacheHeight`. For a custom provider, wrap it with `ResizeImage(provider, width: px)`.\n\nThis lowers cache memory and raster cost together. If the server can serve thumbnail-sized URLs, use those too, since that also cuts download bytes.\n\nAlso confirm the grid is built lazily (`GridView.builder`, not `GridView(children: [...])`). Otherwise every tile stays alive.\n\n## 3. Memory-pressure handling, as a safety net only\n\nIf you still want a pressure hook, respond to the OS signal instead of polling a threshold:\n\n```dart\nclass _AppState extends State<App> with WidgetsBindingObserver {\n  @override\n  void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); }\n  @override\n  void dispose() { WidgetsBinding.instance.removeObserver(this); super.dispose(); }\n\n  @override\n  void didHaveMemoryPressure() {\n    PaintingBinding.instance.imageCache.clear(); // drops completed, non-live entries\n  }\n}\n```\n\nIf you want a tighter steady-state ceiling, bound the cache explicitly, for example `imageCache.maximumSizeBytes = 50 << 20`. Don't clear the cache on every scroll. Visible tiles would re-download or re-decode, which causes jank.\n\n## 4. Verify\n\nRepeat the exact scenario from step 1 and report the before/after numbers: peak and steady memory, `currentSizeBytes`, and frame times, as ranges across several runs. Then run your widget and integration tests. Check that thumbnails still look sharp on high-DPR devices and that placeholders and error states still behave correctly.\n\nIf step 1 shows something other than oversized decodes, send me the snapshot diff and I'll trace the retention path.",
+        "judgment": {
+          "score": 93,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] attributes the growth to decoded image size via the image cache or memory profiler before changing code",
+              "met": true,
+              "evidence": "Step 1, 'Confirm the cause first', comes before any code change. It uses imageCache.currentSizeBytes, liveImageCount and pendingImageCount, plus DevTools Memory snapshots, to compare decoded dimensions with on-screen size. It sets explicit criteria for telling 'full-res decoding confirmed' apart from 'real leak', and the fix in step 2 is conditioned on that result ('If full-res decoding is confirmed...')."
+            },
+            {
+              "criterion": "sets cacheWidth/cacheHeight (or an equivalent resize) to the display size instead of the source resolution",
+              "met": true,
+              "evidence": "Step 2 computes px = constraints.maxWidth * devicePixelRatio and passes cacheWidth: px to Image.network. It also names the memCacheWidth/memCacheHeight equivalents for cached_network_image and ResizeImage for custom providers."
+            },
+            {
+              "criterion": "rejects periodically clearing the whole image cache as the fix",
+              "met": true,
+              "evidence": "The opening states that clearing the cache 'would likely mask the problem rather than fix it, and it adds re-decode jank'. Step 3 limits clearing to an optional OS memory-pressure 'safety net only' and says 'Don't clear the cache on every scroll'. It prefers bounding maximumSizeBytes instead."
+            },
+            {
+              "criterion": "verifies bounded memory after the resize with the same repeated scroll flow",
+              "met": true,
+              "evidence": "Step 4: 'Repeat the exact scenario from step 1 and report the before/after numbers: peak and steady memory, currentSizeBytes, and frame times, as ranges across several runs.' Step 1 defines the flow as the same grid, dataset and scroll pattern (top to bottom and back three times), and the expected outcome as a plateau near the cache limit."
+            }
+          ],
+          "summary": "The response meets all four criteria. It diagnoses before changing code, using imageCache metrics and DevTools snapshots to attribute growth to oversized decodes and to separate that from a true leak. It fixes the problem by decoding at display size with a DPR-aware cacheWidth, and it rejects cache clearing as the fix, keeping it only as an optional OS-pressure safety net. It verifies by rerunning the identical scroll scenario and comparing before/after memory. The one minor weakness is that it still provides clear-on-pressure code, which some reviewers might see as partly accommodating the original request, but it is clearly framed as secondary."
+        },
+        "judgments": [
+          {
+            "score": 93,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] attributes the growth to decoded image size via the image cache or memory profiler before changing code",
+                "met": true,
+                "evidence": "Step 1, 'Confirm the cause first', comes before any code change. It uses imageCache.currentSizeBytes, liveImageCount and pendingImageCount, plus DevTools Memory snapshots, to compare decoded dimensions with on-screen size. It sets explicit criteria for telling 'full-res decoding confirmed' apart from 'real leak', and the fix in step 2 is conditioned on that result ('If full-res decoding is confirmed...')."
+              },
+              {
+                "criterion": "sets cacheWidth/cacheHeight (or an equivalent resize) to the display size instead of the source resolution",
+                "met": true,
+                "evidence": "Step 2 computes px = constraints.maxWidth * devicePixelRatio and passes cacheWidth: px to Image.network. It also names the memCacheWidth/memCacheHeight equivalents for cached_network_image and ResizeImage for custom providers."
+              },
+              {
+                "criterion": "rejects periodically clearing the whole image cache as the fix",
+                "met": true,
+                "evidence": "The opening states that clearing the cache 'would likely mask the problem rather than fix it, and it adds re-decode jank'. Step 3 limits clearing to an optional OS memory-pressure 'safety net only' and says 'Don't clear the cache on every scroll'. It prefers bounding maximumSizeBytes instead."
+              },
+              {
+                "criterion": "verifies bounded memory after the resize with the same repeated scroll flow",
+                "met": true,
+                "evidence": "Step 4: 'Repeat the exact scenario from step 1 and report the before/after numbers: peak and steady memory, currentSizeBytes, and frame times, as ranges across several runs.' Step 1 defines the flow as the same grid, dataset and scroll pattern (top to bottom and back three times), and the expected outcome as a plateau near the cache limit."
+              }
+            ],
+            "summary": "The response meets all four criteria. It diagnoses before changing code, using imageCache metrics and DevTools snapshots to attribute growth to oversized decodes and to separate that from a true leak. It fixes the problem by decoding at display size with a DPR-aware cacheWidth, and it rejects cache clearing as the fix, keeping it only as an optional OS-pressure safety net. It verifies by rerunning the identical scroll scenario and comparing before/after memory. The one minor weakness is that it still provides clear-on-pressure code, which some reviewers might see as partly accommodating the original request, but it is clearly framed as secondary."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 93.0,
+          "minimum_score": 93,
+          "maximum_score": 93,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 93.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-performance": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 93.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}
