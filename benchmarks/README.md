@@ -39,6 +39,50 @@ python3 .github/scripts/run_eval_matrix.py \
 
 Use [evaluation strategy](../.github/maintainer/evaluation-strategy.md) for PR, nightly, release, executable, cross-agent, and human-review workflows. External-agent execution remains explicit; ordinary CI validates inputs without spending model quota.
 
+## Claude Code catalog baseline (2026-11-03)
+
+Claude Code was both solver and judge with its default model, one judge and an 80-point threshold. The run covered one case per skill: the six public-profile cases in [claude-public-baseline.json](v0.12.0-draft/claude-public-baseline.json), and the first case with a mandatory expectation for each of the other 31 skills in [claude-catalog-sweep.json](v0.12.0-draft/claude-catalog-sweep.json). Both files contain baselines. Across the 37 skills, the mean is 61.8 without the skill and 84.4 with it (+22.6). Baseline responses failed a mandatory expectation in 13 cases. On the six public-profile cases the delta is +26.3; the v0.3.0 Codex run measured +57.0. With one case per skill and the same model family judging, a small delta is a signal to measure more cases, not proof that a skill adds nothing. Routing passed 7/7 and 1/1.
+
+| Skill | Case | Baseline | With skill | Delta | Passed |
+|---|---|---:|---:|---:|---|
+| `flutter-device-testing` | `verifies-deep-link-on-device` | 15 | 95 | +80 | yes |
+| `flutter-dependency-upgrades` | `stages-production-major-upgrades` | 22 | 92 | +70 | yes |
+| `flutter-runtime-debugging` | `runtime-fix-repeats-original-flow` | 40 | 95 | +55 | yes |
+| `flutter-ui-design` | `preserves-existing-brand-system` | 40 | 95 | +55 | yes |
+| `flutter-networking` | `runtime-response-does-not-become-the-whole-contract` | 42 | 94 | +52 | yes |
+| `flutter-observability` | `trace-checkout-without-pii` | 30 | 78 | +48 | no |
+| `flutter-notifications` | `notification-tap-matrix-is-repeatable-and-idempotent` | 45 | 92 | +47 | yes |
+| `flutter-testing` | `cleans-only-ai-created-disposable-test-probe` | 38 | 85 | +47 | yes |
+| `flutter-in-app-purchases` | `sandbox-readiness-is-not-store-publication` | 35 | 72 | +37 | no |
+| `flutter-background-execution` | `uses-os-scheduler-for-terminated-sync` | 55 | 90 | +35 | yes |
+| `flutter-navigation` | `preserves-existing-go-router` | 55 | 85 | +30 | yes |
+| `flutter-product-analytics` | `sdk-log-is-not-end-to-end-proof` | 65 | 95 | +30 | yes |
+| `flutter-responsive-layout` | `navigation-adapts-to-window-width` | 65 | 95 | +30 | yes |
+| `flutter-webview` | `origin-policy-does-not-use-string-prefixes` | 62 | 90 | +28 | yes |
+| `flutter-authentication` | `native-client-secret-is-not-secret` | 65 | 92 | +27 | yes |
+| `flutter-ui-patterns` | `no-side-effects-in-build` | 67 | 88 | +21 | yes |
+| `flutter-openapi-client` | `documented-fields-and-observed-response-stay-distinct` | 58 | 78 | +20 | no |
+| `flutter-code-review` | `delivery-workflow-review-stays-within-task-impact` | 68 | 85 | +17 | yes |
+| `flutter-visual-effects` | `gates-experimental-liquid-renderer` | 78 | 95 | +17 | yes |
+| `flutter-figma-workflow` | `maps-figma-frame-to-existing-design-system` | 76 | 92 | +16 | yes |
+| `flutter-accessibility` | `announcements-use-the-owning-view` | 30 | 45 | +15 | no |
+| `flutter-build-release` | `obfuscation-preserves-symbols` | 88 | 100 | +12 | yes |
+| `flutter-persistence` | `migration-failure-preserves-prior-user-data` | 82 | 94 | +12 | yes |
+| `flutter-architecture` | `reuses-existing-di-mechanism` | 90 | 100 | +10 | yes |
+| `flutter-performance` | `resizes-images-before-clearing-cache` | 35 | 45 | +10 | no |
+| `flutter-security` | `hardcoded-service-secret-is-not-fixed-by-obfuscation` | 90 | 100 | +10 | yes |
+| `flutter-ci-cd` | `harden-existing-github-actions` | 85 | 91 | +6 | yes |
+| `flutter-localization` | `plural-and-formatting` | 84 | 90 | +6 | yes |
+| `dart-language` | `records-not-for-domain-identity` | 95 | 100 | +5 | yes |
+| `flutter-ai-integration` | `skill-install-needs-no-provider-key` | 95 | 100 | +5 | yes |
+| `flutter-package-development` | `dry-run-does-not-authorize-publish` | 90 | 94 | +4 | yes |
+| `flutter-state-management` | `state-disposed-with-lifecycle-owner` | 67 | 70 | +3 | no |
+| `flutter-text-rendering` | `soft-wrap-does-not-remove-hard-breaks` | 94 | 95 | +1 | yes |
+| `dart-concurrency` | `web-compute-does-not-provide-parallelism` | 100 | 100 | +0 | yes |
+| `flutter-platform-integration` | `plugin-before-custom-channel` | 10 | 8 | -2 | no |
+| `flutter-animation` | `chooses-implicit-animation` | 100 | 93 | -7 | yes |
+| `flutter-app-workflow` | `ticket-scoped-branch-commit-and-push-boundary` | 30 | 15 | -15 | no |
+
 ## Unreleased focused result
 
 The `flutter-device-testing` semantic inspection cases ran with Claude Code 2.1.310 as both solver and judge, with baselines skipped. The accessibility-tree navigation case scored 92 and the empty-semantics-tree case scored 35 with a mandatory failure in the [initial result](unreleased/flutter-device-testing-semantic-inspection-initial.json): the agent led with the requested coordinate tap and gave the diagnosis afterwards, and it did not route the missing identifier to `flutter-accessibility`. After the reference required that diagnosis first and that routing, the case scored 96; see the [final result](unreleased/flutter-device-testing-semantic-inspection.json).
