@@ -82,7 +82,7 @@ test("prints wrapper help and version without starting the installer", () => {
 });
 
 test("executable entrypoint reports the package version", () => {
-  const result = spawnSync(process.execPath, ["bin/flutter-skills.mjs", "--version"], {
+  const result = spawnSync(process.execPath, ["cli/flutter-skills.mjs", "--version"], {
     cwd: new URL("..", import.meta.url),
     encoding: "utf8",
   });

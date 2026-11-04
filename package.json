@@ -4,10 +4,10 @@
   "description": "Install the Flutter Skills collection with one command.",
   "type": "module",
   "bin": {
-    "flutter-skills": "bin/flutter-skills.mjs"
+    "flutter-skills": "cli/flutter-skills.mjs"
   },
   "files": [
-    "bin",
+    "cli",
     "lib",
     "LICENSE",
     "README.md"
