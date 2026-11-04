@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Show the Claude plugin as `thienqo-flutter` in the directory. The plugin name and install command are unchanged.
 - Add `PRIVACY.md` and link it from the Claude plugin manifest for the plugin directory listing.
 - Move the npm executable from `bin/` to `cli/`, because the Claude plugin directory cannot install a plugin with a top-level `bin/` on Cowork or the Claude apps. The `flutter-skills` command is unchanged.
 - Replace the four Claude Code bundles with one plugin, `thienqo-flutter-skills`, and add `.claude-plugin/plugin.json`, because the Claude plugin directory rejects skills declared in `marketplace.json`. Breaking for Claude Code: `all-flutter-skills`, `flutter-core-skills`, `flutter-ui-skills`, and `flutter-engineering-skills` no longer exist; run `/plugin install thienqo-flutter-skills@flutter-skills` after removing the old plugin. Codex, Tessl, and npm installs are unchanged.
