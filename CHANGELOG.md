@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Move the npm executable from `bin/` to `cli/`, because the Claude plugin directory cannot install a plugin with a top-level `bin/` on Cowork or the Claude apps. The `flutter-skills` command is unchanged.
 - Replace the four Claude Code bundles with one plugin, `thienqo-flutter-skills`, and add `.claude-plugin/plugin.json`, because the Claude plugin directory rejects skills declared in `marketplace.json`. Breaking for Claude Code: `all-flutter-skills`, `flutter-core-skills`, `flutter-ui-skills`, and `flutter-engineering-skills` no longer exist; run `/plugin install thienqo-flutter-skills@flutter-skills` after removing the old plugin. Codex, Tessl, and npm installs are unchanged.
 - Re-measure the catalog on Claude Code with baselines, one case per skill (37 cases): mean 61.8 without the skill and 84.4 with it (+22.6). On the six public-profile cases the delta is +26.3, against +57.0 measured with Codex in v0.3.0. See `benchmarks/README.md`.
 - Rerun the twelve low-delta skills on two more cases each with baselines. Nine show a delta between +6 and +27 over three cases, so no skill was trimmed. `flutter-text-rendering` (baseline 98) adds almost nothing, and `flutter-ci-cd` (70 with the skill against 76 without) and `flutter-package-development` (70 against 64) score below 80. The `flutter-ci-cd` matrix case fell to 72, 55, and 62 after its rubric was reworded to accept a response-only plan, with one mandatory miss on protected-environment secrets, so it stays open.

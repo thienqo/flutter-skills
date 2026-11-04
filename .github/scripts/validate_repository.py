@@ -327,7 +327,10 @@ def validate_packages(skill_names: set[str]) -> list[str]:
         errors.append("npm package name must be @thiennc/flutter-skills")
     if npm_package.get("private") is True:
         errors.append("npm package must be publishable")
-    if npm_package.get("bin") != {"flutter-skills": "bin/flutter-skills.mjs"}:
+    # A top-level bin/ keeps the plugin off Cowork and the Claude apps.
+    if (ROOT / "bin").exists():
+        errors.append("repository root must not contain bin/; the npm executable lives in cli/")
+    if npm_package.get("bin") != {"flutter-skills": "cli/flutter-skills.mjs"}:
         errors.append("npm package must expose the flutter-skills executable")
     if npm_package.get("dependencies", {}).get("skills") != "1.5.23":
         errors.append("npm package must pin skills@1.5.23")
