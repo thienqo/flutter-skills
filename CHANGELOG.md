@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add `PRIVACY.md` and link it from the Claude plugin manifest for the plugin directory listing.
 - Move the npm executable from `bin/` to `cli/`, because the Claude plugin directory cannot install a plugin with a top-level `bin/` on Cowork or the Claude apps. The `flutter-skills` command is unchanged.
 - Replace the four Claude Code bundles with one plugin, `thienqo-flutter-skills`, and add `.claude-plugin/plugin.json`, because the Claude plugin directory rejects skills declared in `marketplace.json`. Breaking for Claude Code: `all-flutter-skills`, `flutter-core-skills`, `flutter-ui-skills`, and `flutter-engineering-skills` no longer exist; run `/plugin install thienqo-flutter-skills@flutter-skills` after removing the old plugin. Codex, Tessl, and npm installs are unchanged.
 - Re-measure the catalog on Claude Code with baselines, one case per skill (37 cases): mean 61.8 without the skill and 84.4 with it (+22.6). On the six public-profile cases the delta is +26.3, against +57.0 measured with Codex in v0.3.0. See `benchmarks/README.md`.
