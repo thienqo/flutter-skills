@@ -1,0 +1,19 @@
+{
+  "name": "thienqo-flutter-skills",
+  "displayName": "thienqo Flutter Skills",
+  "version": "0.12.0",
+  "description": "Package-neutral Flutter and Dart skills for building, reviewing, testing, and releasing applications.",
+  "author": {
+    "name": "thienqo",
+    "url": "https://github.com/thienqo"
+  },
+  "homepage": "https://github.com/thienqo/flutter-skills",
+  "repository": "https://github.com/thienqo/flutter-skills",
+  "license": "BSD-3-Clause",
+  "keywords": [
+    "flutter",
+    "dart",
+    "skills",
+    "mobile"
+  ]
+}

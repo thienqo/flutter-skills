@@ -53,7 +53,7 @@ claude plugin validate .
 npx skills add . --list
 ```
 
-Confirm exact membership across `skills/`, Codex plugin metadata, Claude bundles, and Tessl metadata. Review version alignment, README counts, changelog entries, CI status, npm registry state, and missing release credentials.
+Confirm exact membership across `skills/`, Codex plugin metadata, the Claude plugin, and Tessl metadata. Review version alignment, README counts, changelog entries, CI status, npm registry state, and missing release credentials.
 
 ## Release gate
 

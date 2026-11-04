@@ -32,10 +32,8 @@ Claude Code:
 
 ```sh
 /plugin marketplace add thienqo/flutter-skills
-/plugin install flutter-core-skills@flutter-skills
+/plugin install thienqo-flutter-skills@flutter-skills
 ```
-
-Claude bundles: `all-flutter-skills`, `flutter-core-skills`, `flutter-ui-skills`, and `flutter-engineering-skills`.
 
 </details>
 

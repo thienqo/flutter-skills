@@ -26,7 +26,7 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Validate skills, evaluations, links, and bundles
+      - name: Validate skills, evaluations, links, and packages
         run: python3 .github/scripts/validate_repository.py
 
       - name: Validate forward-evaluation inputs

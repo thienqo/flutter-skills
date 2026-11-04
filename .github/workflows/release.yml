@@ -45,19 +45,20 @@ jobs:
         run: |
           set -euo pipefail
           marketplace_version="$(jq -r '.metadata.version' .claude-plugin/marketplace.json)"
+          claude_plugin_version="$(jq -r '.version' .claude-plugin/plugin.json)"
           codex_version="$(jq -r '.version' .codex-plugin/plugin.json)"
           tessl_version="$(jq -r '.version' .tessl-plugin/plugin.json)"
           npm_version="$(jq -r '.version' package.json)"
 
-          if [[ "$marketplace_version" != "$codex_version" || "$marketplace_version" != "$tessl_version" || "$marketplace_version" != "$npm_version" ]]; then
-            echo "Version mismatch: claude=$marketplace_version codex=$codex_version tessl=$tessl_version npm=$npm_version" >&2
+          if [[ "$marketplace_version" != "$claude_plugin_version" || "$marketplace_version" != "$codex_version" || "$marketplace_version" != "$tessl_version" || "$marketplace_version" != "$npm_version" ]]; then
+            echo "Version mismatch: claude=$marketplace_version claude_plugin=$claude_plugin_version codex=$codex_version tessl=$tessl_version npm=$npm_version" >&2
             exit 1
           fi
 
           if jq -e --arg version "$marketplace_version" \
             'any(.plugins[]; .version != $version)' \
             .claude-plugin/marketplace.json > /dev/null; then
-            echo "One or more Claude bundles do not match version $marketplace_version" >&2
+            echo "The Claude marketplace entry does not match version $marketplace_version" >&2
             exit 1
           fi
 
