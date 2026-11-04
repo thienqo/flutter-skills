@@ -123,7 +123,7 @@ Acceptance for any new skill: clear ownership, installed discovery works, meanin
 
 ## Phase 6: Sustainable maintenance and releases
 
-- Per PR: validate metadata, references, bundles, eval inputs, package contents and focused deterministic regressions. Run executed evals for changed behavior and adjacent routing when relevant.
+- Per PR: validate metadata, references, packages, eval inputs, package contents and focused deterministic regressions. Run executed evals for changed behavior and adjacent routing when relevant.
 - Before release: run the bounded release profile and applicable artifact suite, review warnings/blocks, verify exact candidate installation, then publish through the existing workflow. Confirm each distribution channel independently and retain recovery instructions for partial publication.
 - Monthly proposal: review source-content changes, open failures and flaky cases. Link liveness alone is not technical freshness; track reviewed source claims and dates by affected area.
 - Quarterly proposal: sample holdout tasks, recheck supported SDK/platform combinations, and retire or consolidate unused guidance with routing evidence.

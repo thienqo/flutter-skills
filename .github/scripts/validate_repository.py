@@ -32,93 +32,7 @@ EXPECTED_VERSION = "0.12.0"
 EXPECTED_SKILL_COUNT = 37
 EXPECTED_EVAL_COUNT = 228
 EXPECTED_ROUTING_EVAL_COUNT = 76
-EXPECTED_BUNDLES = {
-    "all-flutter-skills": {
-        "dart-concurrency",
-        "dart-language",
-        "flutter-accessibility",
-        "flutter-ai-integration",
-        "flutter-animation",
-        "flutter-app-workflow",
-        "flutter-architecture",
-        "flutter-authentication",
-        "flutter-background-execution",
-        "flutter-build-release",
-        "flutter-ci-cd",
-        "flutter-code-review",
-        "flutter-dependency-upgrades",
-        "flutter-device-testing",
-        "flutter-figma-workflow",
-        "flutter-in-app-purchases",
-        "flutter-localization",
-        "flutter-navigation",
-        "flutter-networking",
-        "flutter-openapi-client",
-        "flutter-notifications",
-        "flutter-observability",
-        "flutter-package-development",
-        "flutter-performance",
-        "flutter-persistence",
-        "flutter-platform-integration",
-        "flutter-product-analytics",
-        "flutter-responsive-layout",
-        "flutter-runtime-debugging",
-        "flutter-security",
-        "flutter-state-management",
-        "flutter-testing",
-        "flutter-text-rendering",
-        "flutter-ui-design",
-        "flutter-ui-patterns",
-        "flutter-visual-effects",
-        "flutter-webview",
-    },
-    "flutter-core-skills": {
-        "dart-concurrency",
-        "dart-language",
-        "flutter-ai-integration",
-        "flutter-architecture",
-        "flutter-authentication",
-        "flutter-dependency-upgrades",
-        "flutter-networking",
-        "flutter-openapi-client",
-        "flutter-persistence",
-        "flutter-state-management",
-        "flutter-testing",
-    },
-    "flutter-ui-skills": {
-        "flutter-accessibility",
-        "flutter-animation",
-        "flutter-figma-workflow",
-        "flutter-localization",
-        "flutter-navigation",
-        "flutter-responsive-layout",
-        "flutter-text-rendering",
-        "flutter-ui-design",
-        "flutter-ui-patterns",
-        "flutter-visual-effects",
-    },
-    "flutter-engineering-skills": {
-        "flutter-app-workflow",
-        "flutter-authentication",
-        "flutter-background-execution",
-        "flutter-build-release",
-        "flutter-ci-cd",
-        "flutter-code-review",
-        "flutter-dependency-upgrades",
-        "flutter-device-testing",
-        "flutter-in-app-purchases",
-        "flutter-notifications",
-        "flutter-observability",
-        "flutter-package-development",
-        "flutter-performance",
-        "flutter-platform-integration",
-        "flutter-product-analytics",
-        "flutter-runtime-debugging",
-        "flutter-security",
-        "flutter-testing",
-        "flutter-webview",
-    },
-}
+CLAUDE_PLUGIN_NAME = "thienqo-flutter-skills"
 
 
 def load_json(path: Path) -> Any:
@@ -330,6 +244,7 @@ def normalized_skill_paths(values: list[str]) -> set[str]:
 def validate_packages(skill_names: set[str]) -> list[str]:
     errors: list[str] = []
     marketplace = load_json(ROOT / ".claude-plugin" / "marketplace.json")
+    claude_plugin = load_json(ROOT / ".claude-plugin" / "plugin.json")
     codex = load_json(ROOT / ".codex-plugin" / "plugin.json")
     codex_marketplace = load_json(ROOT / ".agents" / "plugins" / "marketplace.json")
     tessl = load_json(ROOT / ".tessl-plugin" / "plugin.json")
@@ -338,6 +253,7 @@ def validate_packages(skill_names: set[str]) -> list[str]:
 
     versions = {
         marketplace.get("metadata", {}).get("version"),
+        claude_plugin.get("version"),
         codex.get("version"),
         tessl.get("version"),
         npm_package.get("version"),
@@ -346,30 +262,26 @@ def validate_packages(skill_names: set[str]) -> list[str]:
     if versions != {EXPECTED_VERSION}:
         errors.append(f"package versions are not aligned at {EXPECTED_VERSION}: {sorted(str(value) for value in versions)}")
 
-    plugins = {plugin.get("name"): plugin for plugin in marketplace.get("plugins", [])}
-    if set(plugins) != set(EXPECTED_BUNDLES):
-        errors.append(
-            "Claude bundle names do not match expected bundles: "
-            f"expected {sorted(EXPECTED_BUNDLES)}, found {sorted(plugins)}"
-        )
-    for plugin_name, expected_members in EXPECTED_BUNDLES.items():
-        plugin = plugins.get(plugin_name)
-        if plugin is None:
-            continue
-        actual_members = normalized_skill_paths(plugin.get("skills", []))
-        if actual_members != expected_members:
-            errors.append(
-                f"{plugin_name}: membership mismatch; "
-                f"missing {sorted(expected_members - actual_members)}, "
-                f"unexpected {sorted(actual_members - expected_members)}"
-            )
-        unknown = actual_members - skill_names
-        if unknown:
-            errors.append(f"{plugin_name}: unknown skills {sorted(unknown)}")
-
-    all_bundle = plugins.get("all-flutter-skills")
-    if all_bundle and normalized_skill_paths(all_bundle.get("skills", [])) != skill_names:
-        errors.append("all-flutter-skills membership does not match public skills")
+    # The Claude directory reads components from plugin.json, so the marketplace
+    # lists one root plugin and skills/ is discovered by convention.
+    if claude_plugin.get("name") != CLAUDE_PLUGIN_NAME:
+        errors.append(f"Claude plugin name must be {CLAUDE_PLUGIN_NAME}")
+    if "skills" in claude_plugin:
+        errors.append("Claude plugin must discover skills/ by convention, not list skills")
+    if marketplace.get("name") != "flutter-skills":
+        errors.append("Claude marketplace name must be flutter-skills")
+    claude_entries = marketplace.get("plugins", [])
+    if len(claude_entries) != 1:
+        errors.append("Claude marketplace must list exactly one plugin")
+    else:
+        claude_entry = claude_entries[0]
+        if claude_entry.get("name") != CLAUDE_PLUGIN_NAME:
+            errors.append("Claude marketplace and plugin names are not aligned")
+        if claude_entry.get("source") != "./":
+            errors.append("Claude marketplace must resolve the repository-root plugin")
+        declared = {"skills", "commands", "agents", "hooks", "mcpServers", "strict"} & set(claude_entry)
+        if declared:
+            errors.append(f"Claude marketplace entry must not declare {sorted(declared)}")
 
     if normalized_skill_paths(tessl.get("skills", [])) != skill_names:
         errors.append("Tessl skill membership does not match public skills")

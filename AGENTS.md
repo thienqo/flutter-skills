@@ -9,7 +9,7 @@ This repository contains Agent Skills for Flutter and Dart app delivery. It is n
 Before creating or substantially revising a skill:
 
 1. Follow the active Agent Skills authoring guidance available in the agent environment.
-2. Inspect the affected skill, neighboring descriptions, evaluation cases, package bundles, and working tree.
+2. Inspect the affected skill, neighboring descriptions, evaluation cases, package manifests, and working tree.
 3. Verify fast-moving Flutter, Dart, package, and platform claims against current primary sources.
 4. Preserve existing project architecture and package choices unless the user's task explicitly requests migration.
 5. Add or update behavior-focused evaluation cases.
@@ -91,7 +91,6 @@ When adding, removing, or renaming a skill, update:
 
 - `skills/<name>/SKILL.md`
 - `skills/<name>/evals/cases.json`
-- `.claude-plugin/marketplace.json`
 - `.codex-plugin/plugin.json`
 - `.agents/plugins/marketplace.json`
 - `.tessl-plugin/plugin.json`

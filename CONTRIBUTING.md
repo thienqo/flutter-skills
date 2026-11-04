@@ -66,6 +66,6 @@ The npm package uses trusted publishing. Configure `@thiennc/flutter-skills` on 
 - [ ] Existing project choices remain respected.
 - [ ] Evaluation coverage was added or updated.
 - [ ] Validation and tests pass locally.
-- [ ] Bundle membership and versions remain aligned.
+- [ ] Package membership and versions remain aligned.
 
 By contributing, you agree that your contribution is distributed under the repository's BSD 3-Clause License.
