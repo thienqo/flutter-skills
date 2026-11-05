@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Harden lifecycle report redaction, cleanup, and simulator failure handling. Fix manual ADB examples, serialize stream cleanup across retriggers, and ask for clarification only when a material app decision remains unresolved.
+
+- Quote Android lifecycle runner arguments for the device shell and redact credentials in lifecycle reports. Keep behavior eval fixtures outside installed skill directories and require a finalized changelog for release validation.
+
 - Clarify how five skills handle untrusted GitHub, dependency, Figma, notification, and OpenAPI content. Add behavior cases that exercise embedded instructions while preserving the requested workflow.
 
 - Package the catalog for DeepSeek Harness and VS Code, and document Zed installation.

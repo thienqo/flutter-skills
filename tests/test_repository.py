@@ -145,12 +145,17 @@ class RepositoryTests(unittest.TestCase):
         self.assertTrue(
             VALIDATOR.release_changelog_errors(f"## {version} - 2026-02-30\n")
         )
+        self.assertTrue(
+            VALIDATOR.release_changelog_errors(
+                f"## Unreleased\n\n- Pending change\n\n## {version} - 2026-08-23\n"
+            )
+        )
 
     def test_eval_names_are_unique_across_catalog(self):
         names = []
-        for path in sorted((ROOT / "skills").glob("*/evals/cases.json")):
+        for path in sorted((ROOT / ".github" / "evals" / "behavior").glob("*/cases.json")):
             cases = json.loads(path.read_text(encoding="utf-8"))
-            names.extend(f"{path.parents[1].name}:{case['name']}" for case in cases)
+            names.extend(f"{path.parent.name}:{case['name']}" for case in cases)
         self.assertEqual(len(names), len(set(names)))
 
     def test_all_skills_have_selection_boundaries(self):
@@ -271,9 +276,10 @@ class RepositoryTests(unittest.TestCase):
         cases = json.loads(
             (
                 ROOT
-                / "skills"
-                / "flutter-performance"
+                / ".github"
                 / "evals"
+                / "behavior"
+                / "flutter-performance"
                 / "cases.json"
             ).read_text(encoding="utf-8")
         )
@@ -294,9 +300,10 @@ class RepositoryTests(unittest.TestCase):
         cases = json.loads(
             (
                 ROOT
-                / "skills"
-                / "flutter-runtime-debugging"
+                / ".github"
                 / "evals"
+                / "behavior"
+                / "flutter-runtime-debugging"
                 / "cases.json"
             ).read_text(encoding="utf-8")
         )
@@ -318,9 +325,10 @@ class RepositoryTests(unittest.TestCase):
         cases = json.loads(
             (
                 ROOT
-                / "skills"
-                / "flutter-in-app-purchases"
+                / ".github"
                 / "evals"
+                / "behavior"
+                / "flutter-in-app-purchases"
                 / "cases.json"
             ).read_text(encoding="utf-8")
         )
@@ -340,9 +348,10 @@ class RepositoryTests(unittest.TestCase):
         cases = json.loads(
             (
                 ROOT
-                / "skills"
-                / "flutter-package-development"
+                / ".github"
                 / "evals"
+                / "behavior"
+                / "flutter-package-development"
                 / "cases.json"
             ).read_text(encoding="utf-8")
         )

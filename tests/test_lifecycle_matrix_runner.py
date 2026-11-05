@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -90,6 +91,41 @@ class LifecycleMatrixRunnerTests(unittest.TestCase):
             ["xcrun", "simctl", "openurl", "A-SIMULATOR-ID", "myapp://orders/42"],
         )
 
+    def test_android_device_shell_receives_one_literal_uri(self):
+        uri = "myapp://orders/42?a=1&b=2;printf BAD"
+        args = RUNNER.deep_link_command(
+            "android", "emulator-5554", "com.example.app", uri
+        )
+        # Model adb's join and the Android shell with a local, inert am stub.
+        shell_program = 'am() { printf "%s\\n" "$@"; }; ' + " ".join(args[4:])
+        completed = subprocess.run(
+            ["/bin/sh", "-c", shell_program], capture_output=True, text=True, check=True
+        )
+        self.assertEqual(completed.stdout.splitlines()[-2:], [uri, "com.example.app"])
+        unusual_id = "com.example.app;printf BAD"
+        commands = RUNNER.preflight_commands("android", "emulator-5554", unusual_id)
+        self.assertEqual(shlex.split(" ".join(commands[1][1][4:])), ["pm", "path", unusual_id])
+        stop = RUNNER.lifecycle_command("android", "emulator-5554", unusual_id)
+        self.assertEqual(shlex.split(" ".join(stop[4:])), ["am", "force-stop", unusual_id])
+
+    def test_report_redacts_entire_cookie_and_urls_in_hook_output(self):
+        log = (
+            "Cookie: session=FAKE_SESSION; refresh=FAKE_REFRESH\n"
+            "callback https://user:FAKE_PASSWORD@example.invalid/path"
+            "?code=FAKE_CODE#FAKE_FRAGMENT"
+        )
+        report = RUNNER.run_step(
+            "hook", [sys.executable, "-c", "import sys; print(sys.argv[1])", log], 5, True
+        )
+        self.assertEqual(
+            report["output_tail"].strip(),
+            "Cookie: [REDACTED]\ncallback https://example.invalid/path",
+        )
+        self.assertEqual(
+            RUNNER.safe_command(["https://user:FAKE_PASSWORD@example.invalid/?token=FAKE_TOKEN"]),
+            ["https://example.invalid/"],
+        )
+
     def test_cleanup_runs_after_a_failed_assertion(self):
         with tempfile.TemporaryDirectory() as directory:
             marker = Path(directory) / "cleaned"
@@ -145,6 +181,77 @@ class LifecycleMatrixRunnerTests(unittest.TestCase):
         )
         self.assertEqual(result["status"], "passed")
         self.assertEqual(result["note"], "app was already stopped")
+
+    def test_ios_cold_prepare_does_not_accept_a_stopped_simulator(self):
+        result = {
+            "status": "failed",
+            "output_tail": "The simulator is not running.",
+        }
+        self.assertEqual(RUNNER.normalize_lifecycle_result("ios", result)["status"], "failed")
+
+    def test_report_redacts_private_scheme_and_free_text_names(self):
+        uri = "com.example.app:/oauth2redirect?code=FAKE_CODE&state=FAKE_STATE"
+        matrix = RUNNER.validate_matrix(
+            {
+                "platform": "ios",
+                "app_id": "com.example.app",
+                "device_id": "PRIVATE_UDID",
+                "scenarios": [
+                    {
+                        "name": "PRIVATE_UDID scenario",
+                        "lifecycle": "warm",
+                        "uri": uri,
+                        "assert": [{"name": f"Inspect {uri}", "argv": ["fixture"]}],
+                    }
+                ],
+            }
+        )
+        report = RUNNER.run_matrix(matrix, execute=False)
+        rendered = json.dumps(report)
+        for private_value in ("PRIVATE_UDID", "FAKE_CODE", "FAKE_STATE"):
+            self.assertNotIn(private_value, rendered)
+        self.assertIn("com.example.app:/oauth2redirect", rendered)
+
+    def test_cleanup_continues_after_hook_emits_invalid_utf8(self):
+        with tempfile.TemporaryDirectory() as directory:
+            marker = Path(directory) / "cleaned"
+            fixture = [sys.executable, "-c", "pass"]
+            matrix = RUNNER.validate_matrix(
+                {
+                    "platform": "ios",
+                    "app_id": "com.example.app",
+                    "device_id": "test-simulator",
+                    "scenarios": [
+                        {
+                            "name": "warm-notification",
+                            "lifecycle": "warm",
+                            "trigger": {"name": "trigger", "argv": fixture},
+                            "assert": [{"name": "assert", "argv": fixture}],
+                            "after": [
+                                {
+                                    "name": "invalid UTF-8",
+                                    "argv": [
+                                        sys.executable, "-c",
+                                        "import sys; sys.stdout.buffer.write(bytes([255])); sys.exit(1)",
+                                    ],
+                                },
+                                {
+                                    "name": "final cleanup",
+                                    "argv": [
+                                        sys.executable, "-c",
+                                        "from pathlib import Path; import sys; Path(sys.argv[1]).touch()",
+                                        str(marker),
+                                    ],
+                                },
+                            ],
+                        }
+                    ],
+                }
+            )
+            report = RUNNER.run_matrix(matrix, execute=True)
+            self.assertTrue(marker.exists())
+            self.assertEqual(report["status"], "failed")
+            self.assertEqual(report["scenarios"][0]["steps"][-1]["status"], "passed")
 
     def test_rejects_a_scenario_without_semantic_assertions(self):
         with self.assertRaisesRegex(

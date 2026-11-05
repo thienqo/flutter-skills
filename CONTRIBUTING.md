@@ -14,7 +14,7 @@ Contributions should solve a concrete agent behavior problem and remain focused 
 
 ## Evaluation cases
 
-Each public skill contains `evals/cases.json`. Cases require a stable `name`, a realistic `prompt`, and an array of observable `expectations`. Include at least one successful capability case and one boundary or preservation case.
+Behavior cases live in `.github/evals/behavior/<skill>/cases.json` outside the installed skill. Cases require a stable `name`, a realistic `prompt`, and an array of observable `expectations`. Include at least one successful capability case and one boundary or preservation case.
 
 When a case needs conditional material, list only directly linked skill references in its optional `resources` array. Do not inject every reference by default; cases without `resources` evaluate the entrypoint alone.
 

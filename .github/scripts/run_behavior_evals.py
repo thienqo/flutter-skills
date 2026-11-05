@@ -121,7 +121,7 @@ def skill_catalog() -> dict[str, dict[str, Any]]:
 def behavior_cases(catalog: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
     cases: list[dict[str, Any]] = []
     for skill_name in sorted(catalog):
-        path = SKILLS_DIR / skill_name / "evals" / "cases.json"
+        path = ROOT / ".github" / "evals" / "behavior" / skill_name / "cases.json"
         for case in load_json(path):
             cases.append({**case, "skill": skill_name})
     return cases

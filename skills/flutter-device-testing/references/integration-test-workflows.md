@@ -68,7 +68,7 @@ Directly granting a permission can prove Flutter behavior under that state, but 
 - **Startup Regression Coverage**: When extracting or changing bootstrap behavior, test that dependencies finish before the app is mounted and that an initialization failure remains observable without mounting a partially initialized app. Keep one integration smoke assertion proving the awaited startup reaches the expected first screen; inject or fake the initialization boundary for deterministic failure coverage instead of contacting live services.
 - **Wait Boundaries**: Use `pumpAndSettle()` only when the screen can actually settle. Prefer an explicit observable condition with a bounded timeout for periodic animations, asynchronous native transitions, or continuously updating screens. Do not use arbitrary sleeps as readiness checks.
 - **Deep Link Verification**: Test deep link invocation on target devices using platform commands:
-  - Android: `adb -s <device-id> shell am start -W -a android.intent.action.VIEW -d "myapp://product/123" <application-id>`
+  - Android: `adb -s <device-id> shell am start -W -a android.intent.action.VIEW -d "'myapp://product/123?source=test&mode=preview'" <application-id>`. The inner quotes are for the device shell. Use the lifecycle runner for dynamic URI values.
   - iOS Simulator: `xcrun simctl openurl <device-id> "myapp://product/123"`
 - **Cleanup**: Ensure integration tests tear down only accounts, fixtures, overrides, or temporary files created by the test, including after failures.
 - **Evidence**: A passing test proves the named assertions on the reported execution surface and data source. It does not upgrade a simulator to hardware, a mock to staging, or a launch command to destination correctness.
