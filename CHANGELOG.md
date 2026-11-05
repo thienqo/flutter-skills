@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Package the Flutter and Dart skills for Google Antigravity and Gemini CLI.
+
 - Package the Flutter and Dart skills as a Cursor plugin.
 - Show the Claude plugin as `thienqo-flutter` in the directory. The plugin name and install command are unchanged.
 - Add `PRIVACY.md` and link it from the Claude plugin manifest for the plugin directory listing.
