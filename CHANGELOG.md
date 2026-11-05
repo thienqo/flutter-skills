@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Quote Android lifecycle runner arguments for the device shell and redact credentials in lifecycle reports. Keep behavior eval fixtures outside installed skill directories and require a finalized changelog for release validation.
+
 - Clarify how five skills handle untrusted GitHub, dependency, Figma, notification, and OpenAPI content. Add behavior cases that exercise embedded instructions while preserving the requested workflow.
 
 - Show the Claude plugin as `thienqo-flutter` in the directory. The plugin name and install command are unchanged.

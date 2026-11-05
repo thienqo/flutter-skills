@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-FIXTURES = ROOT / "skills" / "flutter-openapi-client" / "evals" / "fixtures"
+FIXTURES = ROOT / ".github" / "evals" / "behavior" / "flutter-openapi-client" / "fixtures"
 HTTP_METHODS = {"get", "put", "post", "delete", "options", "head", "patch", "trace"}
 
 

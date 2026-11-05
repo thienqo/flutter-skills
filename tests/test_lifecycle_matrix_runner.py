@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -88,6 +89,41 @@ class LifecycleMatrixRunnerTests(unittest.TestCase):
                 "ios", "A-SIMULATOR-ID", "com.example.app", "myapp://orders/42"
             ),
             ["xcrun", "simctl", "openurl", "A-SIMULATOR-ID", "myapp://orders/42"],
+        )
+
+    def test_android_device_shell_receives_one_literal_uri(self):
+        uri = "myapp://orders/42?a=1&b=2;printf BAD"
+        args = RUNNER.deep_link_command(
+            "android", "emulator-5554", "com.example.app", uri
+        )
+        # Model adb's join and the Android shell with a local, inert am stub.
+        shell_program = 'am() { printf "%s\\n" "$@"; }; ' + " ".join(args[4:])
+        completed = subprocess.run(
+            ["/bin/sh", "-c", shell_program], capture_output=True, text=True, check=True
+        )
+        self.assertEqual(completed.stdout.splitlines()[-2:], [uri, "com.example.app"])
+        unusual_id = "com.example.app;printf BAD"
+        commands = RUNNER.preflight_commands("android", "emulator-5554", unusual_id)
+        self.assertEqual(shlex.split(" ".join(commands[1][1][4:])), ["pm", "path", unusual_id])
+        stop = RUNNER.lifecycle_command("android", "emulator-5554", unusual_id)
+        self.assertEqual(shlex.split(" ".join(stop[4:])), ["am", "force-stop", unusual_id])
+
+    def test_report_redacts_entire_cookie_and_urls_in_hook_output(self):
+        log = (
+            "Cookie: session=FAKE_SESSION; refresh=FAKE_REFRESH\n"
+            "callback https://user:FAKE_PASSWORD@example.invalid/path"
+            "?code=FAKE_CODE#FAKE_FRAGMENT"
+        )
+        report = RUNNER.run_step(
+            "hook", [sys.executable, "-c", "import sys; print(sys.argv[1])", log], 5, True
+        )
+        self.assertEqual(
+            report["output_tail"].strip(),
+            "Cookie: [REDACTED]\ncallback https://example.invalid/path",
+        )
+        self.assertEqual(
+            RUNNER.safe_command(["https://user:FAKE_PASSWORD@example.invalid/?token=FAKE_TOKEN"]),
+            ["https://example.invalid/"],
         )
 
     def test_cleanup_runs_after_a_failed_assertion(self):
