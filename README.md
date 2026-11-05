@@ -37,6 +37,8 @@ Claude Code:
 
 </details>
 
+In Cursor, the same catalog can be used as a local plugin. Clone this repository, then open **Customize → Plugins → Import from Disk** and select the repository folder.
+
 ## Use
 
 Start with `flutter-app-workflow` for a feature, or name a specialist for a focused task:

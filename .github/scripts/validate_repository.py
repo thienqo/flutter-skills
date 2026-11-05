@@ -246,6 +246,7 @@ def validate_packages(skill_names: set[str]) -> list[str]:
     marketplace = load_json(ROOT / ".claude-plugin" / "marketplace.json")
     claude_plugin = load_json(ROOT / ".claude-plugin" / "plugin.json")
     codex = load_json(ROOT / ".codex-plugin" / "plugin.json")
+    cursor = load_json(ROOT / ".cursor-plugin" / "plugin.json")
     codex_marketplace = load_json(ROOT / ".agents" / "plugins" / "marketplace.json")
     tessl = load_json(ROOT / ".tessl-plugin" / "plugin.json")
     tessl_root = load_json(ROOT / "tessl.json")
@@ -255,6 +256,7 @@ def validate_packages(skill_names: set[str]) -> list[str]:
         marketplace.get("metadata", {}).get("version"),
         claude_plugin.get("version"),
         codex.get("version"),
+        cursor.get("version"),
         tessl.get("version"),
         npm_package.get("version"),
     }
