@@ -52,6 +52,26 @@ For Gemini CLI environments that still support extensions, install from `main`, 
 gemini extensions install https://github.com/thienqo/flutter-skills --ref main
 ```
 
+
+In Zed, install the skills into the current project's shared skills directory:
+
+```sh
+npx skills add thienqo/flutter-skills --agent zed --skill '*' --yes
+```
+
+In DeepSeek Harness, open **Plugins → Add plugin** and enter the repository URL
+`https://github.com/thienqo/flutter-skills`. The bundle adds the skills to the current Harness profile.
+
+For VS Code, use the repository's VS Code extension packaging script to build a VSIX:
+
+```sh
+python3 .github/scripts/stage_vscode_extension.py /tmp/flutter-skills-vscode
+cd /tmp/flutter-skills-vscode
+npx @vscode/vsce package
+```
+
+Install the resulting VSIX from **Extensions → Install from VSIX…**.
+
 ## Use
 
 Start with `flutter-app-workflow` for a feature, or name a specialist for a focused task:
