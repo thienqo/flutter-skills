@@ -81,7 +81,7 @@ When implementing any feature, bug fix, refactor, evaluation, or documentation u
 - Read `pubspec.yaml` and SDK constraints before recommending syntax or packages.
 - Prefer current official Flutter and Dart documentation; use package-publisher documentation for package-specific behavior.
 - Require evidence proportionate to the claim: formatting, analysis, tests, profile-mode measurements, or device behavior.
-- Ensure all reference documents in `references/` are covered in `evals/cases.json` (`python3 .github/scripts/run_behavior_evals.py --coverage` must report 100%).
+- Ensure all reference documents in `references/` are covered in `.github/evals/behavior/<name>/cases.json` (`python3 .github/scripts/run_behavior_evals.py --coverage` must report 100%).
 - Designate critical correctness, security, or constraint expectations with `mandatory: true` to enforce strict evaluation gating.
 - Keep maintainer-only workflows outside `skills/` so they do not enter the public catalog.
 
@@ -90,7 +90,7 @@ When implementing any feature, bug fix, refactor, evaluation, or documentation u
 When adding, removing, or renaming a skill, update:
 
 - `skills/<name>/SKILL.md`
-- `skills/<name>/evals/cases.json`
+- `.github/evals/behavior/<name>/cases.json`
 - `.codex-plugin/plugin.json`
 - `.agents/plugins/marketplace.json`
 - `.tessl-plugin/plugin.json`

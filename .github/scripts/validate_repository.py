@@ -180,9 +180,11 @@ def validate_skill(skill_dir: Path) -> tuple[list[str], list[str], int, int]:
         if child.is_dir() and child.name not in {"evals", "references"} and not any(child.rglob("*")):
             warnings.append(f"{skill_dir.name}: empty subdirectory {child.name}/")
 
-    eval_path = skill_dir / "evals" / "cases.json"
+    if (skill_dir / "evals").exists():
+        errors.append(f"{skill_dir.name}: evaluation files must stay outside distributed skills")
+    eval_path = ROOT / ".github" / "evals" / "behavior" / skill_dir.name / "cases.json"
     if not eval_path.is_file():
-        errors.append(f"{skill_dir.name}: missing evals/cases.json")
+        errors.append(f"{skill_dir.name}: missing .github/evals/behavior cases.json")
         return errors, warnings, len(description), 0
 
     try:
@@ -394,6 +396,8 @@ def validate_routing_cases(skill_names: set[str]) -> tuple[list[str], int]:
 
 
 def release_changelog_errors(changelog: str) -> list[str]:
+    if re.search(r"^## Unreleased[ \t]*$", changelog, re.MULTILINE | re.IGNORECASE):
+        return ["release changelog still has an Unreleased section"]
     match = re.search(
         rf"^## {re.escape(EXPECTED_VERSION)} - (\d{{4}}-\d{{2}}-\d{{2}})\s*$",
         changelog,
@@ -461,9 +465,9 @@ def validate_holdout() -> list[str]:
         return [f"invalid holdout manifest: {error}"]
 
     known: set[tuple[str, str]] = set()
-    for cases_path in sorted(SKILLS_DIR.glob("*/evals/cases.json")):
+    for cases_path in sorted((ROOT / ".github" / "evals" / "behavior").glob("*/cases.json")):
         for case in load_json(cases_path):
-            known.add((cases_path.parent.parent.name, case.get("name")))
+            known.add((cases_path.parent.name, case.get("name")))
 
     held: set[tuple[str, str]] = set()
     for index, item in enumerate(manifest.get("cases", [])):

@@ -10,7 +10,7 @@ Useful rows include cold signed-in entry, cold signed-out continuation after log
 
 ## Runner
 
-`scripts/run_lifecycle_matrix.py` orchestrates one Android emulator/device or iOS Simulator. For iOS, `app_id` is the bundle identifier. It defaults to a dry run, invokes commands as argv without a shell, bounds each step, runs target and installed-app preflight for version 2 matrices, redacts common token output, removes URI queries from report labels, hides the target identifier by default, and writes machine-readable evidence.
+`scripts/run_lifecycle_matrix.py` orchestrates one Android emulator/device or iOS Simulator. For iOS, `app_id` is the bundle identifier. It defaults to a dry run, invokes commands as argv without a host shell and quotes arguments passed through the Android device shell, bounds each step, runs target and installed-app preflight for version 2 matrices, redacts common token and cookie output and strips URL credentials, queries, and fragments from report text, hides the target identifier by default, and writes machine-readable evidence.
 
 Every scenario hook, including `precondition`, inherits the top-level `timeout_seconds` bound. Every `after` hook is failure-safe cleanup: the runner invokes it from a `finally` path after a pass, failed `before`, failed `precondition`, failed trigger or assertion, timeout, or command error. State both guarantees when reviewing a plan. Keep restoration and fixture cleanup in `after` rather than at the end of an assertion hook, and make the cleanup itself idempotent because its failure marks the scenario failed.
 
