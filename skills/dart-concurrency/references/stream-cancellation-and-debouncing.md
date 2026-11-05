@@ -47,3 +47,4 @@ Streams model sequences of asynchronous events over time. Failure to cancel subs
 
 - Use `package:fake_async` to control virtual time deterministically. Avoid `Future.delayed` in unit tests.
 - Test edge cases: stream errors, early cancellation before completion, rapid succession of inputs, and unmounting while an asynchronous emission is in flight.
+- Hold cleanup of the first listener with a completer, issue two newer queries, and assert neither subscribes until cleanup finishes. After completion, assert only the newest query subscribes. Complete older result work after the newest result and assert it cannot emit. Dispose during pending cleanup and assert that no listener is attached afterward.
