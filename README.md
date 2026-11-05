@@ -39,6 +39,19 @@ Claude Code:
 
 In Cursor, the same catalog can be used as a local plugin. Clone this repository, then open **Customize → Plugins → Import from Disk** and select the repository folder.
 
+
+For Antigravity, clone the repository and install the plugin from its directory:
+
+```sh
+agy plugin install ./flutter-skills
+```
+
+For Gemini CLI environments that still support extensions:
+
+```sh
+gemini extensions install https://github.com/thienqo/flutter-skills
+```
+
 ## Use
 
 Start with `flutter-app-workflow` for a feature, or name a specialist for a focused task:

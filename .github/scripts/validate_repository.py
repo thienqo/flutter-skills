@@ -247,6 +247,8 @@ def validate_packages(skill_names: set[str]) -> list[str]:
     claude_plugin = load_json(ROOT / ".claude-plugin" / "plugin.json")
     codex = load_json(ROOT / ".codex-plugin" / "plugin.json")
     cursor = load_json(ROOT / ".cursor-plugin" / "plugin.json")
+    antigravity = load_json(ROOT / ".antigravity-plugin" / "plugin.json")
+    gemini = load_json(ROOT / "gemini-extension.json")
     codex_marketplace = load_json(ROOT / ".agents" / "plugins" / "marketplace.json")
     tessl = load_json(ROOT / ".tessl-plugin" / "plugin.json")
     tessl_root = load_json(ROOT / "tessl.json")
@@ -257,6 +259,8 @@ def validate_packages(skill_names: set[str]) -> list[str]:
         claude_plugin.get("version"),
         codex.get("version"),
         cursor.get("version"),
+        antigravity.get("version"),
+        gemini.get("version"),
         tessl.get("version"),
         npm_package.get("version"),
     }
