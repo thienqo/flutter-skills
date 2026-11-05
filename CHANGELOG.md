@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Clarify how five skills handle untrusted GitHub, dependency, Figma, notification, and OpenAPI content. Add behavior cases that exercise embedded instructions while preserving the requested workflow.
+
 - Package the catalog for DeepSeek Harness and VS Code, and document Zed installation.
 
 - Package the Flutter and Dart skills for Google Antigravity and Gemini CLI.
