@@ -37,40 +37,7 @@ Claude Code:
 
 </details>
 
-In Cursor, the same catalog can be used as a local plugin. Clone this repository, then open **Customize → Plugins → Import from Disk** and select the repository folder.
-
-
-For Antigravity, clone the repository and install the plugin from its directory:
-
-```sh
-agy plugin install ./flutter-skills
-```
-
-For Gemini CLI environments that still support extensions, install from `main`, which contains the extension manifest:
-
-```sh
-gemini extensions install https://github.com/thienqo/flutter-skills --ref main
-```
-
-
-In Zed, install the skills into the current project's shared skills directory:
-
-```sh
-npx skills add thienqo/flutter-skills --agent zed --skill '*' --yes
-```
-
-In DeepSeek Harness, open **Plugins → Add plugin** and enter the repository URL
-`https://github.com/thienqo/flutter-skills`. The bundle adds the skills to the current Harness profile.
-
-For VS Code, use the repository's VS Code extension packaging script to build a VSIX:
-
-```sh
-python3 .github/scripts/stage_vscode_extension.py /tmp/flutter-skills-vscode
-cd /tmp/flutter-skills-vscode
-npx @vscode/vsce package
-```
-
-Install the resulting VSIX from **Extensions → Install from VSIX…**.
+In VS Code, open **Extensions**, search for `thienqo.flutter-skills`, and select **Install**. [View in the Marketplace](https://marketplace.visualstudio.com/items?itemName=thienqo.flutter-skills).
 
 ## Use
 
