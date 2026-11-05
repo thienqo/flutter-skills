@@ -182,6 +182,77 @@ class LifecycleMatrixRunnerTests(unittest.TestCase):
         self.assertEqual(result["status"], "passed")
         self.assertEqual(result["note"], "app was already stopped")
 
+    def test_ios_cold_prepare_does_not_accept_a_stopped_simulator(self):
+        result = {
+            "status": "failed",
+            "output_tail": "The simulator is not running.",
+        }
+        self.assertEqual(RUNNER.normalize_lifecycle_result("ios", result)["status"], "failed")
+
+    def test_report_redacts_private_scheme_and_free_text_names(self):
+        uri = "com.example.app:/oauth2redirect?code=FAKE_CODE&state=FAKE_STATE"
+        matrix = RUNNER.validate_matrix(
+            {
+                "platform": "ios",
+                "app_id": "com.example.app",
+                "device_id": "PRIVATE_UDID",
+                "scenarios": [
+                    {
+                        "name": "PRIVATE_UDID scenario",
+                        "lifecycle": "warm",
+                        "uri": uri,
+                        "assert": [{"name": f"Inspect {uri}", "argv": ["fixture"]}],
+                    }
+                ],
+            }
+        )
+        report = RUNNER.run_matrix(matrix, execute=False)
+        rendered = json.dumps(report)
+        for private_value in ("PRIVATE_UDID", "FAKE_CODE", "FAKE_STATE"):
+            self.assertNotIn(private_value, rendered)
+        self.assertIn("com.example.app:/oauth2redirect", rendered)
+
+    def test_cleanup_continues_after_hook_emits_invalid_utf8(self):
+        with tempfile.TemporaryDirectory() as directory:
+            marker = Path(directory) / "cleaned"
+            fixture = [sys.executable, "-c", "pass"]
+            matrix = RUNNER.validate_matrix(
+                {
+                    "platform": "ios",
+                    "app_id": "com.example.app",
+                    "device_id": "test-simulator",
+                    "scenarios": [
+                        {
+                            "name": "warm-notification",
+                            "lifecycle": "warm",
+                            "trigger": {"name": "trigger", "argv": fixture},
+                            "assert": [{"name": "assert", "argv": fixture}],
+                            "after": [
+                                {
+                                    "name": "invalid UTF-8",
+                                    "argv": [
+                                        sys.executable, "-c",
+                                        "import sys; sys.stdout.buffer.write(bytes([255])); sys.exit(1)",
+                                    ],
+                                },
+                                {
+                                    "name": "final cleanup",
+                                    "argv": [
+                                        sys.executable, "-c",
+                                        "from pathlib import Path; import sys; Path(sys.argv[1]).touch()",
+                                        str(marker),
+                                    ],
+                                },
+                            ],
+                        }
+                    ],
+                }
+            )
+            report = RUNNER.run_matrix(matrix, execute=True)
+            self.assertTrue(marker.exists())
+            self.assertEqual(report["status"], "failed")
+            self.assertEqual(report["scenarios"][0]["steps"][-1]["status"], "passed")
+
     def test_rejects_a_scenario_without_semantic_assertions(self):
         with self.assertRaisesRegex(
             RUNNER.MatrixError, "assert must contain at least one verification step"

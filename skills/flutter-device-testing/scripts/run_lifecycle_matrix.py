@@ -28,7 +28,7 @@ SECRET_PATTERNS = (
         r"\1[REDACTED]",
     ),
 )
-URI_PATTERN = re.compile(r'[A-Za-z][A-Za-z0-9+.-]*://[^\s<>"]+')
+URI_PATTERN = re.compile(r'[A-Za-z][A-Za-z0-9+.-]*:/[^\s<>"]+')
 TARGET_KINDS = {
     "android": {"android-emulator", "android-physical"},
     "ios": {"ios-simulator"},
@@ -281,6 +281,7 @@ def run_step(
     execute: bool,
     sensitive_values: tuple[str, ...] = (),
 ) -> dict[str, Any]:
+    name = redact(name, sensitive_values=sensitive_values)
     if not execute:
         return {
             "name": name,
@@ -294,7 +295,8 @@ def run_step(
             argv,
             check=False,
             capture_output=True,
-            text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             shell=False,
         )
@@ -315,7 +317,11 @@ def run_step(
         return result
     except subprocess.TimeoutExpired as error:
         output = redact(
-            "\n".join(str(part or "") for part in (error.stdout, error.stderr)),
+            "\n".join(
+                part.decode("utf-8", errors="replace") if isinstance(part, bytes) else part
+                for part in (error.stdout, error.stderr)
+                if part
+            ),
             sensitive_values=sensitive_values,
         )
         result = {
@@ -341,7 +347,10 @@ def normalize_lifecycle_result(
     if platform != "ios" or result["status"] != "failed":
         return result
     output = result.get("output_tail", "").lower()
-    if "no such process" in output or "not running" in output:
+    if (
+        "found nothing to terminate" in output
+        or re.search(r"\b(?:the )?app(?:lication)? is not running\b", output)
+    ):
         result["status"] = "passed"
         result["note"] = "app was already stopped"
     return result
@@ -401,7 +410,7 @@ def run_matrix(matrix: dict[str, Any], execute: bool) -> dict[str, Any]:
     if preflight_failed:
         scenario_results = [
             {
-                "name": scenario["name"],
+                "name": redact(scenario["name"], sensitive_values=sensitive_values),
                 "lifecycle": scenario["lifecycle"],
                 "status": "skipped",
                 "reason": "target or installed-app preflight failed",
@@ -511,7 +520,7 @@ def run_matrix(matrix: dict[str, Any], execute: bool) -> dict[str, Any]:
 
         scenario_results.append(
             {
-                "name": scenario["name"],
+                "name": redact(scenario["name"], sensitive_values=sensitive_values),
                 "lifecycle": scenario["lifecycle"],
                 "status": (
                     "failed" if failed else ("planned" if not execute else "passed")
@@ -522,7 +531,7 @@ def run_matrix(matrix: dict[str, Any], execute: bool) -> dict[str, Any]:
 
     target = {
         "label": redact(matrix["target_label"], sensitive_values=sensitive_values),
-        "kind": matrix["target_kind"],
+        "kind": redact(matrix["target_kind"], sensitive_values=sensitive_values),
     }
     if matrix["include_device_id"]:
         target["device_id"] = device_id
@@ -534,7 +543,7 @@ def run_matrix(matrix: dict[str, Any], execute: bool) -> dict[str, Any]:
         "executed": execute,
         "platform": platform,
         "target": target,
-        "app_id": app_id,
+        "app_id": redact(app_id, sensitive_values=sensitive_values),
         "context": {
             key: redact(value, sensitive_values=sensitive_values)
             for key, value in matrix["context"].items()

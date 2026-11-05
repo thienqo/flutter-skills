@@ -8,12 +8,16 @@ Streams model sequences of asynchronous events over time. Failure to cancel subs
 - **Cancel on Re-trigger**: When starting a new asynchronous operation from user input (e.g., search queries), define latest-wins behavior and prevent overlapping `cancel`/`listen` continuations. A generation token is one package-free option:
   ```dart
   int _searchGeneration = 0;
+  Future<void> _searchCancellation = Future<void>.value();
 
   Future<void> search(String query) async {
     final generation = ++_searchGeneration;
     final previous = _searchSubscription;
     _searchSubscription = null;
-    await previous?.cancel();
+    if (previous != null) {
+      _searchCancellation = previous.cancel();
+    }
+    await _searchCancellation;
 
     if (generation != _searchGeneration) return;
     _searchSubscription = repository.search(query).listen((result) {
@@ -21,7 +25,7 @@ Streams model sequences of asynchronous events over time. Failure to cancel subs
     });
   }
   ```
-  Increment the generation before final teardown and cancel the stored subscription. Alternatively, serialize the whole cancel-and-listen transition or use switch-latest semantics already present in the project's stream stack. A busy flag can lose the newest query, and debounce alone reduces request frequency but does not guarantee ordering or ownership.
+  All retriggers share the pending cleanup even when the subscription field is empty. Increment the generation before final teardown, cancel the stored subscription, and await any pending cleanup before releasing shared resources. Handle cancellation errors through the owner’s error path. Alternatively, serialize the whole cancel-and-listen transition or use switch-latest semantics already present in the project's stream stack. A busy flag can lose the newest query, and debounce alone reduces request frequency but does not guarantee ordering or ownership.
 - **StreamController Ownership**: A controller must be closed by the class that instantiates it. Never leave a controller open after its consumers are unmounted. Check `isClosed` before adding events if emissions can race with disposal.
 
 ## Debouncing and Throttling
