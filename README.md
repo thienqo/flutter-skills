@@ -46,10 +46,10 @@ For Antigravity, clone the repository and install the plugin from its directory:
 agy plugin install ./flutter-skills
 ```
 
-For Gemini CLI environments that still support extensions:
+For Gemini CLI environments that still support extensions, install from `main`, which contains the extension manifest:
 
 ```sh
-gemini extensions install https://github.com/thienqo/flutter-skills
+gemini extensions install https://github.com/thienqo/flutter-skills --ref main
 ```
 
 ## Use
