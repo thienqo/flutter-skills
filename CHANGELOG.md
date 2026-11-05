@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Package the catalog for DeepSeek Harness and VS Code, and document Zed installation.
+
 - Package the Flutter and Dart skills for Google Antigravity and Gemini CLI.
 
 - Package the Flutter and Dart skills as a Cursor plugin.
