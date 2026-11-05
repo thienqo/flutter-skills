@@ -37,7 +37,7 @@ class LifecycleMatrixRunnerTests(unittest.TestCase):
                             {
                                 "name": "warm-link",
                                 "lifecycle": "warm",
-                                "uri": "myapp://orders/42?token=secret",
+                                "uri": "myapp://orders/O'Neil?code=fake-query#fake-fragment",
                                 "assert": [
                                     {
                                         "name": "order destination",
@@ -50,19 +50,32 @@ class LifecycleMatrixRunnerTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            completed = subprocess.run(
-                [sys.executable, str(RUNNER_PATH), str(matrix_path)],
-                check=False,
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(completed.returncode, 0, completed.stderr)
-            report = json.loads(completed.stdout)
-            self.assertEqual(report["status"], "planned")
-            self.assertEqual(report["schema_version"], 2)
-            self.assertNotIn("device_id", report["target"])
-            trigger = report["scenarios"][0]["steps"][0]
-            self.assertNotIn("token=secret", json.dumps(trigger))
+            report_path = Path(directory) / "report.json"
+            for report_args in ([], ["--report", str(report_path)]):
+                with self.subTest(report_args=report_args):
+                    completed = subprocess.run(
+                        [sys.executable, str(RUNNER_PATH), str(matrix_path), *report_args],
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                    )
+                    self.assertEqual(completed.returncode, 0, completed.stderr)
+                    rendered = (
+                        report_path.read_text(encoding="utf-8")
+                        if report_args
+                        else completed.stdout
+                    )
+                    self.assertNotIn("fake-query", rendered)
+                    self.assertNotIn("fake-fragment", rendered)
+                    report = json.loads(rendered)
+                    self.assertEqual(report["status"], "planned")
+                    self.assertEqual(report["schema_version"], 2)
+                    self.assertNotIn("device_id", report["target"])
+                    trigger = report["scenarios"][0]["steps"][0]
+                    self.assertEqual(trigger["name"], "trigger: myapp://orders/O'Neil")
+                    self.assertEqual(
+                        shlex.split(trigger["command"][-2]), ["myapp://orders/O'Neil"]
+                    )
 
     def test_builds_platform_commands_without_a_shell(self):
         self.assertEqual(

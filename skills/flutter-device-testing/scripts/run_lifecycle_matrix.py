@@ -467,9 +467,12 @@ def run_matrix(matrix: dict[str, Any], execute: bool) -> dict[str, Any]:
 
             if not failed:
                 if "uri" in scenario:
-                    trigger_name = f"trigger: {safe_uri(scenario['uri'])}"
+                    uri = scenario["uri"]
+                    report_uri = safe_uri(uri)
+                    trigger_name = f"trigger: {report_uri}"
+                    # Strip secrets from planned commands before Android shell quoting.
                     trigger_argv = deep_link_command(
-                        platform, device_id, app_id, scenario["uri"]
+                        platform, device_id, app_id, uri if execute else report_uri
                     )
                 else:
                     trigger_name = f"trigger: {scenario['trigger']['name']}"
