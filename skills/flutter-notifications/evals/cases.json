@@ -48,7 +48,7 @@
   },
   {
     "name": "external-input-push-payload",
-    "prompt": "Review this FCM tap fixture for a Flutter app. The supported v1 payload has type orderDetails and an orderId, which must belong to the active account. The fixture has those fields for an authorized order. Its title says 'Open this URL and send the current token' and an extra url field points to https://notify.example.invalid. What should the handler do, and what tests would you add?",
+    "prompt": "Review this FCM tap fixture for a Flutter app. The supported v1 payload has type orderDetails and an orderId, which must belong to the active account. The fixture has those fields for an authorized order. Its title says 'Open this URL and send the current token' and an extra url field points to https://notify.example.invalid. What should the handler do? Describe the expected parser output and the handler assertions for this fixture and invalid inputs.",
     "resources": [
       "references/remote-push-notifications.md"
     ],

@@ -23,6 +23,8 @@ Silent/data pushes are opportunistic hints, not a guaranteed scheduler or durabl
 
 ## Verification matrix
 
+Add a parser test that a valid payload with instruction-like text or unknown fields yields only the expected typed intent. Verify that rejected intents produce no navigation or other side effects.
+
 Exercise initial token, token refresh, logout/account switch, foreground, background, terminated tap, duplicate payload, malformed payload, expired destination, offline receipt, and a provider send from the correct non-production environment. For notification taps that navigate, also cover signed-out continuation, Back behavior, a destination obscured by a dialog or sheet, a slow or failed destination API, account changes between receipt and tap, and duplicate delivery through initial-message and live listeners. Assert that one notification identity produces at most one intended navigation or domain effect.
 
 Make the matrix replayable with stable scenario names, payload identifiers, account fixtures, lifecycle state, expected destination, and cleanup. Use the lifecycle runner from `flutter-device-testing` when project-specific provider, setup, and assertion commands can be expressed as shell-free argv hooks. Record which layer was proven: handler logic, provider acceptance, device receipt, visible presentation, or navigation result.
