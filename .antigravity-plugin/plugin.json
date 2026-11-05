@@ -1,0 +1,21 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "flutter-skills",
+  "displayName": "Flutter Skills",
+  "version": "0.12.0",
+  "description": "Use 37 skills to build, review, test, and release Flutter and Dart apps while preserving your project's architecture and package choices.",
+  "logo": "assets/antigravity-icon.png",
+  "suggestedPrompts": [
+    "Plan and implement a Flutter feature using this project's architecture, then verify it.",
+    "Review this Flutter change for regressions, security risks, and missing tests.",
+    "Diagnose this Flutter performance issue and define how to measure the fix."
+  ],
+  "author": {
+    "name": "thienqo",
+    "url": "https://github.com/thienqo"
+  },
+  "homepage": "https://github.com/thienqo/flutter-skills",
+  "repository": "https://github.com/thienqo/flutter-skills",
+  "license": "BSD-3-Clause",
+  "keywords": ["flutter", "dart", "mobile", "testing", "code-review"]
+}

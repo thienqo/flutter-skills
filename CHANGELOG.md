@@ -8,6 +8,11 @@
 
 - Clarify how five skills handle untrusted GitHub, dependency, Figma, notification, and OpenAPI content. Add behavior cases that exercise embedded instructions while preserving the requested workflow.
 
+- Package the catalog for DeepSeek Harness and VS Code, and document Zed installation.
+
+- Package the Flutter and Dart skills for Google Antigravity and Gemini CLI.
+
+- Package the Flutter and Dart skills as a Cursor plugin.
 - Show the Claude plugin as `thienqo-flutter` in the directory. The plugin name and install command are unchanged.
 - Add `PRIVACY.md` and link it from the Claude plugin manifest for the plugin directory listing.
 - Move the npm executable from `bin/` to `cli/`, because the Claude plugin directory cannot install a plugin with a top-level `bin/` on Cowork or the Claude apps. The `flutter-skills` command is unchanged.
