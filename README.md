@@ -37,6 +37,8 @@ Claude Code:
 
 </details>
 
+In VS Code, open **Extensions**, search for `thienqo.flutter-skills`, and select **Install**. [View in the Marketplace](https://marketplace.visualstudio.com/items?itemName=thienqo.flutter-skills).
+
 ## Use
 
 Start with `flutter-app-workflow` for a feature, or name a specialist for a focused task:

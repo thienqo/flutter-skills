@@ -9,9 +9,26 @@
   "files": [
     "cli",
     "lib",
+    "skills/*/SKILL.md",
+    "skills/*/references",
+    "skills/*/scripts",
+    "skills/*/assets",
+    "cordis.patch.yml",
+    "integrations/deepseek/en.json",
+    "assets/antigravity-icon.png",
     "LICENSE",
     "README.md"
   ],
+  "exports": {
+    "./locale/en.json": "./integrations/deepseek/en.json",
+    "./icon": "./assets/antigravity-icon.png",
+    "./*": "./*"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
   "scripts": {
     "test": "node --test tests/test_npm_cli.mjs",
     "pack:check": "npm pack --dry-run"
