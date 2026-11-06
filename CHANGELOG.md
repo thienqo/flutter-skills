@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.13.0 - 2026-11-06
+
+- Redact cookie values that start on the next line and scan lifecycle report URLs in linear time. Allow a later Dart search to retry after subscription cancellation fails.
 
 - Clarify Flutter web and native thumbnail sizing, reproducible visual and keyboard checks, and policy shared across repositories. Add focused behavior cases for all three.
 
