@@ -18,6 +18,11 @@ from urllib.parse import urlsplit, urlunsplit
 
 SECRET_PATTERNS = (
     (
+        re.compile(r'(?i)("(?:set-cookie|cookie)"[ \t]*:[ \t]*\r?\n[ \t]*")'
+                   r'(?:[^"\\\r\n]|\\[^\r\n])*(")'),
+        r"\1[REDACTED]\2",
+    ),
+    (
         re.compile(r'(?i)(\b(?:set-cookie|cookie)["\']?[ \t]*[:=][ \t]*)[^\r\n]+'),
         r"\1[REDACTED]",
     ),

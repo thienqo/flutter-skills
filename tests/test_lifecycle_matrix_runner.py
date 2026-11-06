@@ -139,6 +139,21 @@ class LifecycleMatrixRunnerTests(unittest.TestCase):
             ["https://example.invalid/"],
         )
 
+    def test_report_redacts_cookie_value_on_the_next_line(self):
+        for header in ("cookie", "Set-Cookie"):
+            with self.subTest(header=header):
+                log = (
+                    f'{{"{header}":\n'
+                    '  "session=FAKE_SESSION; refresh=FAKE_REFRESH",\n'
+                    '  "status": "ready"}'
+                )
+                report = RUNNER.run_step(
+                    "hook", [sys.executable, "-c", "import sys; print(sys.argv[1])", log], 5, True
+                )
+                self.assertEqual(
+                    json.loads(report["output_tail"]), {header: "[REDACTED]", "status": "ready"}
+                )
+
     def test_cleanup_runs_after_a_failed_assertion(self):
         with tempfile.TemporaryDirectory() as directory:
             marker = Path(directory) / "cleaned"
