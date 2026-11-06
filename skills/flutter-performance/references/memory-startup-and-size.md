@@ -6,7 +6,7 @@ Measure a repeated flow: establish a steady baseline, enter and leave the featur
 
 Inspect lifecycle ownership of controllers, subscriptions, listeners, image caches, platform handles, and closures capturing widget state. Fix disposal or ownership at the source; do not hide retention by clearing every cache.
 
-Treat a reported cause, such as "the images are full resolution", as a hypothesis. Before changing code, confirm it during the repeated flow: watch `imageCache.currentSizeBytes` and `liveImageCount`, or compare decoded image sizes with display sizes in the DevTools Memory view. State the measurement you will take and what result would confirm or reject the cause.
+Treat full-resolution decodes as a hypothesis. Compare actual decoded dimensions with the physical pixels required for the tile's fit or crop, and check whether oversized images account for the growth. If decodes already match the required size, rule out oversized dimensions and inspect the number of retained images and their ownership instead.
 
 Read `ImageCache.currentSizeBytes` as cached entry size and `liveImageCount` as a separate count. Pair them with memory profiling and decoded dimensions before attributing growth. When oversized decodes are confirmed, use [platform-aware image sizing](profile-and-frame-analysis.md#common-interventions-once-attributed) to reduce the size at the source.
 
