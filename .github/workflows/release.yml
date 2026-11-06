@@ -168,10 +168,62 @@ jobs:
           done
           exit "$publish_status"
 
+  publish-vscode:
+    name: Publish VS Code Extension
+    if: github.ref_type == 'tag' || inputs.release_tag != ''
+    needs: [validate, publish-npm]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.release_tag && format('refs/tags/{0}', inputs.release_tag) || github.ref }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Stage and verify the Marketplace version
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          work_dir="$(mktemp -d)"
+          python3 .github/scripts/stage_vscode_extension.py "$work_dir/extension"
+          cd "$work_dir/extension"
+          version="$(jq -er '.version' package.json)"
+          extension_id="$(jq -er '.publisher + "." + .name' package.json)"
+          test "$RELEASE_TAG" = "v$version"
+          test "$extension_id" = "thienqo.flutter-skills"
+
+          marketplace_has_version() {
+            jq -e --arg version "$version" 'any(.versions[]; .version == $version)' > /dev/null
+          }
+
+          listing="$(npx --yes @vscode/vsce@4.1.0 show "$extension_id" --json)"
+          if marketplace_has_version <<< "$listing"; then
+            echo "$extension_id@$version is already public on Visual Studio Marketplace."
+            exit 0
+          fi
+
+          npx --yes @vscode/vsce@4.1.0 publish --oidc --no-dependencies
+          for attempt in {1..60}; do
+            if npx --yes @vscode/vsce@4.1.0 show "$extension_id" --json | marketplace_has_version; then
+              echo "Verified $extension_id@$version on Visual Studio Marketplace."
+              exit 0
+            fi
+            echo "Waiting for Marketplace verification (attempt $attempt/60)."
+            sleep 15
+          done
+          echo "::error::Marketplace has not exposed $extension_id@$version. Check publisher verification before retrying."
+          exit 1
+
   github-release:
     name: Publish GitHub Release
     if: github.ref_type == 'tag' || inputs.release_tag != ''
-    needs: [validate, publish-npm, publish-tessl]
+    needs: [validate, publish-npm, publish-tessl, publish-vscode]
     runs-on: ubuntu-latest
     permissions:
       contents: write
