@@ -10,6 +10,8 @@ Treat a reported cause, such as "the images are full resolution", as a hypothesi
 
 Read `ImageCache.currentSizeBytes` as cached entry size and `liveImageCount` as a separate count. Pair them with memory profiling and decoded dimensions before attributing growth. When oversized decodes are confirmed, use [platform-aware image sizing](profile-and-frame-analysis.md#common-interventions-once-attributed) to reduce the size at the source.
 
+For oversized thumbnails, keep normal cache eviction and correct the decode size. Reject periodic whole-cache clearing as a fix because it discards reusable entries and leaves actively listened-to images live.
+
 For web image-memory comparisons, repeat the same scroll in an isolated browser tab and sample its memory footprint at the same points before and after. Use a browser process metric such as Chrome Task Manager's Memory footprint and report it as aggregate memory. Record response dimensions and transfer bytes separately. A JS heap snapshot alone misses native allocations, and transfer size measures network cost.
 
 ## Startup
