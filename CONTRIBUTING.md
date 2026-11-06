@@ -59,6 +59,10 @@ python3 .github/scripts/validate_repository.py --release
 
 The npm package uses trusted publishing. Configure `@thiennc/flutter-skills` on npm with GitHub Actions publisher `thienqo/flutter-skills`, workflow filename `release.yml`, and permission to run `npm publish`. The tag-only release workflow uses OIDC, publishes provenance, verifies the immutable registry version, and smoke-tests the installed CLI before continuing to Tessl and GitHub Release.
 
+Visual Studio Marketplace also uses [Trusted Publishing](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#publish-with-github-actions-and-trusted-publishing). In publisher `thienqo`, create a policy for repository owner `thienqo`, repository `flutter-skills`, and workflow `release.yml`. Leave the environment blank. The release workflow packages the extension from the same Git revision and waits for that version to appear in the public Marketplace listing before creating the GitHub Release.
+
+If a registry job fails after publication, run the Release workflow from `main` with the existing version tag as `release_tag`. Check the publisher dashboard first if VS Code Marketplace is still verifying an upload. The workflow checks for versions already visible before publishing again.
+
 ## Pull-request checklist
 
 - [ ] The change addresses one clear problem.
