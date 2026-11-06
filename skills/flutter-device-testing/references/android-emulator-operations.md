@@ -37,12 +37,12 @@ Use the narrowest operation that represents the scenario:
 - `am force-stop` changes later intent, alarm, and background-delivery semantics. Use it only when the scenario is explicitly a force-stop or cold-entry case.
 - Clearing package data or uninstalling destroys app-owned state and requires an explicit clean-state decision.
 
-For deep links, target the selected serial and verify application behavior after Android accepts the intent:
+For deep links, target the selected serial and verify application behavior after Android accepts the intent. Quote the URI for the device shell as well as the host shell. For a dynamic URI, use the [lifecycle runner](lifecycle-entry-matrix.md) to escape it before passing it to ADB.
 
 ```sh
 adb -s <serial> shell am start -W \
   -a android.intent.action.VIEW \
-  -d <uri> <application-id>
+  -d "'myapp://product/123?source=test&mode=preview'" <application-id>
 ```
 
 For Android App Links, separately verify domain association and resolver state when that is part of the claim. A successful `am start` does not prove navigation, authentication continuation, Back behavior, or exactly-once side effects.

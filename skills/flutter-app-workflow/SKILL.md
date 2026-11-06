@@ -23,7 +23,7 @@ Read [project preflight](references/project-preflight.md) before planning.
   - tests and platforms outside scope
   - inspection that can continue
 
-  Then ask one focused question. Pair each affected boundary with why the behavior reaches it and the exact code, contract, or test evidence still needed; a list of module names is not an impact map.
+  Ask one focused question only when a material decision remains unresolved. If the available evidence resolves the decision, proceed. Pair each affected boundary with why the behavior reaches it and the exact code, contract, or test evidence still needed; a list of module names is not an impact map.
 
 ## Route specialists
 
