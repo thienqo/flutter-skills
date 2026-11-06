@@ -58,6 +58,16 @@
     ]
   },
   {
+    "name": "composes-checkout-policy-above-repositories",
+    "prompt": "In an existing Bloc app, checkout eligibility depends on cart contents and membership from two independent repositories. The eligibility rule is reused by checkout and express reorder. A proposal has CartRepository call MembershipRepository directly. Show the smallest design and regression checks while keeping both repositories and the existing DI mechanism.",
+    "resources": ["references/feature-boundaries-and-dependency-rules.md", "references/greenfield-and-evolution.md"],
+    "expectations": [
+      {"text": "places the shared eligibility rule above the repositories in a single use case or domain policy and preserves each repository's independent data ownership", "mandatory": true},
+      "reuses the existing Bloc and dependency injection and avoids adding a redundant layer for unrelated flows",
+      "tests the policy with both repository inputs and covers unavailable or failed membership data without inventing a product outcome"
+    ]
+  },
+  {
     "name": "repository-maps-data-source-model-to-domain",
     "prompt": "OrderRepository currently returns the raw Drift OrderRow straight from the database query to the presentation layer. Add a new getOrderHistory method following the same existing pattern.",
     "resources": [

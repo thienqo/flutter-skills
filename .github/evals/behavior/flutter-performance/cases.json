@@ -44,9 +44,10 @@
   },
   {
     "name": "resizes-images-before-clearing-cache",
-    "prompt": "A grid of thumbnails loads full-resolution network images and memory keeps climbing while scrolling. Clear the image cache whenever memory gets high.",
+    "prompt": "A native Flutter grid of thumbnails loads full-resolution network images and memory keeps climbing while scrolling. Clear the image cache whenever memory gets high.",
     "resources": [
-      "references/memory-startup-and-size.md"
+      "references/memory-startup-and-size.md",
+      "references/profile-and-frame-analysis.md"
     ],
     "expectations": [
       {
@@ -56,6 +57,16 @@
       "sets cacheWidth/cacheHeight (or an equivalent resize) to the display size instead of the source resolution",
       "rejects periodically clearing the whole image cache as the fix",
       "verifies bounded memory after the resize with the same repeated scroll flow"
+    ]
+  },
+  {
+    "name": "sizes-network-thumbnails-by-platform",
+    "prompt": "Our Android and web catalog displays mixed-aspect-ratio network photos in square BoxFit.cover tiles. A trace confirms oversized decodes. The CDN already serves sized cropped variants. A teammate proposes cacheWidth and cacheHeight set to the square tile size on every platform. Give the smallest fix, preserving crop and sharpness, and the verification plan.",
+    "resources": ["references/profile-and-frame-analysis.md", "references/memory-startup-and-size.md"],
+    "expectations": [
+      {"text": "states that Flutter web Image.network ignores cacheWidth and cacheHeight and uses a suitably sized CDN variant for the web path", "mandatory": true},
+      {"text": "preserves aspect ratio or applies an intentional cover crop instead of setting both exact decode dimensions to a square for uncropped non-square images", "mandatory": true},
+      "uses physical pixel requirements for the tile and verifies memory and visual quality separately on Android and web"
     ]
   },
   {
