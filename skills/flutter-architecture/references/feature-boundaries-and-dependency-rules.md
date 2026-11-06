@@ -12,6 +12,8 @@ Group code by user-facing capability when it has distinct state, behavior, or da
 
 Use an interface when multiple implementations, isolation from an external dependency, or meaningful test substitution justifies it. Avoid speculative abstractions and pass-through layers.
 
+Keep independent repositories focused on their own data. Compose data from multiple repositories in presentation logic when it is specific to one screen. Put reusable or complex business policy in a focused use case above the repositories. For example, let checkout and reorder share one eligibility policy that consumes cart and membership data. Test the policy with both inputs and verify that unavailable inputs follow the existing product contract.
+
 Validate with import/dependency rules where the repository already supports them, plus tests at the feature boundary. A diagram is useful only if it matches actual imports and runtime ownership.
 
 ## Dependency injection and data mapping
@@ -22,4 +24,5 @@ Validate with import/dependency rules where the repository already supports them
 ## Sources
 
 - [Flutter architecture concepts](https://docs.flutter.dev/app-architecture/concepts)
+- [Flutter architecture guide](https://docs.flutter.dev/app-architecture/guide)
 - [Flutter dependency injection case study](https://docs.flutter.dev/app-architecture/case-study/dependency-injection)

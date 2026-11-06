@@ -20,6 +20,8 @@ Keep the matrix small enough to maintain while covering the highest-risk visual 
 
 Use screenshot or golden tests for stable component and screen states. Use emulator or real-device captures when system chrome, fonts, safe areas, platform controls, GPU effects, keyboard behavior, or input mode matters. Behavioral widget tests remain separate evidence.
 
+For golden tests, match the CI operating system and pinned Flutter version, explicitly load the product fonts, and fix viewport, device pixel ratio, theme, and fixture data. Inspect expected, actual, and diff images under those conditions before updating a baseline. For critical actions, separately test keyboard traversal, visible focus, and activation on the relevant input surface.
+
 Do not approve visual output solely from source review. Render it at the intended sizes.
 
 ## Inspect systematically
@@ -27,7 +29,7 @@ Do not approve visual output solely from source review. Render it at the intende
 - Primary task and action are immediately identifiable.
 - Reading order remains clear without accent color.
 - Text wraps, scales, and localizes without clipping or hiding actions.
-- Foreground/background pairs maintain contrast in every theme and state.
+- Foreground/background pairs maintain contrast in every theme and state. For translucent or gradient surfaces, check the rendered foreground against representative backdrops, including the lowest-contrast region behind text or controls.
 - Spacing and alignment follow the token rhythm.
 - Components have coherent shape, icon, elevation, and state treatment.
 - Empty, loading, error, offline, disabled, and focus states feel designed rather than appended.
@@ -52,3 +54,8 @@ For a visible redesign, use a render-critique-render loop:
 A successful build or passing widget test proves implementation health, not visual quality. Do not mark visual work complete until a rendered artifact has been inspected.
 
 If the result depends on subjective brand direction that the repository and brief do not establish, present a restrained default and record the open choice. Do not invent a redesign mandate or claim universal aesthetic superiority.
+
+## Sources
+
+- [Flutter golden test rendering and fonts](https://api.flutter.dev/flutter/flutter_test/matchesGoldenFile.html)
+- [Flutter accessibility testing](https://docs.flutter.dev/ui/accessibility/accessibility-testing)

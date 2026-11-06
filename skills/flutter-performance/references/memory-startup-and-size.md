@@ -6,9 +6,13 @@ Measure a repeated flow: establish a steady baseline, enter and leave the featur
 
 Inspect lifecycle ownership of controllers, subscriptions, listeners, image caches, platform handles, and closures capturing widget state. Fix disposal or ownership at the source; do not hide retention by clearing every cache.
 
-Treat a reported cause, such as "the images are full resolution", as a hypothesis. Before changing code, confirm it during the repeated flow: watch `imageCache.currentSizeBytes` and `liveImageCount`, or compare decoded image sizes with display sizes in the DevTools Memory view. State the measurement you will take and what result would confirm or reject the cause.
+Treat full-resolution decodes as a hypothesis. Compare actual decoded dimensions with the physical pixels required for the tile's fit or crop, and check whether oversized images account for the growth. If decodes already match the required size, rule out oversized dimensions and inspect the number of retained images and their ownership instead.
 
-Check the image cache specifically: `PaintingBinding.instance.imageCache` holds decoded bitmaps up to its size and byte-size limits. A resized decode (`cacheWidth`/`cacheHeight` matching the display size) reduces both raster cost and cache memory at the source. Evicting or shrinking the cache globally is a workaround for images decoded far larger than their display size, not a fix for it.
+Read `ImageCache.currentSizeBytes` as cached entry size and `liveImageCount` as a separate count. Pair them with memory profiling and decoded dimensions before attributing growth. When oversized decodes are confirmed, use [platform-aware image sizing](profile-and-frame-analysis.md#common-interventions-once-attributed) to reduce the size at the source.
+
+For oversized thumbnails, keep normal cache eviction and correct the decode size. Reject periodic whole-cache clearing as a fix because it discards reusable entries and leaves actively listened-to images live.
+
+For web image-memory comparisons, repeat the same scroll in an isolated browser tab and sample its memory footprint at the same points before and after. Use a browser process metric such as Chrome Task Manager's Memory footprint and report it as aggregate memory. Record response dimensions and transfer bytes separately. A JS heap snapshot alone misses native allocations, and transfer size measures network cost.
 
 ## Startup
 
@@ -21,5 +25,7 @@ Compare like-for-like release artifacts for the same target, architecture splits
 ## Sources
 
 - [DevTools memory view](https://docs.flutter.dev/tools/devtools/memory)
+- [ImageCache metrics](https://api.flutter.dev/flutter/painting/ImageCache-class.html)
+- [Chrome memory diagnostics](https://developer.chrome.com/docs/devtools/memory-problems)
 - [Measure app size](https://docs.flutter.dev/perf/app-size)
 - [Flutter performance profiling](https://docs.flutter.dev/perf)

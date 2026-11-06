@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Clarify Flutter web and native thumbnail sizing, reproducible visual and keyboard checks, and policy shared across repositories. Add focused behavior cases for all three.
+
 - Harden lifecycle report redaction, cleanup, and simulator failure handling. Fix manual ADB examples, serialize stream cleanup across retriggers, and ask for clarification only when a material app decision remains unresolved.
 
 - Quote Android lifecycle runner arguments for the device shell and redact credentials in lifecycle reports. Keep behavior eval fixtures outside installed skill directories and require a finalized changelog for release validation.

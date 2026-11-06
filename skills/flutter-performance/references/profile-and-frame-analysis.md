@@ -18,7 +18,7 @@ Apply the smallest intervention that matches the attributed cause, then repeat t
 
 - **Unnecessary repaints**: wrap the smallest subtree that actually repaints independently in `RepaintBoundary`; a boundary placed around a large, frequently rebuilding ancestor adds compositing cost without isolating the paint. Confirm scope with the repaint rainbow or layer visualizer rather than wrapping speculatively.
 - **Unnecessary rebuilds**: narrow the state subscription scope (`Selector`, `select`, a scoped `Consumer`) before adding `const` everywhere; `const` only skips rebuild for a widget whose own arguments are unchanged, not for an ancestor that still rebuilds to reach it.
-- **Image decode/raster cost**: set `cacheWidth`/`cacheHeight` to the display size in logical pixels times the device pixel ratio, not the source asset size. Decoding and retaining a full-resolution bitmap for a thumbnail is a common hidden raster and memory cost.
+- **Image decode/raster cost**: size thumbnails for the physical pixels needed by the displayed image and its fit or crop. On native targets, use one decode dimension when preserving the source aspect ratio, or use an already cropped variant. Passing both exact dimensions for a non-matching source can stretch it before `BoxFit.cover` runs. On web, `Image.network` ignores `cacheWidth` and `cacheHeight`. Request an appropriately sized variant from the image source or CDN and verify dimensions, sharpness, and cost in the browser.
 - **Long or unbounded lists**: use a lazy builder (`ListView.builder`, `SliverList.builder`) instead of eagerly building every child, and add `itemExtent` or a `prototypeItem` when items share a size so the viewport can estimate layout without measuring each one.
 - **Shader or first-use jank**: separate one-time shader compilation cost from steady-state cost with a warm-up pass before comparing; attributing a first-frame-only cost to ongoing code leads to the wrong fix.
 - **Isolates**: move work to an isolate only after the trace shows sustained UI-thread CPU work; isolate setup and message-copy cost is real and is not a default fix for jank.
@@ -27,10 +27,13 @@ Record which rendering backend (Impeller or the legacy Skia backend) was active 
 
 ## Web
 
-Profile a release-like web build with browser performance and memory tools. Record browser, renderer, viewport, and network/CPU throttling. Do not claim a Flutter DevTools frame chart proves web rendering performance when browser tooling is the relevant evidence.
+Use a Flutter web profile build and the Chrome DevTools Performance panel for Flutter timeline events. Record browser, renderer, viewport, and network/CPU throttling. Use browser network or memory tools when those metrics drive the investigation.
 
 ## Sources
 
 - [Flutter UI performance](https://docs.flutter.dev/perf/ui-performance)
 - [Flutter performance metrics](https://docs.flutter.dev/perf/metrics)
 - [DevTools CPU profiler](https://docs.flutter.dev/tools/devtools/cpu-profiler)
+- [Flutter web performance profiling](https://docs.flutter.dev/perf/web-performance)
+- [Image.network decode sizing](https://api.flutter.dev/flutter/widgets/Image/Image.network.html)
+- [ResizeImage sizing policy](https://api.flutter.dev/flutter/painting/ResizeImagePolicy.html)

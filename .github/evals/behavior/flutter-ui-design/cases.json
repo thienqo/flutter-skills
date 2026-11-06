@@ -55,6 +55,16 @@
     ]
   },
   {
+    "name": "verifies-goldens-and-keyboard-access-separately",
+    "prompt": "A Flutter checkout redesign added a translucent sticky action dock. Widget goldens pass on macOS but fail in Linux CI, and keyboard users report that the pay action is unreachable. The original custom font is bundled. Give a verification and repair plan without claiming unavailable evidence.",
+    "resources": ["references/visual-verification.md"],
+    "expectations": [
+      {"text": "verifies keyboard traversal, visible focus, and activation separately from screenshot or golden equality", "mandatory": true},
+      {"text": "makes golden rendering reproducible using a fixed CI Flutter and OS baseline and explicit loading of the bundled font before accepting intentional diffs", "mandatory": true},
+      "checks contrast on the rendered dock over representative backgrounds and confirms enlarged text does not hide the action"
+    ]
+  },
+  {
     "name": "designs-complete-data-states",
     "prompt": "Design a production-ready API-backed catalog screen with loading, empty, error, offline, disabled, and loaded states.",
     "resources": [
