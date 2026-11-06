@@ -154,6 +154,25 @@ class LifecycleMatrixRunnerTests(unittest.TestCase):
                     json.loads(report["output_tail"]), {header: "[REDACTED]", "status": "ready"}
                 )
 
+    def test_report_redacts_urls_after_a_long_log_token(self):
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "import runpy, sys\n"
+                "runner = runpy.run_path(sys.argv[1])\n"
+                "log = 'A' * 200_000 + ' +123https://user:FAKE_PASSWORD@example.invalid/path'"
+                " + '?code=FAKE_CODE#FAKE_FRAGMENT'\n"
+                "print(runner['redact'](log))",
+                str(RUNNER_PATH),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        self.assertTrue(completed.stdout.rstrip().endswith("+123https://example.invalid/path"))
+
     def test_cleanup_runs_after_a_failed_assertion(self):
         with tempfile.TemporaryDirectory() as directory:
             marker = Path(directory) / "cleaned"

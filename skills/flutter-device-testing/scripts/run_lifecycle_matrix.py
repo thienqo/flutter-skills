@@ -33,7 +33,10 @@ SECRET_PATTERNS = (
         r"\1[REDACTED]",
     ),
 )
-URI_PATTERN = re.compile(r'[A-Za-z][A-Za-z0-9+.-]*:/[^\s<>"]+')
+# Scan each run of scheme characters once. Preserve any prefix before its first letter.
+URI_PATTERN = re.compile(
+    r'(?<![A-Za-z0-9+.-])([0-9+.-]*)([A-Za-z][A-Za-z0-9+.-]*:/[^\s<>"]+)'
+)
 TARGET_KINDS = {
     "android": {"android-emulator", "android-physical"},
     "ios": {"ios-simulator"},
@@ -55,7 +58,7 @@ class MatrixError(ValueError):
 def redact(
     text: str, limit: int = 4000, sensitive_values: tuple[str, ...] = ()
 ) -> str:
-    value = URI_PATTERN.sub(lambda match: safe_uri(match.group()), text)
+    value = URI_PATTERN.sub(lambda match: match[1] + safe_uri(match[2]), text)
     for pattern, replacement in SECRET_PATTERNS:
         value = pattern.sub(replacement, value)
     for sensitive in sensitive_values:
