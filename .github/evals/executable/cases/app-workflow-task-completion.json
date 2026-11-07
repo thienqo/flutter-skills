@@ -1,0 +1,44 @@
+{
+  "name": "app-workflow-task-completion",
+  "skill": "flutter-app-workflow",
+  "prompt": "Deliver the task-completion feature in this existing Flutter fixture, preserving its TaskApi/repository, ChangeNotifier, and injected-controller widget architecture. Completing a task must send its ID once, use the server-confirmed task fields, show a pending state, prevent duplicate submission, preserve the task on failure with a visible recoverable error, support retry, and stop accepting late results after controller disposal. A completed task cannot be submitted again. Inspect the existing code and immutable acceptance tests before editing. Implement the coherent data/state/UI path and add a focused regression under test/regression if useful. Review the final diff and report checks actually executed separately from checks left to the harness. There is no live backend or device target: widget tests with a controlled TaskApi are the available runtime surface. Do not install packages, publish, or fabricate device/backend evidence.",
+  "resources": [
+    "references/specialist-coordination.md",
+    "references/project-preflight.md",
+    "references/post-implementation-review.md",
+    "references/delivery-verification.md"
+  ],
+  "available_skills": [
+    "flutter-state-management",
+    "flutter-networking",
+    "flutter-ui-patterns",
+    "flutter-testing",
+    "flutter-code-review",
+    "flutter-architecture",
+    "flutter-package-development"
+  ],
+  "fixture": "app-workflow-task-completion",
+  "allowed_changes": ["lib", "test/regression"],
+  "checks": [
+    {
+      "name": "offline-dependencies",
+      "command": ["flutter", "pub", "get", "--offline", "--enforce-lockfile"],
+      "timeout": 120
+    },
+    {
+      "name": "format",
+      "command": ["dart", "format", "--output=none", "--set-exit-if-changed", "lib", "test"],
+      "timeout": 60
+    },
+    {
+      "name": "analyze",
+      "command": ["flutter", "analyze", "--no-pub"],
+      "timeout": 120
+    },
+    {
+      "name": "feature-verification",
+      "command": ["flutter", "test", "--no-pub", "--reporter=expanded"],
+      "timeout": 120
+    }
+  ]
+}

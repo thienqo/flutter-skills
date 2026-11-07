@@ -1,0 +1,121 @@
+{
+  "created_at": "2026-11-07T11:50:43.032183+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "d3ab0475bc0ab4af3c724f834a2522f807df2d08",
+    "dirty": true,
+    "branch": "fix/app-workflow-orchestration"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [],
+  "routing": [
+    {
+      "case": "complete-feature-delivery",
+      "response": {
+        "skills": [
+          "flutter-app-workflow",
+          "flutter-ui-patterns",
+          "flutter-state-management",
+          "flutter-networking",
+          "flutter-persistence",
+          "flutter-testing",
+          "flutter-device-testing"
+        ],
+        "reason": "End-to-end checkout delivery spans UI, state, API, offline persistence, tests, and concrete Android runtime verification."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-app-workflow",
+        "flutter-device-testing",
+        "flutter-networking",
+        "flutter-persistence",
+        "flutter-state-management",
+        "flutter-testing",
+        "flutter-ui-patterns"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "validated-profile-form",
+      "response": {
+        "skills": [
+          "flutter-ui-patterns",
+          "flutter-accessibility"
+        ],
+        "reason": "Use UI patterns for form validation, duplicate-submit protection, and recoverable errors over the existing service, plus accessibility for focus traversal."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-accessibility",
+        "flutter-ui-patterns"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "reusable-federated-plugin-release",
+      "response": {
+        "skills": [
+          "flutter-package-development"
+        ],
+        "reason": "Covers plugin federation, an independently maintained Linux implementation, platform interface compatibility, example app, and pub.dev readiness without publishing."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-package-development"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "app-owned-native-bridge-not-package",
+      "response": {
+        "skills": [
+          "flutter-platform-integration"
+        ],
+        "reason": "An app-owned typed Android and iOS scanner bridge is a contained native platform integration task."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-platform-integration"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    }
+  ],
+  "summary": {
+    "behavior_cases": 0,
+    "behavior_passed": 0,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": null,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {},
+    "routing_cases": 4,
+    "routing_passed": 4
+  }
+}

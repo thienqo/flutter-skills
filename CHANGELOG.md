@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Complete `flutter-app-workflow` routing with conditional reusable-package ownership and validate that its specialist inventory stays synchronized with all 36 specialists.
+- Define shared-contract ownership, concrete handoffs, conflict resolution, and local work around external verification blockers in a conditionally loaded coordination reference. Add two mandatory-gated behavior cases (236 to 238) and retain their measured failures and reruns.
+- Add a pinned Flutter feature fixture spanning repository, ChangeNotifier state, and UI, with immutable acceptance tests, a selective local specialist library, input hashes, and an executed agent patch. CI verifies a passing oracle and seeded contract, duplicate-submit, disposal, and hidden-error defects without invoking a model.
+- Calibrate the unavailable-specialist case to explicitly declare its response-only environment and supplied stack; keep the original failed result separate from the revised case. Document executable sandbox limits and the exact locked, offline Flutter dependency setup allowed by the host.
+
 ## 0.13.0 - 2026-11-06
 
 - Redact cookie values that start on the next line and scan lifecycle report URLs in linear time. Allow a later Dart search to retry after subscription cancellation fails.

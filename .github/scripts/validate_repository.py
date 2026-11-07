@@ -30,7 +30,7 @@ IGNORED_LINK_DIRECTORIES = {
 }
 EXPECTED_VERSION = "0.13.0"
 EXPECTED_SKILL_COUNT = 37
-EXPECTED_EVAL_COUNT = 236
+EXPECTED_EVAL_COUNT = 238
 EXPECTED_ROUTING_EVAL_COUNT = 76
 CLAUDE_PLUGIN_NAME = "thienqo-flutter-skills"
 
@@ -496,6 +496,31 @@ def validate_holdout() -> list[str]:
     return errors
 
 
+def validate_workflow_routing(skill_names: set[str]) -> list[str]:
+    """Keep the workflow's explicit specialist inventory in sync with discovery."""
+    workflow = "flutter-app-workflow"
+    path = SKILLS_DIR / workflow / "SKILL.md"
+    if not path.is_file():
+        return ["workflow routing: missing flutter-app-workflow/SKILL.md"]
+    text = path.read_text(encoding="utf-8")
+    match = re.search(r"^## Route specialists\s*\n(.*?)(?=^## |\Z)", text, re.M | re.S)
+    if match is None:
+        return ["workflow routing: missing Route specialists section"]
+    routes = re.findall(r"`([a-z0-9]+(?:-[a-z0-9]+)*)`", match.group(1))
+    expected = skill_names - {workflow}
+    errors: list[str] = []
+    missing = expected - set(routes)
+    unknown = set(routes) - expected
+    if missing:
+        errors.append(f"workflow routing: missing specialists {sorted(missing)}")
+    if unknown:
+        errors.append(f"workflow routing: unknown or self routes {sorted(unknown)}")
+    duplicates = {name for name in routes if routes.count(name) > 1}
+    if duplicates:
+        errors.append(f"workflow routing: duplicate specialists {sorted(duplicates)}")
+    return errors
+
+
 def validate_repository(
     release: bool = False,
 ) -> tuple[list[str], list[str], dict[str, int]]:
@@ -505,6 +530,8 @@ def validate_repository(
     skill_names = {path.name for path in skill_dirs}
     if len(skill_names) != EXPECTED_SKILL_COUNT:
         errors.append(f"expected {EXPECTED_SKILL_COUNT} public skills, found {len(skill_names)}")
+
+    errors.extend(validate_workflow_routing(skill_names))
 
     description_total = 0
     eval_total = 0

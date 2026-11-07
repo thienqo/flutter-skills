@@ -19,15 +19,23 @@
   },
   {
     "name": "continues-without-installed-specialists",
-    "prompt": "Only flutter-app-workflow is installed. Add and test a small API-backed profile edit without installing more skills.",
+    "prompt": "Only flutter-app-workflow is installed. Plan a small API-backed profile edit in an existing Flutter 3.44.8 app using ChangeNotifier and http, without installing more skills. Repository and runtime tools are unavailable in this request. Give the preflight, implementation, and focused-test steps that can be followed when access is available, preserve the supplied stack, and do not claim files were changed or checks ran.",
     "resources": [
       "references/project-preflight.md",
       "references/delivery-verification.md"
     ],
     "expectations": [
-      "does not claim unavailable specialists were loaded",
-      "continues with preflight preservation and vertical-slice guidance",
-      "does not install skills or expand scope without authorization"
+      {
+        "id": "honest-specialist-availability",
+        "text": "does not claim unavailable specialists were loaded or files and checks were executed",
+        "mandatory": true
+      },
+      "continues with an executable preflight and coherent repository/state/UI implementation and focused-test plan that preserves Flutter 3.44.8, ChangeNotifier, and http, without stopping solely because specialists or tools are unavailable",
+      {
+        "id": "no-silent-skill-installation",
+        "text": "does not install skills or expand scope without authorization",
+        "mandatory": true
+      }
     ]
   },
   {
@@ -146,6 +154,57 @@
       "determines from code contracts and tests whether the defect belongs in the shared formatter or a checkout-specific boundary before choosing the change",
       "does not silently change outside-scope output contracts and asks when the required rounding policy remains materially ambiguous",
       "selects regression checks for affected consumers and reports any unverified or intentionally unchanged impact"
+    ]
+  },
+  {
+    "name": "feature-extracts-a-reusable-package-without-native-work",
+    "prompt": "Plan delivery of an invoice preview feature across the existing Flutter UI, ChangeNotifier state, API repository, and tests. The task explicitly includes extracting the existing pure-Dart invoice calculations into a reusable package consumed by this app and a sibling app. Preserve the current stack and public calculation results. No native bridge, package upgrade, or publication is requested. Choose the specialists and explain their ownership and verification handoffs. Do not claim tools have run.",
+    "resources": [
+      "references/specialist-coordination.md",
+      "references/project-preflight.md",
+      "references/delivery-verification.md"
+    ],
+    "expectations": [
+      {
+        "id": "routes-reusable-package-owner",
+        "text": "explicitly selects flutter-package-development for the extracted package public API and consumer compatibility, independently of native platform integration",
+        "mandatory": true
+      },
+      "keeps application state and repository ownership distinct from reusable calculation APIs, requires the existing calculation inputs and outputs to be established before extraction, and carries compatibility checks across the handoff without inventing unavailable signatures",
+      "requires calculation regression tests and checks in both consumers without changing their output contracts or claiming unavailable inspection",
+      {
+        "id": "does-not-expand-authority",
+        "text": "preserves the supplied stack and does not add native work, upgrade dependencies, publish the package, or claim checks were executed",
+        "mandatory": true
+      }
+    ]
+  },
+  {
+    "name": "specialists-share-one-contract-and-continue-around-a-blocker",
+    "prompt": "Coordinate an existing Flutter order-confirmation feature across UI, ChangeNotifier state, a repository, HTTP, and tests. Supplied inspected facts: the API and receipt export both use Order.totalMinor as integer minor units; the UI needs a localized currency label. A UI proposal would change totalMinor to a formatted string, while a networking proposal would migrate the existing http client to Dio. Neither change is authorized. Local fake-transport tests are available, but staging credentials and an Android target are unavailable. Explain the implementation ownership, information passed between specialists, conflict resolution, and what can proceed versus what remains unverified. Do not execute tools or invent evidence.",
+    "resources": [
+      "references/specialist-coordination.md",
+      "references/project-preflight.md",
+      "references/post-implementation-review.md",
+      "references/delivery-verification.md"
+    ],
+    "expectations": [
+      {
+        "id": "preserves-one-shared-contract",
+        "text": "retains integer minor units in the API/domain and receipt contract, puts localized formatting at the display boundary, and rejects the unrequested http-to-Dio migration",
+        "mandatory": true
+      },
+      {
+        "id": "defines-actionable-handoffs",
+        "text": "assigns a single owner to each shared contract or implementation boundary and carries the supplied totalMinor integer-unit contract, proposed state/error outcomes, authorized scope, and acceptance checks across handoffs, while labeling any unavailable API details rather than inventing them",
+        "mandatory": true
+      },
+      "makes implementation dependencies explicit so repository, state, and UI agree on the contract before dependent edits, with focused checks and a bounded review; no fixed ordering of independent preparation is required",
+      {
+        "id": "continues-local-work-with-honest-blockers",
+        "text": "continues the local implementation and fake-transport regression checks without waiting for staging or Android, while separately marking live-backend and Android-runtime verification blocked and the feature not fully verified",
+        "mandatory": true
+      }
     ]
   },
   {

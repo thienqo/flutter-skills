@@ -28,12 +28,13 @@ ROOT = Path(__file__).resolve().parents[2]
 EXECUTABLE_ROOT = ROOT / ".github" / "evals" / "executable"
 CASES_DIR = EXECUTABLE_ROOT / "cases"
 FIXTURES_DIR = EXECUTABLE_ROOT / "fixtures"
-RUNNER_VERSION = "1.1.0"
+RUNNER_VERSION = "1.2.0"
 ALLOWED_EXECUTABLES = {"dart", "flutter"}
 ALLOWED_SUBCOMMANDS = {
     "dart": {"format", "analyze", "test", "run"},
     "flutter": {"analyze", "test", "build"},
 }
+OFFLINE_FLUTTER_PREPARE = ["flutter", "pub", "get", "--offline", "--enforce-lockfile"]
 
 
 def relative_path(value: str, identity: str) -> Path:
@@ -85,6 +86,20 @@ def validate_case(case: dict[str, Any], catalog: dict[str, dict[str, Any]]) -> l
             f"executable case {name}: unknown resources {sorted(set(resources) - available)}"
         )
 
+    available_skills = case.get("available_skills", [])
+    if not isinstance(available_skills, list) or not all(
+        isinstance(item, str) for item in available_skills
+    ):
+        errors.append(f"executable case {name}: available_skills must be a string list")
+    else:
+        if len(set(available_skills)) != len(available_skills):
+            errors.append(f"executable case {name}: duplicate available_skills")
+        unknown = set(available_skills) - set(catalog)
+        if unknown:
+            errors.append(f"executable case {name}: unknown available_skills {sorted(unknown)}")
+        if skill in available_skills:
+            errors.append(f"executable case {name}: primary skill is already injected")
+
     checks = case.get("checks")
     if not isinstance(checks, list) or not checks:
         errors.append(f"executable case {name}: checks must be non-empty")
@@ -102,7 +117,10 @@ def validate_case(case: dict[str, Any], catalog: dict[str, dict[str, Any]]) -> l
                 errors.append(
                     f"executable case {name}: check {index + 1} executable is not allowed"
                 )
-            elif len(command) < 2 or command[1] not in ALLOWED_SUBCOMMANDS[command[0]]:
+            elif len(command) < 2 or (
+                command[1] not in ALLOWED_SUBCOMMANDS[command[0]]
+                and command != OFFLINE_FLUTTER_PREPARE
+            ):
                 errors.append(
                     f"executable case {name}: check {index + 1} subcommand is not allowed"
                 )
@@ -167,15 +185,47 @@ def build_prompt(case: dict[str, Any], catalog: dict[str, dict[str, Any]]) -> st
         "resources": case.get("resources", []),
     }
     allowed = ", ".join(case["allowed_changes"])
+    discovery = (
+        "Available specialist names, descriptions, and local paths are listed in "
+        ".eval-skills/catalog.md. Select and read only the specialists relevant to "
+        "this task; do not modify the skill library. State which specialists you "
+        "actually read and their implementation or verification ownership.\n\n"
+        if case.get("available_skills")
+        else ""
+    )
     return (
         "Implement the task in the provided disposable fixture. Work only inside "
         f"these allowed paths: {allowed}. Do not edit verification files, package "
         "metadata, or generated configuration. Do not access the network or external "
         "services. Keep the smallest clean change and finish with a concise summary.\n\n"
+        f"{discovery}"
         "Apply this skill guidance:\n\n"
         f"<skill>\n{instructions_for_case(instruction_case, catalog)}\n</skill>\n\n"
         f"<task>\n{case['prompt']}\n</task>"
     )
+
+
+def stage_skill_library(
+    workspace: Path, case: dict[str, Any], catalog: dict[str, dict[str, Any]]
+) -> None:
+    """Expose optional specialists for selective reading, protected by the snapshot."""
+    names = case.get("available_skills", [])
+    if not names:
+        return
+    library = workspace / ".eval-skills"
+    library.mkdir()
+    entries: list[str] = []
+    for name in names:
+        details = catalog[name]
+        directory = library / name
+        directory.mkdir()
+        (directory / "SKILL.md").write_text(details["instructions"], encoding="utf-8")
+        for relative, contents in details.get("resources", {}).items():
+            path = directory / relative_path(relative, "skill resource")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(contents, encoding="utf-8")
+        entries.append(f"- {name}: {details['description']} — {name}/SKILL.md")
+    (library / "catalog.md").write_text("\n".join(entries) + "\n", encoding="utf-8")
 
 
 def run_checks(workspace: Path, checks: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -232,6 +282,7 @@ def execute_case(
 
         workspace = Path(directory) / "candidate"
         shutil.copytree(fixture, workspace)
+        stage_skill_library(workspace, case, catalog)
         before = snapshot(workspace)
         response = agent.run_in_workspace(build_prompt(case, catalog), workspace)
         after = snapshot(workspace)
@@ -248,6 +299,12 @@ def execute_case(
         return {
             "name": case["name"],
             "skill": case["skill"],
+            "available_skills": case.get("available_skills", []),
+            "input_sha256": {
+                path: hashlib.sha256(contents).hexdigest()
+                for path, contents in before.items()
+            },
+            "prompt": build_prompt(case, catalog),
             "agent_response": response,
             "changed_paths": changes,
             "forbidden_changes": forbidden,

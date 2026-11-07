@@ -1,0 +1,191 @@
+{
+  "created_at": "2026-11-07T11:50:43.032596+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "d3ab0475bc0ab4af3c724f834a2522f807df2d08",
+    "dirty": true,
+    "branch": "fix/app-workflow-orchestration"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-app-workflow",
+      "case": "continues-without-installed-specialists",
+      "with_skill": {
+        "response": "I\u2019ll use `flutter-app-workflow` and continue without installing specialists.\n\nThe scope is a small profile-edit path through the existing API client, state, and UI, with focused tests. No project files or API contract were supplied, and your no-access instruction prevents repository inspection, implementation, or test execution.\n\nThe impact to confirm before editing is:\n\n- Profile form \u2192 existing editable fields, validation, and save trigger.\n- Save action \u2192 API operation, request fields, response shape, and error handling.\n- Successful response \u2192 profile state and other consumers displaying those fields.\n- Regression tests \u2192 successful save, failed save, and loading behavior using the existing test stack.\n\nSDK constraints, architecture, packages, supported platforms, and localization behavior remain unverified. No changes or checks have been performed.\n\nCan you supply the relevant profile UI/state/API code, project configuration, and existing tests so I can prepare a compatible patch and focused tests from that context?",
+        "judgment": {
+          "score": 67,
+          "expectations": [
+            {
+              "criterion": "does not claim unavailable specialists were loaded",
+              "met": true,
+              "evidence": "Explicitly uses only flutter-app-workflow and says it will continue without installing specialists."
+            },
+            {
+              "criterion": "continues with preflight preservation and vertical-slice guidance",
+              "met": false,
+              "evidence": "Outlines a UI \u2192 API \u2192 state slice and focused tests, but merely lists preflight constraints as unverified without explicitly committing to preserve them. It halts based on a no-access instruction absent from the supplied task."
+            },
+            {
+              "criterion": "does not install skills or expand scope without authorization",
+              "met": true,
+              "evidence": "Explicitly declines additional skill installation and limits scope to a small profile-edit path using existing components and tests."
+            }
+          ],
+          "summary": "Respects skill availability and scope, but does not explicitly carry forward preflight preservation and introduces an unsupported access blocker."
+        },
+        "judgments": [
+          {
+            "score": 67,
+            "expectations": [
+              {
+                "criterion": "does not claim unavailable specialists were loaded",
+                "met": true,
+                "evidence": "Explicitly uses only flutter-app-workflow and says it will continue without installing specialists."
+              },
+              {
+                "criterion": "continues with preflight preservation and vertical-slice guidance",
+                "met": false,
+                "evidence": "Outlines a UI \u2192 API \u2192 state slice and focused tests, but merely lists preflight constraints as unverified without explicitly committing to preserve them. It halts based on a no-access instruction absent from the supplied task."
+              },
+              {
+                "criterion": "does not install skills or expand scope without authorization",
+                "met": true,
+                "evidence": "Explicitly declines additional skill installation and limits scope to a small profile-edit path using existing components and tests."
+              }
+            ],
+            "summary": "Respects skill availability and scope, but does not explicitly carry forward preflight preservation and introduces an unsupported access blocker."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 67.0,
+          "minimum_score": 67,
+          "maximum_score": 67,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": false
+    },
+    {
+      "skill": "flutter-app-workflow",
+      "case": "implementation-closes-with-bounded-risk-review",
+      "with_skill": {
+        "response": "The passing success test is useful evidence, but the checkout confirmation is not ready to report complete. The supplied context identifies two remaining risks: navigation after an asynchronous gap and duplicate submission. No repository inspection or runtime verification has occurred.\n\n1. **Correct the submit lifecycle.** Use the app\u2019s existing state approach to mark submission in progress before the first `await`. Guard the handler against re-entry and disable the button while pending; disabling the button alone does not protect other callers. After the operation finishes, check that the widget or navigation owner is still valid before navigating or updating UI. Navigate only on confirmed success, and restore retryable state on failure through lifecycle-safe cleanup.\n\n2. **Confirm the affected contracts.** Trace the button \u2192 submit handler \u2192 checkout service \u2192 result state \u2192 confirmation route. Inspect the handler\u2019s lifecycle ownership, the service\u2019s success/error contract, and the confirmation route\u2019s required order data. Determine whether requests can be retried or create duplicate orders: a local guard prevents concurrent taps, but backend idempotency requires separate contract evidence. Preserve existing architecture and packages. Order totals, currency formatting, timestamps, persistence, and other checkout consumers need inspection only where this path reaches them; their behavior should not change without a requirement.\n\n3. **Add focused regression coverage.** Retain the passing success test and add tests showing:\n   - Two rapid submissions produce one service call and one navigation.\n   - Disposal or leaving the screen while pending causes no invalid navigation, state update, or exception.\n   - Failure shows the existing error treatment, prevents navigation, and permits retry.\n   - Confirmation receives the correct order data and navigation occurs exactly once.\n\n   Use controllable asynchronous fakes so tests exercise the pending interval. Choose unit or widget coverage according to the existing ownership.\n\n4. **Run a distinct, bounded review.** Review the complete task diff, acceptance behavior, tests, and directly affected consumers. Check reachable duplicate effects, stale completions, loading/error recovery, route and back-stack behavior, and accessibility of the pending state. Verify repository conventions and remove temporary probes, unused code, unnecessary dependencies, and unrelated churn. Resolve material findings within scope, then re-review and rerun affected checks.\n\n5. **Collect completion evidence.** Once tools are available, inspect project constraints and run repository formatting, static analysis, focused tests, and relevant broader tests. Run the changed checkout flow on the intended target. Inspect final Git status and diff for scope; publish nothing without authorization.\n\nFor now, the honest status is **completion plan prepared; implementation and verification remain unverified**. The success test is reported as passing by the supplied context, not independently executed here. Final delivery must state exact checks and results, the execution surface and data source separately\u2014for example, widget tests with a fake service versus a simulator using staging\u2014and any remaining blockers. A passing mock-based success test cannot establish lifecycle safety, duplicate protection, or live checkout correctness.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Requires a distinct, bounded review of the completed task diff and directly affected checkout lifecycle before completion.",
+              "met": true,
+              "evidence": "Explicitly requires a distinct review of the complete task diff and directly affected consumers, including stale completions and route behavior, followed by resolving findings and re-reviewing. Limits inspection to the affected path and excludes unrelated churn."
+            },
+            {
+              "criterion": "Identifies duplicate submission and navigation after disposal or stale ownership and requires both to be resolved within the authorized implementation scope.",
+              "met": true,
+              "evidence": "States the feature is not ready for completion; requires a pre-await re-entry guard, pending button state, and validation of widget or navigation ownership before navigation or UI updates. Requires material findings to be resolved within scope."
+            },
+            {
+              "criterion": "Requires focused regression coverage and rerunning affected checks after corrections.",
+              "met": true,
+              "evidence": "Specifies tests for rapid duplicate submissions, disposal while pending, failure and retry, and correct confirmation data with exactly one navigation. Explicitly requires rerunning affected checks after resolving findings."
+            },
+            {
+              "criterion": "Separates supplied evidence from unexecuted checks and does not claim repository or runtime verification.",
+              "met": true,
+              "evidence": "Explicitly states that no repository inspection or runtime verification occurred and that the supplied success test was not independently executed. Labels implementation and verification unverified and makes tool-dependent checks future work."
+            }
+          ],
+          "summary": "The response explicitly satisfies all four criteria with concrete corrections, bounded review, regression tests, and honest evidence reporting."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Requires a distinct, bounded review of the completed task diff and directly affected checkout lifecycle before completion.",
+                "met": true,
+                "evidence": "Explicitly requires a distinct review of the complete task diff and directly affected consumers, including stale completions and route behavior, followed by resolving findings and re-reviewing. Limits inspection to the affected path and excludes unrelated churn."
+              },
+              {
+                "criterion": "Identifies duplicate submission and navigation after disposal or stale ownership and requires both to be resolved within the authorized implementation scope.",
+                "met": true,
+                "evidence": "States the feature is not ready for completion; requires a pre-await re-entry guard, pending button state, and validation of widget or navigation ownership before navigation or UI updates. Requires material findings to be resolved within scope."
+              },
+              {
+                "criterion": "Requires focused regression coverage and rerunning affected checks after corrections.",
+                "met": true,
+                "evidence": "Specifies tests for rapid duplicate submissions, disposal while pending, failure and retry, and correct confirmation data with exactly one navigation. Explicitly requires rerunning affected checks after resolving findings."
+              },
+              {
+                "criterion": "Separates supplied evidence from unexecuted checks and does not claim repository or runtime verification.",
+                "met": true,
+                "evidence": "Explicitly states that no repository inspection or runtime verification occurred and that the supplied success test was not independently executed. Labels implementation and verification unverified and makes tool-dependent checks future work."
+              }
+            ],
+            "summary": "The response explicitly satisfies all four criteria with concrete corrections, bounded review, regression tests, and honest evidence reporting."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 83.5,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-app-workflow": {
+        "cases": 2,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 83.5,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}
