@@ -1,0 +1,201 @@
+{
+  "created_at": "2026-11-07T11:48:28.388361+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "d3ab0475bc0ab4af3c724f834a2522f807df2d08",
+    "dirty": true,
+    "branch": "fix/app-workflow-orchestration"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-app-workflow",
+      "case": "feature-extracts-a-reusable-package-without-native-work",
+      "with_skill": {
+        "response": "I\u2019ll apply the supplied `flutter-app-workflow` to plan the feature and package extraction. The existing UI, ChangeNotifier state, and API repository remain in place; public calculation results must stay compatible. No inspection or checks have run.\n\nThe intended path is invoice input \u2192 API repository \u2192 ChangeNotifier \u2192 preview UI, with pure-Dart calculations extracted into a package consumed by both apps. The current preview behavior, calculation API, wire fields, and sibling-app integration are still unverified.\n\n**Specialists and ownership**\n\nThese are guidance selections; their contents have not been loaded.\n\n| Specialist | Ownership | Verification handoff |\n|---|---|---|\n| `flutter-architecture` | Keep existing boundaries; establish the calculation package\u2019s dependency direction and integration points. | Identify current calculation callers in both apps and confirm extraction introduces no app dependencies into the package. |\n| `flutter-package-development` | Own the reusable package\u2019s public API, exports, dependency configuration, and both consumers. | Preserve signatures and results; provide compatibility cases and confirm both apps resolve and use the extracted implementation. No publication work. |\n| `flutter-state-management` | Keep ChangeNotifier as the single owner of preview loading, success, failure, and recovery transitions. | Supply explicit state outcomes and notification expectations for widget tests; inspect disposal and stale-response handling where relevant. |\n| `flutter-networking` | Keep the repository responsible for API access and existing wire-to-domain mapping. | Confirm request/response fields, units, nullability, and error mapping before state or UI implementation depends on them. |\n| `flutter-ui-patterns` | Integrate the preview into existing navigation and presentation conventions. | Consume agreed notifier states; verify rendered values and loading, error, and recovery behavior. |\n| `flutter-testing`, then `flutter-code-review` | Establish regression evidence and perform a bounded implementation review. | Check compatibility, package boundaries, state transitions, and preview behavior; resolve material findings and rerun affected checks. |\n\nNo platform-integration specialist is needed: this is a pure-Dart extraction without a native bridge. No stack migration or package upgrade is planned.\n\n**Delivery sequence**\n\n1. **Confirm the contracts.** Inspect SDK constraints, dependencies, architecture, calculation implementation and callers, repository mapping, notifier, preview entry point, and existing tests in both apps. Confirm supported targets and preserve unrelated changes.\n2. **Extract calculations first.** Capture existing results as regression fixtures, move the implementation into the reusable package, and update both consumers. Avoid redesigning the public API during extraction.\n3. **Implement the preview path.** Establish repository outputs, implement notifier transitions, then bind the UI to those states. Add focused tests alongside each change.\n4. **Review and verify.** Review the final implementation for compatibility and ownership, resolve findings, and run affected checks plus the intended preview flow.\n\nThe key impact boundaries are:\n\n- **Calculation package \u2192 both apps:** extraction changes imports and dependency resolution. Existing exports, call sites, and regression fixtures must prove that public results remain unchanged.\n- **API \u2192 repository:** invoice fields feed the preview. DTOs, mappings, and fixtures must establish monetary units, rounding, nullability, and date semantics.\n- **Repository \u2192 notifier:** asynchronous results drive visible state. Current methods and tests must establish loading, error, retry, and any overlapping-request behavior.\n- **Notifier \u2192 UI:** displayed totals and dates must follow existing formatting and localization conventions. Widget assertions must verify values without changing calculation semantics.\n- **Sibling app:** it is an explicit package consumer. Its dependency configuration, calculation callers, and relevant tests are part of acceptance; unrelated UI changes remain outside scope.\n\nPlanned evidence includes package unit tests using preserved fixtures, repository tests using fake transport, notifier tests using a fake repository, and preview widget tests using controlled data. Then run formatting, analysis, relevant tests in the package and both apps, and the preview on the project\u2019s intended target. Report the execution surface and data source separately; fake-backed tests do not establish live API correctness.\n\nSDK versions, target platforms, currency rounding, dates, and localization rules require inspection before dependent design choices. Nothing supplied currently requires a product decision, so the next step is that inspection rather than a clarification question. Implementation and verification remain pending.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "1. Explicitly selects flutter-package-development for the extracted package public API and consumer compatibility, independently of native platform integration.",
+              "met": true,
+              "evidence": "Assigns flutter-package-development ownership of the public API, exports, dependency configuration, and both consumers, including preserving signatures and results. Separately excludes platform integration because the extraction is pure Dart."
+            },
+            {
+              "criterion": "2. Separates application state and repository ownership from reusable calculation APIs, establishes existing contracts before extraction, and carries compatibility checks across handoffs without inventing signatures.",
+              "met": true,
+              "evidence": "Assigns ChangeNotifier transitions to state management, API access and mapping to networking, and calculation APIs to package development. Requires inspecting the existing calculation implementation and callers, confirming contracts, and capturing existing results before extraction. Handoffs require preserved signatures, compatibility cases, and checks of both consumers without supplying invented signatures."
+            },
+            {
+              "criterion": "3. Requires calculation regression tests and checks in both consumers without changing output contracts or claiming unavailable inspection.",
+              "met": true,
+              "evidence": "Requires preserved regression fixtures, package unit tests, and relevant tests in both apps. Makes sibling-app callers and tests part of acceptance and requires public results to remain unchanged. Explicitly states that inspection and verification remain pending."
+            },
+            {
+              "criterion": "4. Preserves the supplied stack and excludes native work, dependency upgrades, publication, and claims of executed checks.",
+              "met": true,
+              "evidence": "Retains the existing Flutter UI, ChangeNotifier, and API repository; explicitly excludes native bridges, stack migration, package upgrades, and publication. States that no inspection or checks have run and describes verification as planned."
+            }
+          ],
+          "summary": "The response explicitly satisfies all criteria, with clear specialist ownership, contract-first extraction, compatibility handoffs, and planned regression verification across both consumers."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "1. Explicitly selects flutter-package-development for the extracted package public API and consumer compatibility, independently of native platform integration.",
+                "met": true,
+                "evidence": "Assigns flutter-package-development ownership of the public API, exports, dependency configuration, and both consumers, including preserving signatures and results. Separately excludes platform integration because the extraction is pure Dart."
+              },
+              {
+                "criterion": "2. Separates application state and repository ownership from reusable calculation APIs, establishes existing contracts before extraction, and carries compatibility checks across handoffs without inventing signatures.",
+                "met": true,
+                "evidence": "Assigns ChangeNotifier transitions to state management, API access and mapping to networking, and calculation APIs to package development. Requires inspecting the existing calculation implementation and callers, confirming contracts, and capturing existing results before extraction. Handoffs require preserved signatures, compatibility cases, and checks of both consumers without supplying invented signatures."
+              },
+              {
+                "criterion": "3. Requires calculation regression tests and checks in both consumers without changing output contracts or claiming unavailable inspection.",
+                "met": true,
+                "evidence": "Requires preserved regression fixtures, package unit tests, and relevant tests in both apps. Makes sibling-app callers and tests part of acceptance and requires public results to remain unchanged. Explicitly states that inspection and verification remain pending."
+              },
+              {
+                "criterion": "4. Preserves the supplied stack and excludes native work, dependency upgrades, publication, and claims of executed checks.",
+                "met": true,
+                "evidence": "Retains the existing Flutter UI, ChangeNotifier, and API repository; explicitly excludes native bridges, stack migration, package upgrades, and publication. States that no inspection or checks have run and describes verification as planned."
+              }
+            ],
+            "summary": "The response explicitly satisfies all criteria, with clear specialist ownership, contract-first extraction, compatibility handoffs, and planned regression verification across both consumers."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-app-workflow",
+      "case": "specialists-share-one-contract-and-continue-around-a-blocker",
+      "with_skill": {
+        "response": "I\u2019d apply the supplied Flutter workflow with one owner for each contract and state transition. The established constraint is that `Order.totalMinor` remains an integer: both the API and receipt export depend on minor units. Localized currency formatting belongs at the UI boundary, and the existing `http` client stays in place.\n\nThe ownership and handoffs would be:\n\n| Owner | Responsibility and information passed onward |\n|---|---|\n| Repository / HTTP | Own request handling and wire-to-domain mapping using existing `http` conventions. Pass the unchanged integer total and established success/error outcomes to state. Currency metadata, nullability, and error signatures still require inspection. |\n| ChangeNotifier | Own confirmation submission, pending/success/error transitions, and recovery under existing conventions. Give the UI explicit observable states; inspect current lifecycle handling before deciding how duplicate submissions or late responses are handled. |\n| UI | Render those states and format the total using the project\u2019s localization approach. Confirm the currency identifier and minor-unit conversion rules; do not assume every currency has two decimal places. |\n| Tests | Assert contract preservation, state transitions, and localized presentation at the cheapest meaningful layer. Receipt export is a directly affected shared consumer, so its integer contract needs regression coverage even if its implementation needs no edit. |\n\nBefore dependent edits, each handoff should contain the inspected fields, types, units, lifecycle and error outcomes, compatible interface, concrete acceptance assertions, and checks already run or still needed. The same implementation owner can apply these specialist perspectives sequentially; unavailable specialist guidance does not justify installing tools or inventing contracts.\n\nBoth conflicting proposals are rejected within the authorized scope. Changing `totalMinor` to a formatted string breaks the supplied API/export contract. Migrating to Dio introduces an unauthorized client migration. The smallest coherent change preserves the model and networking stack while adding localized presentation and any necessary state wiring.\n\nWith repository access, implementation and local fake-transport tests can proceed without staging credentials or Android. Focused checks should cover integer mapping, confirmation success and failure, relevant pending/retry behavior, localized labels, and export compatibility. Then a distinct bounded review should inspect the task diff and directly affected consumers, followed by formatting, analysis, and affected tests.\n\nNo tools were executed here, so none of those checks has been verified. Fake-transport results would establish local behavior against simulated responses; staging authentication and real service behavior remain unverified. Android rendering, interaction, and lifecycle behavior also remain unverified until an Android target is available. Those blockers do not prevent independent local work, but they prevent claiming full runtime verification.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "1. Preserve integer minor-unit contracts, format at the display boundary, and reject the Dio migration.",
+              "met": true,
+              "evidence": "Explicitly retains Order.totalMinor as an integer for API and receipt export, assigns localized formatting to the UI, and rejects both conflicting proposals."
+            },
+            {
+              "criterion": "2. Assign single owners and carry contracts, outcomes, scope, and acceptance checks across handoffs without inventing API details.",
+              "met": true,
+              "evidence": "Assigns repository/HTTP, ChangeNotifier, UI, and test responsibilities. Requires handoffs to include types, units, lifecycle/error outcomes, compatible interfaces, and acceptance assertions. Identifies currency metadata, nullability, and error signatures as requiring inspection."
+            },
+            {
+              "criterion": "3. Make implementation dependencies explicit, with focused checks and bounded review.",
+              "met": true,
+              "evidence": "Requires contract and interface information before dependent edits, specifies focused checks across affected layers and receipt export, and calls for a distinct bounded review of the diff and affected consumers."
+            },
+            {
+              "criterion": "4. Continue local implementation and fake-transport checks while separating blocked live-backend and Android verification.",
+              "met": true,
+              "evidence": "Explicitly allows local implementation and fake-transport tests to proceed without staging credentials or Android, identifies real-service and Android-runtime verification as unavailable, and declines to claim full verification or executed checks."
+            }
+          ],
+          "summary": "Meets all supplied criteria through explicit ownership, contract preservation, scoped conflict resolution, dependency-aware handoffs, and clear verification limits."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "1. Preserve integer minor-unit contracts, format at the display boundary, and reject the Dio migration.",
+                "met": true,
+                "evidence": "Explicitly retains Order.totalMinor as an integer for API and receipt export, assigns localized formatting to the UI, and rejects both conflicting proposals."
+              },
+              {
+                "criterion": "2. Assign single owners and carry contracts, outcomes, scope, and acceptance checks across handoffs without inventing API details.",
+                "met": true,
+                "evidence": "Assigns repository/HTTP, ChangeNotifier, UI, and test responsibilities. Requires handoffs to include types, units, lifecycle/error outcomes, compatible interfaces, and acceptance assertions. Identifies currency metadata, nullability, and error signatures as requiring inspection."
+              },
+              {
+                "criterion": "3. Make implementation dependencies explicit, with focused checks and bounded review.",
+                "met": true,
+                "evidence": "Requires contract and interface information before dependent edits, specifies focused checks across affected layers and receipt export, and calls for a distinct bounded review of the diff and affected consumers."
+              },
+              {
+                "criterion": "4. Continue local implementation and fake-transport checks while separating blocked live-backend and Android verification.",
+                "met": true,
+                "evidence": "Explicitly allows local implementation and fake-transport tests to proceed without staging credentials or Android, identifies real-service and Android-runtime verification as unavailable, and declines to claim full verification or executed checks."
+              }
+            ],
+            "summary": "Meets all supplied criteria through explicit ownership, contract preservation, scoped conflict resolution, dependency-aware handoffs, and clear verification limits."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 2,
+    "behavior_passed": 2,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-app-workflow": {
+        "cases": 2,
+        "passed": 2,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

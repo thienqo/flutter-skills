@@ -32,10 +32,13 @@ Load only the available specialists needed for the vertical slice:
 - UI & visual: `flutter-ui-design`, `flutter-ui-patterns`, `flutter-visual-effects`, `flutter-responsive-layout`, `flutter-animation`, `flutter-navigation`, `flutter-text-rendering`, `flutter-figma-workflow`
 - Data, AI & product: `flutter-networking`, `flutter-openapi-client`, `flutter-persistence`, `flutter-authentication`, `flutter-in-app-purchases`, `flutter-product-analytics`, `flutter-ai-integration`
 - Platform & ops: `flutter-platform-integration`, `flutter-webview`, `flutter-notifications`, `flutter-background-execution`, `flutter-localization`, `flutter-dependency-upgrades`, `flutter-observability`, `flutter-runtime-debugging`
+- Reusable packages: `flutter-package-development` when the slice includes a reusable package or plugin's public API, consumers, examples, or distribution readiness; app-owned native bridges stay with platform integration.
 - Language & security: `dart-language`, `dart-concurrency`, `flutter-security`, `flutter-code-review`
 - Quality & delivery: `flutter-testing`, `flutter-accessibility`, `flutter-performance`, `flutter-ci-cd`, `flutter-build-release`, `flutter-device-testing`
 
 If a specialist is unavailable, continue with this workflow's preflight and vertical-slice rules; do not claim it was loaded or silently install skills. Hand focused work (e.g. form validation, API cache) to dedicated specialists rather than running this workflow.
+
+When specialists share contracts or dependent implementation, read [specialist coordination](references/specialist-coordination.md) for ownership, handoff evidence, conflicting proposals, and work that can continue around verification blockers.
 
 ## Deliver in vertical slices
 

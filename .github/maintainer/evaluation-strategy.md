@@ -31,7 +31,7 @@ The [nightly representative profile](../evals/profiles/nightly-representative.js
 
 ### Release
 
-The [release profile](../evals/profiles/release-full.json) resolves all behavior and routing cases. The default Codex-only run with skipped baselines needs 530 model invocations before retries (two per behavior case plus one per routing case). Run it only with an explicit budget and retained output.
+The [release profile](../evals/profiles/release-full.json) resolves all behavior and routing cases. The default Codex-only run with skipped baselines needs 552 model invocations before retries (two per behavior case plus one per routing case). Run it only with an explicit budget and retained output.
 
 ## Holdout cases
 
@@ -106,6 +106,10 @@ python3 .github/scripts/run_executable_evals.py \
   --output benchmarks/unreleased/dart-concurrency-latest-wins-executable.json
 ```
 
-The runner copies a fixture to a temporary workspace, disables shell commands, allows only declared source owners to change, rejects verifier or package-metadata edits, and then executes allowlisted `dart` or `flutter` checks with timeouts. Keep fixtures deterministic, dependency-light, free of credentials, and independent of live services. Add `flutter build` only when compilation at that platform boundary is material; prefer format, analysis, focused tests, and runtime assertions for ordinary cases.
+The runner copies a fixture to a temporary workspace, instructs the agent to avoid network and external services, allows only declared source owners to change, rejects verifier or package-metadata edits, and then executes allowlisted `dart` or `flutter` checks with timeouts. The agent uses the Codex workspace-write sandbox; the post-run file guard and check allowlist are not a network or shell security sandbox. Keep fixtures deterministic, dependency-light, free of credentials, and independent of live services. Add `flutter build` only when compilation at that platform boundary is material; prefer format, analysis, focused tests, and runtime assertions for ordinary cases.
 
 The `responsive-checkout-geometry` case uses Flutter 3.44.8 and immutable widget tests. Its CI proof runs the broken starter, a passing oracle, and isolated clipping, sticky-action, and offscreen-action mutations via `.github/scripts/verify_responsive_fixture.py`. The starter also proves that a missing wide composition fails at the 600-pixel boundary. This verifies the test oracle before an agent run. An executed agent result additionally shows whether the skill led the agent to a passing code change; widget tests do not establish real OS keyboard or screen-reader behavior.
+
+The `app-workflow-task-completion` case uses the same pinned Flutter SDK and integrates a repository, ChangeNotifier owner, and widget with a controlled API. The agent can inspect a local catalog of optional specialists and read only relevant instructions/references; the copied library and acceptance tests are immutable. Only `lib` and agent-authored `test/regression` changes are allowed. The runner retains the prompt, input hashes, response, patch, and host checks; a final statement of skill selection is self-reported, not a tool-read audit. The host permits only the exact `flutter pub get --offline --enforce-lockfile` setup command in addition to ordinary checks, so populate the pinned package cache before execution.
+
+Run `python3 .github/scripts/verify_app_workflow_fixture.py` to prove the corrected oracle passes seven acceptance scenarios and seeded repository, duplicate-submit, late-disposal, and hidden-error defects fail. CI runs that deterministic proof without invoking an agent. Executed agent results demonstrate a bounded feature implementation against fake-API unit/widget checks, not a device test, live-backend test, or proof of native skill discovery in every agent host.

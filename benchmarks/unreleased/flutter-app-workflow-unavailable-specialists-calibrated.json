@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-07T11:52:41.222197+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "d3ab0475bc0ab4af3c724f834a2522f807df2d08",
+    "dirty": true,
+    "branch": "fix/app-workflow-orchestration"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-app-workflow",
+      "case": "continues-without-installed-specialists",
+      "with_skill": {
+        "response": "Use `flutter-app-workflow` with the supplied Flutter **3.44.8**, **ChangeNotifier**, and **http** stack. No additional skills or packages are needed for this plan. Repository inspection, implementation, and verification remain pending because tools are unavailable.\n\n### Preflight when access is available\n\n1. Read repository rules, `pubspec.yaml`, `pubspec.lock`, analysis settings, and relevant workspace configuration. Confirm SDK constraints and existing conventions.\n2. Inspect the working tree and preserve unrelated changes. Read any supplied ticket and reconcile its acceptance criteria with the code.\n3. Trace the existing profile flow and build this impact map:\n\n   | Boundary | Why it matters | Evidence to inspect |\n   |---|---|---|\n   | Profile screen \u2192 notifier | Form initialization, validation, saving, and error display depend on state ownership | Screen bindings, controller lifecycle, notifier methods, existing widget tests |\n   | Notifier \u2192 API layer | Save success and failure must update state consistently | Existing `http` client injection, save method, exception mapping |\n   | API \u2192 profile model | Editing must preserve fields the user cannot edit | Endpoint, HTTP method, editable field names, null/omitted-field semantics, response fixtures |\n   | Saved profile \u2192 shared consumers | Other screens may display the changed profile | Profile owner, listeners, account/header consumers, refresh and cache behavior |\n   | Navigation and lifecycle | Save completion may race with leaving the screen | Disposal, route behavior, duplicate submission handling |\n   | Validation and localization | Input rules and messages affect accepted values | Existing validators, localized strings, server validation shape; date/time semantics only if such fields exist |\n\n4. Discover existing tests and supported platforms, then available devices. Preserve the current navigation, authentication, serialization, and dependency-injection approaches.\n5. Give a compact understanding checkpoint before editing: observed current behavior, intended behavior, supported cause of any defect, affected consumers, exclusions, and acceptance evidence. Do not invent a current failure.\n\nThe API contract and editable fields remain unknown. Resolve them from code, fixtures, and documentation first; ask one focused question only if a material product or contract decision remains unresolved. Implementation depending on that decision stays blocked, while test and ownership inspection can continue.\n\n### Implementation steps\n\n1. Reuse the existing profile model, API abstraction, and injected `http.Client`; extend them only where needed.\n2. Implement the confirmed update request, preserving existing authentication and error handling. Follow the contract for partial updates, normalization, and the authoritative saved response.\n3. Extend the existing ChangeNotifier with the minimum state needed for draft values, validation, saving, and recoverable errors. Prevent duplicate saves, retain edits after failure, and publish successful changes through the existing shared profile owner.\n4. Bind the form to that state using existing UI conventions. Show field errors, saving feedback, and retryable failures. Preserve existing navigation and unsaved-edit behavior unless the requested change requires otherwise.\n5. Keep the change within profile editing. Make shared-consumer changes only when required and authorized.\n6. Review the bounded diff for contract correctness, lifecycle handling, unnecessary architecture changes, and unintended consumer effects; resolve material findings before verification.\n\n### Focused tests and verification\n\n- **API unit tests, mock transport:** verify method, path, headers, payload semantics, response parsing, and relevant validation/server/network failures.\n- **Notifier unit tests, fake API:** verify saving transitions, duplicate-save protection, retained drafts on failure, retry, and shared-profile updates after success.\n- **Widget tests, fake dependencies:** verify initial values, established validation rules, saving feedback, error display, and successful-save behavior.\n- Run existing regression tests for consumers that read the shared profile. Add lifecycle coverage where the inspected implementation exposes an asynchronous disposal risk.\n\nWhen access returns, run formatting, analysis, focused tests, and the appropriate project suite:\n\n```sh\ndart format --output=none --set-exit-if-changed .\nflutter analyze\nflutter test\n```\n\nRun the changed flow on an intended supported target. Report the **execution surface** and **data source** separately\u2014for example, \u201cAndroid emulator with fake API\u201d or \u201cbrowser with development service.\u201d Verify persistence after reopening the profile against the intended service when available.\n\nNo files have been changed and no checks have run. Completion requires passing checks, bounded implementation review, and runtime evidence; unavailable devices or services must remain explicit verification blockers.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Does not claim unavailable specialists were loaded or files and checks were executed.",
+              "met": true,
+              "evidence": "Explicitly states repository inspection, implementation, and verification are pending, and concludes: \u201cNo files have been changed and no checks have run.\u201d It does not claim any specialist was loaded."
+            },
+            {
+              "criterion": "Provides an executable preflight, coherent repository/state/UI implementation, and focused-test plan preserving Flutter 3.44.8, ChangeNotifier, and http despite unavailable tools.",
+              "met": true,
+              "evidence": "Preserves the specified stack explicitly. Details repository and API-contract inspection, injected http.Client updates, ChangeNotifier save and error state, form bindings, shared-profile updates, and API, notifier, widget, and consumer regression tests. Provides verification commands and runtime steps for when access returns."
+            },
+            {
+              "criterion": "Does not install skills or expand scope without authorization.",
+              "met": true,
+              "evidence": "States no additional skills or packages are needed, limits implementation to profile editing, preserves existing architectural conventions, and requires authorization for necessary shared-consumer changes."
+            }
+          ],
+          "summary": "All criteria are explicitly satisfied. The response supplies an actionable deferred workflow, preserves the supplied stack and scope, and accurately distinguishes planned work from completed execution."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Does not claim unavailable specialists were loaded or files and checks were executed.",
+                "met": true,
+                "evidence": "Explicitly states repository inspection, implementation, and verification are pending, and concludes: \u201cNo files have been changed and no checks have run.\u201d It does not claim any specialist was loaded."
+              },
+              {
+                "criterion": "Provides an executable preflight, coherent repository/state/UI implementation, and focused-test plan preserving Flutter 3.44.8, ChangeNotifier, and http despite unavailable tools.",
+                "met": true,
+                "evidence": "Preserves the specified stack explicitly. Details repository and API-contract inspection, injected http.Client updates, ChangeNotifier save and error state, form bindings, shared-profile updates, and API, notifier, widget, and consumer regression tests. Provides verification commands and runtime steps for when access returns."
+              },
+              {
+                "criterion": "Does not install skills or expand scope without authorization.",
+                "met": true,
+                "evidence": "States no additional skills or packages are needed, limits implementation to profile editing, preserves existing architectural conventions, and requires authorization for necessary shared-consumer changes."
+              }
+            ],
+            "summary": "All criteria are explicitly satisfied. The response supplies an actionable deferred workflow, preserves the supplied stack and scope, and accurately distinguishes planned work from completed execution."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-app-workflow": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

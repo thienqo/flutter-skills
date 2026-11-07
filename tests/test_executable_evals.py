@@ -18,6 +18,76 @@ SPEC.loader.exec_module(EXECUTABLE)
 
 
 class ExecutableEvalTests(unittest.TestCase):
+    def test_specialist_discovery_is_selective_and_library_changes_are_forbidden(self):
+        catalog = {
+            "flutter-app-workflow": {"instructions": "Coordinate.", "resources": {}},
+            "flutter-testing": {
+                "description": "Test Flutter behavior.",
+                "instructions": "Run focused tests.",
+                "resources": {"references/checks.md": "Keep assertions strong."},
+            },
+        }
+        case = {
+            "skill": "flutter-app-workflow",
+            "available_skills": ["flutter-testing"],
+            "allowed_changes": ["lib"],
+            "prompt": "Fix the feature.",
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            EXECUTABLE.stage_skill_library(root, case, catalog)
+            before = EXECUTABLE.snapshot(root)
+            self.assertIn(".eval-skills/flutter-testing/references/checks.md", before)
+            self.assertIn(
+                "flutter-testing/SKILL.md", (root / ".eval-skills/catalog.md").read_text()
+            )
+            prompt = EXECUTABLE.build_prompt(case, catalog)
+            self.assertIn(".eval-skills/catalog.md", prompt)
+            self.assertNotIn("Run focused tests.", prompt)
+            path = root / ".eval-skills/flutter-testing/SKILL.md"
+            path.write_text("Weakened checks.")
+            changes = EXECUTABLE.changed_paths(before, EXECUTABLE.snapshot(root))
+            self.assertEqual(changes, [".eval-skills/flutter-testing/SKILL.md"])
+            self.assertFalse(
+                EXECUTABLE.path_is_allowed(changes[0], case["allowed_changes"])
+            )
+
+    def test_specialist_library_rejects_unknown_or_duplicate_skills(self):
+        catalog = {"dart-concurrency": {"resources": {}}}
+        case = {
+            "name": "bad-library",
+            "skill": "dart-concurrency",
+            "prompt": "Fix it",
+            "fixture": "dart-concurrency-latest-wins",
+            "allowed_changes": ["lib"],
+            "available_skills": ["missing", "missing", "dart-concurrency"],
+            "checks": [{"command": ["dart", "analyze", "lib"]}],
+        }
+        errors = EXECUTABLE.validate_case(case, catalog)
+        self.assertTrue(any("unknown available_skills" in error for error in errors))
+        self.assertTrue(any("duplicate available_skills" in error for error in errors))
+        self.assertTrue(any("already injected" in error for error in errors))
+
+    def test_only_locked_offline_flutter_dependency_setup_is_allowlisted(self):
+        case = {
+            "name": "dependencies",
+            "skill": "dart-concurrency",
+            "prompt": "Fix it",
+            "fixture": "dart-concurrency-latest-wins",
+            "allowed_changes": ["lib"],
+            "checks": [{"command": EXECUTABLE.OFFLINE_FLUTTER_PREPARE}],
+        }
+        catalog = {"dart-concurrency": {"resources": {}}}
+        self.assertEqual(EXECUTABLE.validate_case(case, catalog), [])
+        for command in [["flutter", "pub", "publish"], ["flutter", "pub", "get"]]:
+            case["checks"] = [{"command": command}]
+            self.assertTrue(
+                any(
+                    "subcommand is not allowed" in error
+                    for error in EXECUTABLE.validate_case(case, catalog)
+                )
+            )
+
     def test_rejects_traversal_and_non_allowlisted_commands(self):
         catalog = {"dart-concurrency": {"resources": {}}}
         case = {
