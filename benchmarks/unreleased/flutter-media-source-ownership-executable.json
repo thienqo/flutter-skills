@@ -1,0 +1,118 @@
+{
+  "created_at": "2026-11-07T12:54:15.221914+00:00",
+  "runner_version": "1.2.0",
+  "git": {
+    "commit": "d545e4a34197f1f96738496d5a89d5cf8554f485",
+    "dirty": true,
+    "branch": "feature/flutter-media"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "cases": [
+    {
+      "name": "media-source-ownership",
+      "skill": "flutter-media",
+      "available_skills": [],
+      "input_sha256": {
+        "bin/verify.dart": "76ce33f1733ee678db70e08cab78ff2bc5d06599ba9970a215bc289453bd9a89",
+        "lib/media_source_owner.dart": "f743dfa3296efd36d3ca5a5ede468c485a0953db016fae71e2fd0e0f47c08513",
+        "pubspec.yaml": "790a7521f2a8397230c5a73b99ac55159175cbd6bb415e3519298e8f58f59ba2"
+      },
+      "prompt": "Implement the task in the provided disposable fixture. Work only inside these allowed paths: lib. Do not edit verification files, package metadata, or generated configuration. Do not access the network or external services. Keep the smallest clean change and finish with a concise summary.\n\nApply this skill guidance:\n\n<skill>\n---\nname: flutter-media\ndescription: Implement Flutter camera capture, audio/video recording and playback, livestreams, calls, and screen sharing. Use for media resources, tracks, permissions, and interruptions; route text-only realtime transport to flutter-networking and native bridges to flutter-platform-integration.\n---\n\n# Flutter Media\n\nDeliver media behavior that respects the user's intent, the resolved player or capture SDK, and each target's lifecycle. Preserve existing packages and architecture. Installing this skill requires no provider account, server key, room, stream URL, or camera/microphone access.\n\n## Establish the media contract\n\nRead `pubspec.yaml`, the lockfile, SDK constraints, current adapters/controllers, native configuration, and tests. Establish:\n\n- Capture, recorded-file playback, live viewing, broadcasting, or interactive calling; an image-buffer stream is not an encoded broadcast.\n- Source and output, format/codec, target platforms, permissions, foreground/background requirements, and intended behavior on interruption or exit.\n- For live sessions, service ownership, participant identity, host/viewer permissions, and what proves actual remote media delivery.\n\nUse the current SDK's supported facilities before adding another player, audio-session owner, signaling stack, or provider. Inspect version-specific native/browser requirements instead of copying setup or API names from a newer release. Keep secrets in the authorized service boundary, not in Flutter or logs.\n\n## Read the relevant mode\n\n- [Capture and recording](references/capture-and-recording.md): camera, microphone, media picking, transforms, encoded outputs, and recovery.\n- [Playback and streaming](references/playback-and-streaming.md): audio/video controllers, source switching, buffering, HLS/live viewing, and browser constraints.\n- [Audio interruptions and routing](references/audio-interruptions-and-routing.md): focus, session activation, user pause intent, calls, and output-device changes.\n- [Live broadcasting](references/live-broadcasting.md): preview, going live, host/viewer authority, delivery stages, and ending a broadcast.\n- [Realtime calls and screen sharing](references/realtime-calls-and-screen-sharing.md): participants/tracks, reconnect, device selection, capture consent, and screen-share setup.\n\nRead [verification](references/verification.md) before claiming capture, playback, live delivery, or target compatibility. Read several mode references only when the task crosses their boundaries.\n\n## Keep ownership explicit\n\nGive each controller, track, subscription, renderer, temporary file, and session one lifecycle owner. Invalidate abandoned asynchronous work; release resources returned by stale successful initialization instead of only ignoring its UI update. Handle cleanup failures explicitly and follow SDK-specific ordering for exclusive hardware acquisition. Do not reopen capture or resume audio merely because the app or connection resumes.\n\nModel permission denial, initialization, ready/live, interruption/reconnection, terminal error, user stop, and disposal as distinct outcomes where relevant. Keep permission prompts and media effects outside widget `build`. Stop only resources this feature owns; protect user-authored and retained recordings from disposable-test cleanup.\n\n## Neighbor boundaries\n\n- Networking owns ordinary HTTP/WebSocket/SSE messages and upload transport; this skill owns audio/video capture, playback, and media sessions.\n- Platform integration owns custom native bridges/plugins; background execution owns OS continuation/scheduling when required. Pair them only when that boundary changes.\n- Authentication/security own identity lifecycle and wider threat audits. Media integration still respects service-enforced publish permissions and confidential credentials.\n- Device testing operates concrete targets; performance owns measured jank/latency/memory diagnosis. UI design owns visual art direction.\n- Document parsing/PDF editing, generic file management/sharing, and text-only chat are outside this skill. Media capture does not authorize uploading or publishing its output.\n\n\n<supporting_resources>\n<resource path=\"references/playback-and-streaming.md\">\n# Playback and streaming\n\nEstablish whether the source is an asset, application-owned file, authenticated URL, on-demand stream, or live playback URL. Check actual container/codec, captions, player backend, platform coverage, seek/live-edge behavior, and source authorization. Use the installed player's contract; do not select a new package solely for familiarity.\n\n## Controller and source ownership\n\nInitialize once per intended source/owner and release controllers and listeners on replacement or exit. Treat readiness, playing, user pause, buffering, ended, and failed as different states. Expose a recoverable failure rather than an endless loading indicator. Remember user intent separately from lifecycle interruptions.\n\nDuring source switching, accept only a still-current initialization. Release successfully initialized stale controllers, including completions after stop/disposal. Decide whether a failed replacement preserves the previous source or shows an error; do not accidentally revive a source the user abandoned. Await cleanup where the SDK requires it, and prevent duplicate release by transferring ownership before asynchronous cleanup.\n\n## Delivery and platform checks\n\nAn HLS viewer URL does not require building a broadcasting room or ingest pipeline. HLS and interactive realtime media solve different delivery contracts. Low latency requires compatible encoder/packager, delivery, and player behavior; a playlist extension does not establish latency. Measure source-to-viewer delay when that claim matters.\n\nOn web, inspect autoplay/user-gesture rules, codec/HLS support, CORS, authentication, and whether the backend accepts headers/cookies for every playlist and segment request. Keep signed URLs and credentials out of diagnostics. Do not assume a file-path constructor or platform option exists on every backend. Keep HTTPS; add a narrowly justified transport exception only for an explicitly required source after checking platform guidance.\n\nTest startup, buffering, retry, expired authorization, seek/live edge where supported, captions, source replacement, and cleanup. UI status or downloaded bytes alone do not prove decoded frames or audible output.\n\n## Sources\n\n- [Flutter video player setup and platform behavior](https://pub.dev/packages/video_player)\n- [Apple HLS delivery](https://developer.apple.com/streaming/)\n- [Low-Latency HLS delivery requirements](https://developer.apple.com/documentation/http-live-streaming/enabling-low-latency-http-live-streaming-hls)\n- [Browser autoplay guidance](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Autoplay)\n\n</resource>\n\n<resource path=\"references/verification.md\">\n# Media verification\n\nTie important decisions to the installed SDK's documentation/API/source and actual target constraints. Record the source URL, resolved package/native version, review date, expected behavior, test, and observed result where they affect reproducibility. Current publisher documentation is a starting point; check changelogs/source for the version the app actually uses. Treat examples as examples rather than a universal package choice.\n\n| Claim | Appropriate evidence |\n|---|---|\n| State, late initialization, event deduplication, owned cleanup | Deterministic fake-controlled unit tests, including reversed completion and stop/disposal while pending |\n| Pending/error/retry/role UI | Widget tests with the real state owner and a controlled adapter |\n| Native permission and camera/microphone/audio routing | Target runtime checks with actual platform/plugin and relevant hardware |\n| Media file can be consumed | Inspect produced format/metadata and decode/play the output on the supported target |\n| Livestream/call works | Distinct publishing and receiving endpoints, named service, actual received video/audio, and role restrictions |\n| Latency, frame rate, memory, or quality improved | Equivalent before/after measurements, named target/build mode/network/source, and variance |\n\nChoose checks for the changed behavior: permission denial and cancellation; initialization and failure; source/camera changes; user pause during interruption; background/foreground; stop/disposal; repeated reconnect; account/role changes; and unavailable devices. Do not expand every small playback task into every platform or mode.\n\nFor local fixtures use synthetic or explicitly authorized media. Record execution surface and data/service source independently. Mock adapter success does not prove OS permission flow, camera release, codec support, audible output, remote delivery, or live authorization. Ordinary widget interaction also does not prove native system-dialog behavior.\n\nWhen runtime, hardware, credentials, a second participant, or a compatible SDK blocks a check, complete independent local checks and report that exact boundary as unverified. Do not label a call healthy from signaling alone, or a recording valid from a nonempty path. Keep credentials, signed media URLs, and private recordings out of retained diagnostics.\n\n## Sources\n\n- [Flutter testing surfaces](https://docs.flutter.dev/testing/overview)\n- [Flutter integration-test boundaries](https://docs.flutter.dev/testing/integration-tests)\n- [Example SDK connection/media diagnostics](https://docs.livekit.io/reference/client-sdk-flutter/)\n\n</resource>\n</supporting_resources>\n</skill>\n\n<task>\nFix the existing MediaSourceOwner adapter without changing its public API or adding packages. Its fake player backend supports overlapping asynchronous source opens and returns a distinct owned handle per successful open. Only the newest still-requested source may become current. Release replaced or stale successful handles exactly once, invalidate pending opens when stopped/disposed, reject new starts after disposal, and keep a working current source if its replacement fails. A failed close must not leave its handle current for a repeated stop to close again. This is a controlled playback-adapter test, not permission to operate camera/microphone, connect to a live room, or claim native playback verification.\n</task>",
+      "agent_response": "Updated `lib/media_source_owner.dart` to invalidate stale opens, release owned handles once, preserve the current source on replacement failure, and prevent opens after disposal.\n\nAll six fixture checks pass using the cached Dart SDK directly. Native playback was not verified.",
+      "changed_paths": [
+        "lib/media_source_owner.dart"
+      ],
+      "forbidden_changes": [],
+      "patch": "--- a/lib/media_source_owner.dart\n+++ b/lib/media_source_owner.dart\n@@ -4,15 +4,33 @@\n \n class MediaSourceOwner {\n   MediaHandle? current;\n+  int _request = 0;\n+  bool _disposed = false;\n \n   Future<void> start(Future<MediaHandle> Function() open) async {\n-    current = await open();\n+    if (_disposed) return;\n+    final request = ++_request;\n+    final handle = await open();\n+    if (_disposed || request != _request) {\n+      await handle.close();\n+      return;\n+    }\n+\n+    final previous = current;\n+    current = handle;\n+    await previous?.close();\n   }\n \n   Future<void> stop() async {\n-    await current?.close();\n+    ++_request;\n+    final handle = current;\n+    // Transfer ownership before asynchronous cleanup, even if close fails.\n     current = null;\n+    await handle?.close();\n   }\n \n-  Future<void> dispose() => stop();\n+  Future<void> dispose() {\n+    _disposed = true;\n+    return stop();\n+  }\n }\n",
+      "baseline_checks": [
+        {
+          "name": "format",
+          "command": [
+            "dart",
+            "format",
+            "--output=none",
+            "--set-exit-if-changed",
+            "lib"
+          ],
+          "exit_code": 0,
+          "stdout": "Formatted 1 file (0 changed) in 0.00 seconds.\n",
+          "stderr": "",
+          "passed": true
+        },
+        {
+          "name": "analyze",
+          "command": [
+            "dart",
+            "analyze",
+            "lib",
+            "bin"
+          ],
+          "exit_code": 0,
+          "stdout": "Analyzing lib, bin...\nNo issues found!\n",
+          "stderr": "",
+          "passed": true
+        },
+        {
+          "name": "ownership-verification",
+          "command": [
+            "dart",
+            "run",
+            "bin/verify.dart"
+          ],
+          "exit_code": 255,
+          "stdout": "",
+          "stderr": "Unhandled exception:\nBad state: Stale source replaced latest\n#0      require (file:///private/var/folders/p2/nv1h_pwd6sxgxbm994lrcvb00000gn/T/flutter-executable-eval-z95a0f80/baseline/bin/verify.dart:21:19)\n#1      reversedCompletion (file:///private/var/folders/p2/nv1h_pwd6sxgxbm994lrcvb00000gn/T/flutter-executable-eval-z95a0f80/baseline/bin/verify.dart:36:3)\n<asynchronous suspension>\n#2      main (file:///private/var/folders/p2/nv1h_pwd6sxgxbm994lrcvb00000gn/T/flutter-executable-eval-z95a0f80/baseline/bin/verify.dart:132:5)\n<asynchronous suspension>\n",
+          "passed": false
+        }
+      ],
+      "checks": [
+        {
+          "name": "format",
+          "command": [
+            "dart",
+            "format",
+            "--output=none",
+            "--set-exit-if-changed",
+            "lib"
+          ],
+          "exit_code": 0,
+          "stdout": "Formatted 1 file (0 changed) in 0.00 seconds.\n",
+          "stderr": "",
+          "passed": true
+        },
+        {
+          "name": "analyze",
+          "command": [
+            "dart",
+            "analyze",
+            "lib",
+            "bin"
+          ],
+          "exit_code": 0,
+          "stdout": "Analyzing lib, bin...\nNo issues found!\n",
+          "stderr": "",
+          "passed": true
+        },
+        {
+          "name": "ownership-verification",
+          "command": [
+            "dart",
+            "run",
+            "bin/verify.dart"
+          ],
+          "exit_code": 0,
+          "stdout": "PASS reversed completion\nPASS stop during open\nPASS disposal\nPASS replacement and concurrent stop\nPASS failed replacement\nPASS failed close\n",
+          "stderr": "",
+          "passed": true
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "summary": {
+    "cases": 1,
+    "passed": 1
+  }
+}

@@ -542,5 +542,61 @@
     "required": ["flutter-visual-effects"],
     "optional": ["flutter-accessibility", "flutter-performance", "flutter-testing"],
     "forbidden": ["flutter-app-workflow", "flutter-figma-workflow", "flutter-ui-design"]
+  },
+  {
+    "name": "media-camera-using-existing-plugin",
+    "prompt": "Fix an existing Flutter camera preview that reappears after leaving the route while its controller initializes. Keep the current camera plugin; no native bridge or app architecture change is needed.",
+    "required": ["flutter-media"],
+    "optional": ["dart-concurrency", "flutter-state-management", "flutter-testing"],
+    "forbidden": ["flutter-platform-integration", "flutter-app-workflow", "flutter-architecture"]
+  },
+  {
+    "name": "media-hls-viewer-without-broadcast-ingest",
+    "prompt": "Add playback controls and buffering/retry states for an existing authorized HTTPS HLS livestream using the Flutter app's current supported player. No publishing or backend work is requested.",
+    "required": ["flutter-media"],
+    "optional": ["flutter-ui-patterns", "flutter-accessibility", "flutter-testing"],
+    "forbidden": ["flutter-app-workflow", "flutter-platform-integration", "flutter-ai-integration"]
+  },
+  {
+    "name": "media-vietnamese-live-host-viewer",
+    "prompt": "Sửa màn livestream Flutter đang có: host phát camera và mic, viewer chỉ xem; mất mạng thì kết nối lại, rời phòng phải tắt tài nguyên đã mở. Giữ SDK hiện tại và API cấp token hiện có, không đổi kiến trúc hay viết lại backend.",
+    "required": ["flutter-media"],
+    "optional": ["flutter-testing", "flutter-security", "dart-concurrency"],
+    "forbidden": ["flutter-app-workflow", "flutter-architecture", "flutter-ai-integration"]
+  },
+  {
+    "name": "media-call-reconnect-track-replay",
+    "prompt": "Our Flutter call SDK already reconnects and republishes local audio/video, but replayed participant events create duplicate tiles and microphone tracks. Fix application-side track reconciliation using the existing SDK.",
+    "required": ["flutter-media"],
+    "optional": ["dart-concurrency", "flutter-state-management", "flutter-testing"],
+    "forbidden": ["flutter-app-workflow", "flutter-platform-integration", "flutter-ai-integration"]
+  },
+  {
+    "name": "media-screen-share-sdk-integration",
+    "prompt": "Add SDK-supported screen sharing to the existing Flutter call on Android, iOS, and web, handling platform consent and user stop. Preserve the current provider and use its documented setup; custom native bridges are not requested.",
+    "required": ["flutter-media"],
+    "optional": ["flutter-background-execution", "flutter-testing", "flutter-device-testing"],
+    "forbidden": ["flutter-platform-integration", "flutter-app-workflow", "flutter-ai-integration"]
+  },
+  {
+    "name": "media-negative-text-only-websocket",
+    "prompt": "Repair reconnect and duplicate JSON-message delivery in our Flutter support chat's existing WebSocket transport. It sends text only; there is no audio, video, capture, or calling.",
+    "required": ["flutter-networking"],
+    "optional": ["dart-concurrency", "flutter-testing"],
+    "forbidden": ["flutter-media", "flutter-ai-integration", "flutter-app-workflow"]
+  },
+  {
+    "name": "media-negative-pdf-upload-retry",
+    "prompt": "Fix duplicate retry uploads of PDF documents in an existing Flutter http transport adapter. Do not edit document contents, capture media, or redesign the attachment screen.",
+    "required": ["flutter-networking"],
+    "optional": ["dart-concurrency", "flutter-testing"],
+    "forbidden": ["flutter-media", "flutter-platform-integration", "flutter-app-workflow"]
+  },
+  {
+    "name": "media-negative-measured-gallery-jank",
+    "prompt": "Profile and reduce frame-time jank and excessive decoded-image memory in an existing Flutter gallery list. No camera, recording, playback controller, or media-session behavior changes are requested.",
+    "required": ["flutter-performance"],
+    "optional": ["flutter-testing"],
+    "forbidden": ["flutter-media", "flutter-app-workflow", "flutter-platform-integration"]
   }
 ]

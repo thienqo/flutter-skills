@@ -1,6 +1,6 @@
 # Flutter Skills
 
-[![Agent Skills](https://img.shields.io/badge/Agent%20Skills-37-2ea44f)](skills/)
+[![Agent Skills](https://img.shields.io/badge/Agent%20Skills-38-2ea44f)](skills/)
 [![Validation](https://github.com/thienqo/flutter-skills/actions/workflows/validate-repository.yml/badge.svg)](https://github.com/thienqo/flutter-skills/actions/workflows/validate-repository.yml)
 [![License](https://img.shields.io/badge/License-BSD--3--Clause-blue)](LICENSE)
 
@@ -41,7 +41,14 @@ In VS Code, open **Extensions**, search for `thienqo.flutter-skills`, and select
 
 ## Use
 
-Start with `flutter-app-workflow` for a feature, or name a specialist for a focused task:
+Describe the task naturally after installation. Agents that support implicit skill invocation can select matching specialists from their descriptions; selection depends on the host and enabled skills. Codex supports both [implicit matching and explicit invocation](https://learn.chatgpt.com/docs/build-skills). For example:
+
+```text
+Fix our Flutter livestream's host/viewer roles and reconnect cleanup,
+preserving the existing SDK and backend token API.
+```
+
+Use `flutter-app-workflow` for complete feature delivery, or name a specialist explicitly for a focused task:
 
 ```text
 Use $flutter-openapi-client to read this Swagger contract and generate
@@ -52,7 +59,7 @@ Skills guide the agent through implementation and verification, with clear repor
 
 ## Catalog
 
-**37 skills** covering Dart, architecture, UI, APIs, testing, debugging, and release delivery.
+**38 skills** covering Dart, architecture, UI, media, APIs, testing, debugging, and release delivery.
 
 <details>
 <summary>Browse all skills</summary>
@@ -64,6 +71,7 @@ Skills guide the agent through implementation and verification, with clear repor
 | Architecture | `flutter-architecture`, `flutter-state-management` |
 | UI | `flutter-ui-design`, `flutter-figma-workflow`, `flutter-visual-effects`, `flutter-ui-patterns`, `flutter-responsive-layout`, `flutter-text-rendering`, `flutter-animation`, `flutter-navigation` |
 | Data & AI | `flutter-networking`, `flutter-openapi-client`, `flutter-persistence`, `flutter-ai-integration` |
+| Media | `flutter-media` (capture, playback, livestreams, calls, screen sharing) |
 | Identity & product | `flutter-authentication`, `flutter-in-app-purchases`, `flutter-product-analytics` |
 | Quality | `flutter-code-review`, `flutter-security`, `flutter-testing`, `flutter-runtime-debugging`, `flutter-performance`, `flutter-observability`, `flutter-accessibility`, `flutter-localization` |
 | Platform & packages | `flutter-background-execution`, `flutter-platform-integration`, `flutter-package-development`, `flutter-notifications`, `flutter-webview` |
@@ -72,7 +80,7 @@ Skills guide the agent through implementation and verification, with clear repor
 
 ## Quality
 
-**238 behavior-focused evaluation cases** and **76 cross-catalog routing cases** define expected behavior and skill selection. See [measured results](benchmarks/README.md) and [contribution guidelines](CONTRIBUTING.md).
+**246 behavior-focused evaluation cases** and **84 cross-catalog routing cases** define expected behavior and skill selection. See [measured results](benchmarks/README.md) and [contribution guidelines](CONTRIBUTING.md).
 
 ## License
 

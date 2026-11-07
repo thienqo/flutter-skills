@@ -1,0 +1,45 @@
+{
+  "name": "media-source-ownership",
+  "skill": "flutter-media",
+  "prompt": "Fix the existing MediaSourceOwner adapter without changing its public API or adding packages. Its fake player backend supports overlapping asynchronous source opens and returns a distinct owned handle per successful open. Only the newest still-requested source may become current. Release replaced or stale successful handles exactly once, invalidate pending opens when stopped/disposed, reject new starts after disposal, and keep a working current source if its replacement fails. A failed close must not leave its handle current for a repeated stop to close again. This is a controlled playback-adapter test, not permission to operate camera/microphone, connect to a live room, or claim native playback verification.",
+  "resources": [
+    "references/playback-and-streaming.md",
+    "references/verification.md"
+  ],
+  "fixture": "media-source-ownership",
+  "allowed_changes": [
+    "lib"
+  ],
+  "checks": [
+    {
+      "name": "format",
+      "command": [
+        "dart",
+        "format",
+        "--output=none",
+        "--set-exit-if-changed",
+        "lib"
+      ],
+      "timeout": 60
+    },
+    {
+      "name": "analyze",
+      "command": [
+        "dart",
+        "analyze",
+        "lib",
+        "bin"
+      ],
+      "timeout": 120
+    },
+    {
+      "name": "ownership-verification",
+      "command": [
+        "dart",
+        "run",
+        "bin/verify.dart"
+      ],
+      "timeout": 60
+    }
+  ]
+}

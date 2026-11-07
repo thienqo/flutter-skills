@@ -1,0 +1,4 @@
+name: executable_media_source_ownership
+publish_to: none
+environment:
+  sdk: ^3.5.0

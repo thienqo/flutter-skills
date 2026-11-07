@@ -1,0 +1,215 @@
+{
+  "source": "local checkout",
+  "installed_skills": [
+    "flutter-media",
+    "flutter-networking",
+    "flutter-platform-integration",
+    "flutter-app-workflow",
+    "dart-concurrency",
+    "flutter-testing"
+  ],
+  "native_execution": true,
+  "installation": {
+    "command": [
+      "/Users/thiennc/.nvm/versions/node/v22.23.4/bin/node",
+      "/Users/thiennc/my-skills/flutter-skills/node_modules/skills/bin/cli.mjs",
+      "add",
+      "/Users/thiennc/my-skills/flutter-skills",
+      "--skill",
+      "flutter-media",
+      "flutter-networking",
+      "flutter-platform-integration",
+      "flutter-app-workflow",
+      "dart-concurrency",
+      "flutter-testing",
+      "--agent",
+      "codex",
+      "--yes"
+    ],
+    "stdout": "\n\u2502\n\u25cf   codex  Agent detected \u2014 installing non-interactively\n\u001b[?25l\u2502\n\u25c7  Source: /Users/thiennc/my-skills/flutter-skills\n\u001b[?25h\u001b[?25l\u2502\n\u25c7  Local path validated\n\u001b[?25h\u001b[?25l\u2502\n\u25c7  Found 38 skills\n\u001b[?25h\u2502\n\u25cf  Selected 6 skills: dart-concurrency, flutter-app-workflow, flutter-media, flutter-networking, flutter-platform-integration, flutter-testing\n\n\u2502\n\u25c7  Installation Summary \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502                                                 \u2502\n\u2502  ./.agents/skills/dart-concurrency              \u2502\n\u2502    copy \u2192 Codex                                 \u2502\n\u2502                                                 \u2502\n\u2502  ./.agents/skills/flutter-app-workflow          \u2502\n\u2502    copy \u2192 Codex                                 \u2502\n\u2502                                                 \u2502\n\u2502  ./.agents/skills/flutter-media                 \u2502\n\u2502    copy \u2192 Codex                                 \u2502\n\u2502                                                 \u2502\n\u2502  ./.agents/skills/flutter-networking            \u2502\n\u2502    copy \u2192 Codex                                 \u2502\n\u2502                                                 \u2502\n\u2502  ./.agents/skills/flutter-platform-integration  \u2502\n\u2502    copy \u2192 Codex                                 \u2502\n\u2502                                                 \u2502\n\u2502  ./.agents/skills/flutter-testing               \u2502\n\u2502    copy \u2192 Codex                                 \u2502\n\u2502                                                 \u2502\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n\u001b[?25l\u2502\n\u25c7  Installation complete\n\u001b[?25h\n\u2502\n\u25c7  Installed 6 skills \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502                                                     \u2502\n\u2502  \u2713 dart-concurrency (copied)                        \u2502\n\u2502    \u2192 ./.agents/skills/dart-concurrency              \u2502\n\u2502  \u2713 flutter-app-workflow (copied)                    \u2502\n\u2502    \u2192 ./.agents/skills/flutter-app-workflow          \u2502\n\u2502  \u2713 flutter-media (copied)                           \u2502\n\u2502    \u2192 ./.agents/skills/flutter-media                 \u2502\n\u2502  \u2713 flutter-networking (copied)                      \u2502\n\u2502    \u2192 ./.agents/skills/flutter-networking            \u2502\n\u2502  \u2713 flutter-platform-integration (copied)            \u2502\n\u2502    \u2192 ./.agents/skills/flutter-platform-integration  \u2502\n\u2502  \u2713 flutter-testing (copied)                         \u2502\n\u2502    \u2192 ./.agents/skills/flutter-testing               \u2502\n\u2502                                                     \u2502\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n\n\u2502\n\u2514  Done!  Review skills before use; they run with full agent permissions.\n\n",
+    "stderr": ""
+  },
+  "installed_entrypoint_sha256": "8ebb42f3fc27912c736f6ff354a5ba058a9cf2c553cbf60ab45fef4175365d76",
+  "default_implicit_policy": true,
+  "prompt": "Plan a focused fix for a Flutter video player that uses its existing SDK. Opening source A is slow; source B becomes ready first; then A returns after the user has left the page. A successful open creates an owned player controller. Explain source ownership, resource cleanup, and verification without changing packages or writing code. There is no live media or target device in this project. Read local guidance if relevant; do not use the network, operate hardware, or modify files.",
+  "command": [
+    "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+    "exec",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--sandbox",
+    "read-only",
+    "--cd",
+    "/var/folders/p2/nv1h_pwd6sxgxbm994lrcvb00000gn/T/flutter-media-discovery-r08tluns",
+    "--json",
+    "--output-last-message",
+    "/var/folders/p2/nv1h_pwd6sxgxbm994lrcvb00000gn/T/flutter-media-discovery-r08tluns/response.txt",
+    "-"
+  ],
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "response": "Use **latest-request-wins ownership** within the existing SDK and state owner.\n\n1. **Check the SDK contract first.** Confirm the resolved package version, open/cancellation behavior, controller disposal requirements, and whether the SDK already manages listeners, audio focus, and lifecycle events. This workspace has no Flutter source, `pubspec.yaml`, or lockfile, so those checks remain pending. Avoid adding duplicate lifecycle handlers.\n\n2. **Give each open a generation.** Starting B invalidates A immediately. Leaving the page or stopping playback invalidates every pending open and closes the owner. Accept a result only when its generation is current and the owner remains active. A mounted check alone cannot prevent A from replacing B while the page is still mounted.\n\n3. **Keep ownership explicit.** Each open attempt initially owns the controller it successfully returns. A current attempt transfers that controller to the page\u2019s state owner. A stale attempt must release its controller\u2014even when it finishes after the page has gone away. Apply the same generation guard to errors and playback callbacks.\n\n4. **Make cleanup reliable.** On replacement or exit, detach owned listeners and remove the active controller from shared state before asynchronous release, preventing double disposal. Follow the SDK\u2019s required stop/dispose ordering and handle cleanup failures through the existing error-reporting path. SDK cancellation can reduce work, but retain stale-result cleanup unless its contract guarantees no controller can return afterward. Flutter widget disposal is synchronous; asynchronous cleanup needs an explicitly owned, error-handled completion path.\n\nFor the reported sequence, the expected outcome is: **B becomes the active controller; leaving releases B; A\u2019s later success releases A immediately without attaching listeners, playing, or updating UI.**\n\nPlan deterministic tests with controlled open completions through the existing adapter:\n\n- Complete B before A: only B becomes active; A is released once.\n- Leave after B succeeds, then complete A: both controllers are released once; no post-exit UI updates occur.\n- Leave while both opens are pending: every later successful result is released.\n- Complete stale failures and callbacks: they cannot overwrite current state or produce unhandled errors.\n- Delay or fail cleanup: verify ownership remains clear and SDK-required cleanup ordering holds.\n\nUse widget tests for loading, ready, error, and page-exit behavior. Keep replacement failure policy explicit; for this focused fix, an abandoned source should never revive.\n\nI read the local media and concurrency guidance; the referenced `../.tessl/RULES.md` is missing. No files were changed, tests run, network used, or hardware operated. These planned tests establish ordering and ownership; actual decoding, native resource release, and startup performance remain unverified without the application, media, and a supported target.",
+  "events": [
+    {
+      "type": "thread.started",
+      "thread_id": "01a1b616-a4de-7500-8adb-0271ed924d62"
+    },
+    {
+      "type": "turn.started"
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_0",
+        "type": "agent_message",
+        "text": "I\u2019ll read the local guidance, then outline how to handle overlapping opens and controller cleanup using the existing SDK."
+      }
+    },
+    {
+      "type": "item.started",
+      "item": {
+        "id": "item_1",
+        "type": "command_execution",
+        "command": "/bin/zsh -lc \"pwd; rg --files -g 'AGENTS.md' -g '*RULES.md' -g 'pubspec.yaml' -g '*player*' -g '*video*' -g 'README*'\"",
+        "aggregated_output": "",
+        "exit_code": null,
+        "status": "in_progress"
+      }
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_1",
+        "type": "command_execution",
+        "command": "/bin/zsh -lc \"pwd; rg --files -g 'AGENTS.md' -g '*RULES.md' -g 'pubspec.yaml' -g '*player*' -g '*video*' -g 'README*'\"",
+        "aggregated_output": "/private/var/folders/p2/nv1h_pwd6sxgxbm994lrcvb00000gn/T/flutter-media-discovery-r08tluns\n",
+        "exit_code": 1,
+        "status": "failed"
+      }
+    },
+    {
+      "type": "item.started",
+      "item": {
+        "id": "item_2",
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'cat ../.tessl/RULES.md'",
+        "aggregated_output": "",
+        "exit_code": null,
+        "status": "in_progress"
+      }
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_2",
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'cat ../.tessl/RULES.md'",
+        "aggregated_output": "cat: ../.tessl/RULES.md: No such file or directory\n",
+        "exit_code": 1,
+        "status": "failed"
+      }
+    },
+    {
+      "type": "item.started",
+      "item": {
+        "id": "item_3",
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'cat .agents/skills/flutter-media/SKILL.md .agents/skills/dart-concurrency/SKILL.md'",
+        "aggregated_output": "",
+        "exit_code": null,
+        "status": "in_progress"
+      }
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_3",
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'cat .agents/skills/flutter-media/SKILL.md .agents/skills/dart-concurrency/SKILL.md'",
+        "aggregated_output": "---\nname: flutter-media\ndescription: Implement Flutter camera capture, audio/video recording and playback, livestreams, calls, and screen sharing. Use for media resources, tracks, permissions, and interruptions; route text-only realtime transport to flutter-networking and native bridges to flutter-platform-integration.\n---\n\n# Flutter Media\n\nDeliver media behavior that respects the user's intent, the resolved player or capture SDK, and each target's lifecycle. Preserve existing packages and architecture. Installing this skill requires no provider account, server key, room, stream URL, or camera/microphone access.\n\n## Establish the media contract\n\nRead `pubspec.yaml`, the lockfile, SDK constraints, current adapters/controllers, native configuration, and tests. Establish:\n\n- Capture, recorded-file playback, live viewing, broadcasting, or interactive calling; an image-buffer stream is not an encoded broadcast.\n- Source and output, format/codec, target platforms, permissions, foreground/background requirements, and intended behavior on interruption or exit.\n- For live sessions, service ownership, participant identity, host/viewer permissions, and what proves actual remote media delivery.\n\nUse the current SDK's supported facilities before adding another player, audio-session owner, signaling stack, or provider. Inspect version-specific native/browser requirements instead of copying setup or API names from a newer release. Keep secrets in the authorized service boundary, not in Flutter or logs.\n\n## Read the relevant mode\n\n- [Capture and recording](references/capture-and-recording.md): camera, microphone, media picking, transforms, encoded outputs, and recovery.\n- [Playback and streaming](references/playback-and-streaming.md): audio/video controllers, source switching, buffering, HLS/live viewing, and browser constraints.\n- [Audio interruptions and routing](references/audio-interruptions-and-routing.md): focus, session activation, user pause intent, calls, and output-device changes.\n- [Live broadcasting](references/live-broadcasting.md): preview, going live, host/viewer authority, delivery stages, and ending a broadcast.\n- [Realtime calls and screen sharing](references/realtime-calls-and-screen-sharing.md): participants/tracks, reconnect, device selection, capture consent, and screen-share setup.\n\nRead [verification](references/verification.md) before claiming capture, playback, live delivery, or target compatibility. Read several mode references only when the task crosses their boundaries.\n\n## Keep ownership explicit\n\nGive each controller, track, subscription, renderer, temporary file, and session one lifecycle owner. Invalidate abandoned asynchronous work; release resources returned by stale successful initialization instead of only ignoring its UI update. Handle cleanup failures explicitly and follow SDK-specific ordering for exclusive hardware acquisition. Do not reopen capture or resume audio merely because the app or connection resumes.\n\nModel permission denial, initialization, ready/live, interruption/reconnection, terminal error, user stop, and disposal as distinct outcomes where relevant. Keep permission prompts and media effects outside widget `build`. Stop only resources this feature owns; protect user-authored and retained recordings from disposable-test cleanup.\n\n## Close the evidence loop\n\nFor an implementation or a tool-free plan, explicitly identify the resolved package/Flutter/native contract checks and existing SDK responsibilities before adding lifecycle, focus, or recovery handlers. A package being present does not establish who already owns those effects. At the affected boundary, state the stop/leave cleanup and the focused acceptance checks, including the native or two-endpoint scenario still needed. Label unavailable inspection and execution as pending; do not substitute a list of fake tests for the media behavior they cannot prove.\n\n## Neighbor boundaries\n\n- Networking owns ordinary HTTP/WebSocket/SSE messages and upload transport; this skill owns audio/video capture, playback, and media sessions.\n- Platform integration owns custom native bridges/plugins; background execution owns OS continuation/scheduling when required. Pair them only when that boundary changes.\n- Authentication/security own identity lifecycle and wider threat audits. Media integration still respects service-enforced publish permissions and confidential credentials.\n- Device testing operates concrete targets; performance owns measured jank/latency/memory diagnosis. UI design owns visual art direction.\n- Document parsing/PDF editing, generic file management/sharing, and text-only chat are outside this skill. Media capture does not authorize uploading or publishing its output.\n---\nname: dart-concurrency\ndescription: Design and debug Dart asynchronous infrastructure with Future, Stream, isolates, cancellation, and lifecycle-safe ownership. Use for races, stale results, background CPU work, stream leaks, or async error handling; not for routine form-local validation or submission unless its underlying ordering mechanism is the task.\n---\n\n# Dart Concurrency\n\nMake ownership, ordering, cancellation, and error propagation explicit.\n\n## Diagnose first\n\nIdentify the producer, consumer, lifecycle owner, ordering requirement, and desired behavior when work becomes obsolete. Reproduce the race or leak before adding synchronization-like machinery.\n\n## Decision rules\n\n- Use `Future` for one result and `Stream` for a sequence over time.\n- Avoid unawaited work unless independence and error handling are intentional.\n- Cancel subscriptions and controllers according to the owning object's lifecycle.\n- Guard UI updates after async gaps with the lifecycle mechanism appropriate to the project.\n- Prevent stale requests from overwriting newer state through cancellation, tokens, sequencing, or latest-wins logic.\n- Use isolates for measured CPU-bound work or isolation needs, not ordinary network I/O.\n- Send transferable values across isolate boundaries and surface failures to the caller.\n- Preserve stack traces when translating errors.\n\nDo not hide async ownership inside global helpers. Keep retry and timeout policy at a boundary that understands idempotency and user intent.\n\n## Verification\n\nTest success, failure, cancellation/disposal, and out-of-order completion. Run static analysis; add a focused stress or fake-time test when timing is central to the bug.\n\n## References\n\n- Read [isolate communication and worker pools](references/isolate-communication-and-worker-pools.md) when handling heavy CPU computations, port messaging, or background worker threads.\n- Read [stream cancellation and debouncing](references/stream-cancellation-and-debouncing.md) when managing subscription lifecycles, race conditions, debounce/throttle, or latest-wins semantics.\n\n## Sources\n\n- [Dart concurrency](https://dart.dev/language/concurrency)\n- [Asynchronous programming](https://dart.dev/libraries/async/async-await)\n",
+        "exit_code": 0,
+        "status": "completed"
+      }
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_4",
+        "type": "agent_message",
+        "text": "I\u2019m applying the local `flutter-media` and `dart-concurrency` guidance. The key distinction is that an obsolete open can still return an owned controller, so ignoring its UI update is insufficient. The referenced `../.tessl/RULES.md` is missing at that path; I\u2019ll check for other local guidance and SDK files."
+      }
+    },
+    {
+      "type": "item.started",
+      "item": {
+        "id": "item_5",
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'cat .agents/skills/flutter-media/references/playback-and-streaming.md .agents/skills/flutter-media/references/verification.md .agents/skills/dart-concurrency/references/stream-cancellation-and-debouncing.md'",
+        "aggregated_output": "",
+        "exit_code": null,
+        "status": "in_progress"
+      }
+    },
+    {
+      "type": "item.started",
+      "item": {
+        "id": "item_6",
+        "type": "command_execution",
+        "command": "/bin/zsh -lc \"ls -la; rg --files --hidden -g '\"'!'\"\\\\.git/**' -g 'AGENTS.md' -g 'RULES.md' -g 'pubspec*' -g '*.dart' -g 'README*'\"",
+        "aggregated_output": "",
+        "exit_code": null,
+        "status": "in_progress"
+      }
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_5",
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'cat .agents/skills/flutter-media/references/playback-and-streaming.md .agents/skills/flutter-media/references/verification.md .agents/skills/dart-concurrency/references/stream-cancellation-and-debouncing.md'",
+        "aggregated_output": "# Playback and streaming\n\nEstablish whether the source is an asset, application-owned file, authenticated URL, on-demand stream, or live playback URL. Check actual container/codec, captions, player backend, platform coverage, seek/live-edge behavior, and source authorization. Use the installed player's contract; do not select a new package solely for familiarity.\n\n## Controller and source ownership\n\nInitialize once per intended source/owner and release controllers and listeners on replacement or exit. Treat readiness, playing, user pause, buffering, ended, and failed as different states. Expose a recoverable failure rather than an endless loading indicator. Remember user intent separately from lifecycle interruptions.\n\nDuring source switching, accept only a still-current initialization. Release successfully initialized stale controllers, including completions after stop/disposal. Decide whether a failed replacement preserves the previous source or shows an error; do not accidentally revive a source the user abandoned. Await cleanup where the SDK requires it, and prevent duplicate release by transferring ownership before asynchronous cleanup.\n\n## Delivery and platform checks\n\nAn HLS viewer URL does not require building a broadcasting room or ingest pipeline. HLS and interactive realtime media solve different delivery contracts. Low latency requires compatible encoder/packager, delivery, and player behavior; a playlist extension does not establish latency. Measure source-to-viewer delay when that claim matters.\n\nOn web, inspect autoplay/user-gesture rules, codec/HLS support, CORS, authentication, and whether the backend accepts headers/cookies for every playlist and segment request. Keep signed URLs and credentials out of diagnostics. Do not assume a file-path constructor or platform option exists on every backend. Keep HTTPS; add a narrowly justified transport exception only for an explicitly required source after checking platform guidance.\n\nTest startup, buffering, retry, expired authorization, seek/live edge where supported, captions, source replacement, and cleanup. UI status or downloaded bytes alone do not prove decoded frames or audible output.\n\n## Sources\n\n- [Flutter video player setup and platform behavior](https://pub.dev/packages/video_player)\n- [Apple HLS delivery](https://developer.apple.com/streaming/)\n- [Low-Latency HLS delivery requirements](https://developer.apple.com/documentation/http-live-streaming/enabling-low-latency-http-live-streaming-hls)\n- [Browser autoplay guidance](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Autoplay)\n# Media verification\n\nTie important decisions to the installed SDK's documentation/API/source and actual target constraints. Record the source URL, resolved package/native version, review date, expected behavior, test, and observed result where they affect reproducibility. Current publisher documentation is a starting point; check changelogs/source for the version the app actually uses. Treat examples as examples rather than a universal package choice.\n\n| Claim | Appropriate evidence |\n|---|---|\n| State, late initialization, event deduplication, owned cleanup | Deterministic fake-controlled unit tests, including reversed completion and stop/disposal while pending |\n| Pending/error/retry/role UI | Widget tests with the real state owner and a controlled adapter |\n| Native permission and camera/microphone/audio routing | Target runtime checks with actual platform/plugin and relevant hardware |\n| Media file can be consumed | Inspect produced format/metadata and decode/play the output on the supported target |\n| Livestream/call works | Distinct publishing and receiving endpoints, named service, actual received video/audio, and role restrictions |\n| Latency, frame rate, memory, or quality improved | Equivalent before/after measurements, named target/build mode/network/source, and variance |\n\nChoose checks for the changed behavior: permission denial and cancellation; initialization and failure; source/camera changes; user pause during interruption; background/foreground; stop/disposal; repeated reconnect; account/role changes; and unavailable devices. Do not expand every small playback task into every platform or mode.\n\nFor local fixtures use synthetic or explicitly authorized media. Record execution surface and data/service source independently. Mock adapter success does not prove OS permission flow, camera release, codec support, audible output, remote delivery, or live authorization. Ordinary widget interaction also does not prove native system-dialog behavior.\n\nWhen runtime, hardware, credentials, a second participant, or a compatible SDK blocks a check, complete independent local checks and report that exact boundary as unverified. Do not label a call healthy from signaling alone, or a recording valid from a nonempty path. Keep credentials, signed media URLs, and private recordings out of retained diagnostics.\n\n## Sources\n\n- [Flutter testing surfaces](https://docs.flutter.dev/testing/overview)\n- [Flutter integration-test boundaries](https://docs.flutter.dev/testing/integration-tests)\n- [Example SDK connection/media diagnostics](https://docs.livekit.io/reference/client-sdk-flutter/)\n# Stream Cancellation and Debouncing\n\nStreams model sequences of asynchronous events over time. Failure to cancel subscriptions or handle race conditions between events is a major source of memory leaks and stale UI states.\n\n## Subscription Lifecycle and Cancellation\n\n- **Always Store and Cancel**: Never call `.listen()` without assigning the returned `StreamSubscription` to a variable that is explicitly cancelled in `dispose()`, `close()`, or during component unmount.\n- **Cancel on Re-trigger**: When starting a new asynchronous operation from user input (e.g., search queries), define latest-wins behavior and prevent overlapping `cancel`/`listen` continuations. A generation token is one package-free option:\n  ```dart\n  int _searchGeneration = 0;\n  Future<void>? _searchCancellation;\n\n  Future<void> search(String query) async {\n    final generation = ++_searchGeneration;\n    final previous = _searchSubscription;\n    _searchSubscription = null;\n    if (previous != null) {\n      _searchCancellation = Future<void>.microtask(previous.cancel);\n    }\n    final cancellation = _searchCancellation;\n    try {\n      await cancellation;\n    } finally {\n      if (identical(_searchCancellation, cancellation)) {\n        _searchCancellation = null;\n      }\n    }\n\n    if (generation != _searchGeneration) return;\n    _searchSubscription = repository.search(query).listen((result) {\n      if (generation == _searchGeneration) emit(result);\n    });\n  }\n  ```\n  All retriggers share pending cleanup even when the subscription field is empty. Schedule cancellation in a microtask so a synchronous cancellation callback can see the shared future if it retriggers search. Let cleanup errors reach the owner, which decides whether another search is safe. Clear only the future that finished so a later attempt can proceed without reusing a failed future or clearing a newer cleanup. Increment the generation before final teardown, cancel the stored subscription, and await any pending cleanup before releasing shared resources. Alternatively, serialize the whole cancel-and-listen transition or use switch-latest semantics already present in the project's stream stack. A busy flag can lose the newest query, and debounce alone reduces request frequency but does not guarantee ordering or ownership.\n- **StreamController Ownership**: A controller must be closed by the class that instantiates it. Never leave a controller open after its consumers are unmounted. Check `isClosed` before adding events if emissions can race with disposal.\n\n## Debouncing and Throttling\n\n- **Debounce**: Delay event processing until a quiet period has elapsed. Essential for text input and auto-complete to avoid request storms:\n  ```dart\n  // Using rxdart or a timer-based transformer\n  stream.debounceTime(const Duration(milliseconds: 300));\n  ```\n- **Throttle / Audit**: Emit the first event immediately and ignore subsequent events for a duration. Useful for button debouncing (preventing double taps).\n\n## Ordering and Latest-Wins (SwitchMap Pattern)\n\n- When an asynchronous operation produces an asynchronous result, sequential calls can complete out of order (a slow earlier query finishing after a fast later query).\n- Use `switchMap` semantics: map incoming events to a new stream, automatically cancelling the previous inner stream.\n- Alternatively, assign an incrementing sequence token to each request and discard responses with a token older than the latest dispatched request.\n\n## Testing Asynchronous Streams\n\n- Use `package:fake_async` to control virtual time deterministically. Avoid `Future.delayed` in unit tests.\n- Test edge cases: stream errors, early cancellation before completion, rapid succession of inputs, and unmounting while an asynchronous emission is in flight.\n- Hold cleanup of the first listener with a completer, issue two newer queries, and assert neither subscribes until cleanup finishes. After completion, assert only the newest query subscribes. Complete older result work after the newest result and assert it cannot emit. Dispose during pending cleanup and assert that no listener is attached afterward.\n- Fail the pending cancellation, assert the owner receives the error, then start a fresh query and verify it can subscribe once the owner has established that retry is safe.\n",
+        "exit_code": 0,
+        "status": "completed"
+      }
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_6",
+        "type": "command_execution",
+        "command": "/bin/zsh -lc \"ls -la; rg --files --hidden -g '\"'!'\"\\\\.git/**' -g 'AGENTS.md' -g 'RULES.md' -g 'pubspec*' -g '*.dart' -g 'README*'\"",
+        "aggregated_output": "total 8\ndrwx------@   4 thiennc  staff    128 Nov  7 19:58 .\ndrwx------@ 768 thiennc  staff  24576 Nov  7 19:58 ..\ndrwxr-xr-x@   3 thiennc  staff     96 Nov  7 19:58 .agents\n-rw-r--r--@   1 thiennc  staff   1431 Nov  7 19:58 skills-lock.json\n",
+        "exit_code": 1,
+        "status": "failed"
+      }
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_7",
+        "type": "agent_message",
+        "text": "Use **latest-request-wins ownership** within the existing SDK and state owner.\n\n1. **Check the SDK contract first.** Confirm the resolved package version, open/cancellation behavior, controller disposal requirements, and whether the SDK already manages listeners, audio focus, and lifecycle events. This workspace has no Flutter source, `pubspec.yaml`, or lockfile, so those checks remain pending. Avoid adding duplicate lifecycle handlers.\n\n2. **Give each open a generation.** Starting B invalidates A immediately. Leaving the page or stopping playback invalidates every pending open and closes the owner. Accept a result only when its generation is current and the owner remains active. A mounted check alone cannot prevent A from replacing B while the page is still mounted.\n\n3. **Keep ownership explicit.** Each open attempt initially owns the controller it successfully returns. A current attempt transfers that controller to the page\u2019s state owner. A stale attempt must release its controller\u2014even when it finishes after the page has gone away. Apply the same generation guard to errors and playback callbacks.\n\n4. **Make cleanup reliable.** On replacement or exit, detach owned listeners and remove the active controller from shared state before asynchronous release, preventing double disposal. Follow the SDK\u2019s required stop/dispose ordering and handle cleanup failures through the existing error-reporting path. SDK cancellation can reduce work, but retain stale-result cleanup unless its contract guarantees no controller can return afterward. Flutter widget disposal is synchronous; asynchronous cleanup needs an explicitly owned, error-handled completion path.\n\nFor the reported sequence, the expected outcome is: **B becomes the active controller; leaving releases B; A\u2019s later success releases A immediately without attaching listeners, playing, or updating UI.**\n\nPlan deterministic tests with controlled open completions through the existing adapter:\n\n- Complete B before A: only B becomes active; A is released once.\n- Leave after B succeeds, then complete A: both controllers are released once; no post-exit UI updates occur.\n- Leave while both opens are pending: every later successful result is released.\n- Complete stale failures and callbacks: they cannot overwrite current state or produce unhandled errors.\n- Delay or fail cleanup: verify ownership remains clear and SDK-required cleanup ordering holds.\n\nUse widget tests for loading, ready, error, and page-exit behavior. Keep replacement failure policy explicit; for this focused fix, an abandoned source should never revive.\n\nI read the local media and concurrency guidance; the referenced `../.tessl/RULES.md` is missing. No files were changed, tests run, network used, or hardware operated. These planned tests establish ordering and ownership; actual decoding, native resource release, and startup performance remain unverified without the application, media, and a supported target."
+      }
+    },
+    {
+      "type": "turn.completed",
+      "usage": {
+        "input_tokens": 56438,
+        "cached_input_tokens": 47872,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 972,
+        "reasoning_output_tokens": 14
+      }
+    }
+  ],
+  "stderr": "2026-11-07T12:58:19.747021Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back\n2026-11-07T12:58:19.772706Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back\n2026-11-07T12:58:19.773864Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back\n2026-11-07T12:58:56.625534Z  WARN codex_core::shell_snapshot: Failed to delete shell snapshot at AbsolutePathBuf(\"/Users/thiennc/.codex/shell_snapshots/01a1b616-a4de-7500-8adb-0271ed924d62.1794056299744317000.sh\"): Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n",
+  "instruction_read_evidence": [
+    {
+      "command": "/bin/zsh -lc 'cat .agents/skills/flutter-media/SKILL.md .agents/skills/dart-concurrency/SKILL.md'",
+      "exit_code": 0
+    }
+  ],
+  "passed": true
+}

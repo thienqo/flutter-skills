@@ -30,7 +30,8 @@
     "defaultPrompt": [
       "Build a complete Flutter feature and verify it.",
       "Review this Flutter change for concrete risks.",
-      "Diagnose and fix this Flutter performance issue."
+      "Diagnose and fix this Flutter performance issue.",
+      "Build a Flutter media capture or livestream feature using the existing SDK."
     ]
   }
 }

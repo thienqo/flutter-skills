@@ -1,0 +1,159 @@
+[
+  {
+    "name": "camera-lifecycle-does-not-revive-an-abandoned-preview",
+    "prompt": "Plan a fix for an existing Flutter camera preview. The app uses its current camera plugin and ChangeNotifier adapter. Initializing the camera is asynchronous; the user can switch cameras, background the app, or leave the route before initialization completes. The current plugin documentation says the app owns lifecycle cleanup and reinitialization. Preserve the stack. No files or device tools are available: explain ownership, permission/error handling, and the checks needed without claiming execution.",
+    "resources": [
+      "references/capture-and-recording.md",
+      "references/verification.md"
+    ],
+    "expectations": [
+      {
+        "id": "stale-capture-cannot-revive",
+        "text": "invalidates abandoned initialization and releases any late-created owned controller instead of attaching it after a camera switch, route exit, or disposal",
+        "mandatory": true
+      },
+      "checks the resolved plugin and SDK contract, sequences exclusive camera cleanup and reacquisition, and preserves the existing adapter and packages",
+      {
+        "id": "permission-denial-is-a-state",
+        "text": "handles denied or restricted camera access and initialization errors as recoverable states without repeatedly prompting; does not introduce microphone permission or recording into a silent-preview task",
+        "mandatory": true
+      },
+      "requires fake-controlled late-completion tests and a separate real target lifecycle/permission check, explicitly unexecuted here"
+    ]
+  },
+  {
+    "name": "playback-source-switch-preserves-the-latest-owner",
+    "prompt": "Fix the design of an existing Flutter video player source switch: open(A) starts, open(B) starts, B initializes first, then A completes after the user leaves the page. Each successful open returns a distinct owned controller that must be released. The project already has a compatible player. Give a concrete plan, including the failure paths and evidence needed, without tools or package migration.",
+    "resources": [
+      "references/playback-and-streaming.md",
+      "references/verification.md"
+    ],
+    "expectations": [
+      {
+        "id": "latest-source-and-release",
+        "text": "accepts only the latest still-owned initialization, invalidates pending opens on stop or disposal, and releases stale successful controllers rather than merely dropping their results",
+        "mandatory": true
+      },
+      "releases replaced active controllers exactly once without overwriting a newer owner and defines what happens if opening the replacement fails",
+      "preserves the compatible player and proposes deterministic reversed-completion, stop-during-open, and disposal tests",
+      "does not claim playback, codec compatibility, or target behavior from fake-controller tests alone"
+    ]
+  },
+  {
+    "name": "audio-interruption-does-not-override-a-user-pause",
+    "prompt": "Our Flutter podcast player already has an audio-session integration. A phone call interrupts playback; while interrupted the user presses Pause. The interruption ends with an OS hint that playback may resume, but the app currently restarts audio anyway. Explain a focused fix and tests. Preserve the existing packages; no native runtime is available in this request.",
+    "resources": [
+      "references/audio-interruptions-and-routing.md",
+      "references/verification.md"
+    ],
+    "expectations": [
+      {
+        "id": "user-intent-wins-resume-hint",
+        "text": "keeps explicit user playback intent separate from interruption state and does not resume after the user's Pause just because an interruption ends or the OS permits resumption",
+        "mandatory": true
+      },
+      "checks whether the existing SDK already manages focus and interruptions before adding handlers, avoiding duplicate session ownership",
+      "requires successful activation or focus before automatic resumption when playback is still intended, and handles denied activation without overriding explicit user pause",
+      "proposes event-sequence unit tests and a separate native phone-call interruption check while declaring native verification unperformed; unrelated route-change work is not required"
+    ]
+  },
+  {
+    "name": "livestream-viewer-role-is-enforced-by-the-service",
+    "prompt": "Plan host/viewer livestream delivery in a Flutter app that already has a supported realtime media SDK. The host can publish camera/audio, viewers only watch. Someone proposes shipping the provider server secret in Flutter, minting host tokens locally, hiding the Publish button for viewers, and declaring the stream healthy when room.connect succeeds. No backend credentials or device tools are available. Correct the plan without changing providers or claiming runtime success.",
+    "resources": [
+      "references/live-broadcasting.md",
+      "references/verification.md"
+    ],
+    "expectations": [
+      {
+        "id": "server-authority-not-client-ui",
+        "text": "keeps provider server secrets out of Flutter, obtains scoped short-lived room/identity permissions from an authorized backend, and enforces viewer publish denial at the service rather than only hiding UI",
+        "mandatory": true
+      },
+      {
+        "id": "connection-is-not-media-delivery",
+        "text": "distinguishes room signaling connection, local capture/publication, remote subscription, and received/decoded audio or video instead of treating connect success as end-to-end livestream proof",
+        "mandatory": true
+      },
+      "defines preview versus live, role changes, recoverable failure, leaving versus authorized broadcast termination, and cleanup while retaining the existing SDK",
+      "provides a two-participant verification plan and explicitly records unavailable backend and runtime boundaries"
+    ]
+  },
+  {
+    "name": "reconnect-does-not-duplicate-published-tracks",
+    "prompt": "Our Flutter call uses an existing SDK whose inspected documentation says a full reconnect republishes local tracks and replays participant/track events. The UI currently adds another tile and creates another microphone track on every Reconnected event. Design the minimal correction for this contract; do not assume another SDK or execute any services.",
+    "resources": [
+      "references/realtime-calls-and-screen-sharing.md",
+      "references/verification.md"
+    ],
+    "expectations": [
+      {
+        "id": "sdk-reconnect-contract-preserved",
+        "text": "lets the existing SDK perform the documented reconnection/republishing rather than blindly creating and publishing another camera or microphone track on every reconnect",
+        "mandatory": true
+      },
+      "reconciles participants and tracks by stable identity/source under the resolved SDK contract, handles replay idempotently, and removes old listeners and renderers on departure or disposal",
+      "keeps reconnecting UI distinct from confirmed recovered media and defines a terminal failure or user-leave path",
+      "specifies controlled repeated/reordered reconnect-event replay with assertions for duplicate tracks or tiles, using a fake SDK, injected events, or equivalent deterministic harness, and separately requires two-peer network-interruption verification without claiming it ran"
+    ]
+  },
+  {
+    "name": "screen-sharing-consent-and-platform-setup-are-versioned",
+    "prompt": "Add screen sharing to an existing Flutter video-call SDK on Android, iOS, and web. The teammate says to bypass capture consent, enable every background mode, and assume the same native setup and system-audio capture work on every OS version. No plugin version or native setup has been inspected, and no runtime tools are available. Give an implementation and verification plan without inventing APIs or replacing the SDK.",
+    "resources": [
+      "references/realtime-calls-and-screen-sharing.md",
+      "references/audio-interruptions-and-routing.md"
+    ],
+    "expectations": [
+      {
+        "id": "capture-consent-and-version-gate",
+        "text": "requires platform capture consent and inspection of the resolved Flutter SDK/native OS requirements, including any required extension or foreground service, without bypassing prompts or enabling unrelated capabilities",
+        "mandatory": true
+      },
+      "distinguishes camera, microphone, screen video, and screen/system audio support instead of promising uniform capture on all targets",
+      "handles consent denial, user/system stop, track cleanup, and return to the camera or call state without silently restarting capture",
+      "names per-target native/browser checks as unperformed and preserves the existing SDK"
+    ]
+  },
+  {
+    "name": "media-library-recovery-and-output-validation",
+    "prompt": "An existing Flutter attachment composer uses image_picker for image/video selection and a recorder for voice messages. On Android it can be killed while the picker is open; users can also cancel, or receive a temporary recording file with the wrong extension for the actual codec. Plan recovery, safe transforms, and upload handoff. No repository or runtime tools are available and no upload is authorized.",
+    "resources": [
+      "references/capture-and-recording.md",
+      "references/playback-and-streaming.md"
+    ],
+    "expectations": [
+      {
+        "id": "picker-recovery-is-not-new-selection",
+        "text": "checks the installed picker's documented lost-result recovery on relaunch, handles cancellation separately from failure, and reconciles recovered attachments idempotently rather than duplicating or silently losing them",
+        "mandatory": true
+      },
+      "checks actual media format, codec/container, MIME, size/duration and platform support rather than changing a filename extension to transcode; preserves originals and distinguishes temporary versus retained outputs",
+      "bounds image/frame processing, preserves required orientation and output quality, and keeps upload authorization and transport outside capture success",
+      "does not upload, invent package APIs, or claim successful hardware recording or playback"
+    ]
+  },
+  {
+    "name": "hls-playback-is-not-a-broadcast-ingest-pipeline",
+    "prompt": "We need to watch an existing authorized HTTPS HLS livestream in Flutter web and iOS using our compatible player. A proposal creates WebRTC rooms, embeds a provider server key, adds a broad cleartext-network exception, and promises sub-second latency because the URL ends in m3u8. Recommend a bounded implementation and evidence plan. No runtime tools are available.",
+    "resources": [
+      "references/playback-and-streaming.md",
+      "references/live-broadcasting.md",
+      "references/verification.md"
+    ],
+    "expectations": [
+      {
+        "id": "playback-scope-not-ingest",
+        "text": "keeps the task to existing HLS viewer playback without inventing publishing rooms or embedding server keys and does not weaken network security for an already-HTTPS source",
+        "mandatory": true
+      },
+      "checks the actual player/native/browser codec and HLS support, media delivery authentication/CORS and autoplay behavior where applicable",
+      {
+        "id": "latency-requires-measurement",
+        "text": "does not infer sub-second latency from the m3u8 suffix; requires compatible delivery/player features and a measured source-to-viewer delay for latency claims",
+        "mandatory": true
+      },
+      "covers startup, buffering, errors, retry, pause/exit cleanup and labels the target/live-stream checks unexecuted"
+    ]
+  }
+]
