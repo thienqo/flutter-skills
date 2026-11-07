@@ -19,6 +19,8 @@ When asked to replace an adequate plugin the project already uses with custom na
 
 Keep domain models outside the channel contract. Version or evolve messages compatibly, validate all values at the boundary, and map platform failures into actionable Dart errors.
 
+`flutter-media` owns app-side capture, playback, livestream, call, and screen-share behavior using existing SDKs. Pair this skill when custom native implementation or platform integration is part of that work.
+
 ## Load references conditionally
 
 - Read [integration strategy](references/integration-strategy.md) when choosing among an existing package, channels or Pigeon, FFI, JS interop, and platform views.

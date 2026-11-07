@@ -1,0 +1,351 @@
+{
+  "created_at": "2026-11-07T12:57:10.536031+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "d545e4a34197f1f96738496d5a89d5cf8554f485",
+    "dirty": true,
+    "branch": "feature/flutter-media"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-media",
+      "case": "camera-lifecycle-does-not-revive-an-abandoned-preview",
+      "with_skill": {
+        "response": "Keep the current camera plugin and `ChangeNotifier` adapter. Make the adapter the single owner of camera controllers and serialize camera acquisition and release.\n\nBefore implementation, these contract checks remain **pending**: resolved plugin/platform versions, Flutter constraints, existing adapter behavior, native permission configuration, and version-specific initialization/disposal requirements. The supplied documentation establishes app-owned lifecycle cleanup and reinitialization; check whether existing code already handles lifecycle events, permissions, or serialization before adding handlers.\n\nThe fix should work as follows:\n\n- **Track intent and state separately.** Store the selected camera, whether preview is wanted, route activity, and app lifecycle. Represent permission denial, initializing, ready, interrupted, error, stopped, and disposed explicitly.\n- **Invalidate pending initialization.** Increment a generation token on camera switch, backgrounding, route exit, or stop. Each initialization captures its generation. Publish its controller only if the generation and current intent still match.\n- **Release stale successful controllers.** When abandoned initialization eventually succeeds, dispose that controller instead of merely ignoring its result. Handle initialization failures without allowing stale errors to replace current state.\n- **Serialize hardware ownership.** Follow the resolved plugin\u2019s required ordering for initialization and disposal. Finish releasing the previous or stale controller before acquiring another camera. Handle cleanup failures explicitly; do not silently acquire a second controller when release is uncertain.\n- **Handle lifecycle through one path.** Backgrounding invalidates pending work and releases owned capture resources. Foregrounding reinitializes only when the route remains active and preview intent permits it. Explicit stop and route exit clear that intent.\n- **Make route cleanup explicit.** Provide an asynchronous stop/close operation that invalidates work and completes owned cleanup. `ChangeNotifier.dispose()` prevents further notifications and removes owned observers/subscriptions; late completions must still release their resources.\n\nKeep permission requests outside `build` and tied to the requested preview operation. Request only required permissions. Map the installed plugin\u2019s errors into actionable outcomes: denied, settings-required/restricted where supported, unavailable camera, and initialization failure. Avoid repeated permission prompts; expose retry or settings guidance as appropriate.\n\nVerification should focus on these boundaries:\n\n| Check | Evidence needed |\n|---|---|\n| Switch A \u2192 B while A initializes | Controlled adapter tests: only B becomes ready; stale A is released |\n| Background, stop, or leave during initialization | Controlled tests: late success is released; no stale notification or unintended reacquisition |\n| Initialization or disposal fails | Controlled tests: current state remains accurate; release uncertainty blocks conflicting acquisition |\n| Permission, pending, error, and retry UI | Widget tests using the real notifier with a controlled camera boundary |\n| Actual permissions and camera release/reacquisition | Native target checks with the resolved plugin and hardware, including rapid switching and background/foreground |\n\nNo inspection or execution was performed. Package/native contract checks and device verification remain pending; fake-controlled tests can establish ownership behavior but cannot prove OS permission handling or hardware release.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Invalidates abandoned initialization and releases late-created owned controllers.",
+              "met": true,
+              "evidence": "Uses generation tokens and current-intent checks before publishing controllers, explicitly disposes stale successful controllers, and requires late completions to release resources after disposal."
+            },
+            {
+              "criterion": "Checks resolved plugin and SDK contracts, sequences exclusive cleanup and reacquisition, and preserves the stack.",
+              "met": true,
+              "evidence": "Preserves the current plugin and ChangeNotifier adapter; requires resolved plugin/platform versions, Flutter constraints, and initialization/disposal contract checks. Requires release to finish before another acquisition and blocks acquisition when cleanup is uncertain."
+            },
+            {
+              "criterion": "Handles permission denial, restriction, and initialization errors recoverably without repeated prompts or adding microphone/recording scope.",
+              "met": true,
+              "evidence": "Explicitly maps denied, settings-required/restricted, unavailable-camera, and initialization-failure outcomes; provides retry or settings guidance and avoids repeated prompts. Requests only required permissions and introduces no microphone permission or recording."
+            },
+            {
+              "criterion": "Requires fake-controlled late-completion tests and separate real-target lifecycle/permission checks, explicitly unexecuted here.",
+              "met": true,
+              "evidence": "Requires controlled tests for switching and late success after backgrounding, stopping, or leaving, plus separate native hardware permission and lifecycle checks. Explicitly states that no inspection or execution occurred and verification remains pending."
+            }
+          ],
+          "summary": "All criteria are explicitly satisfied through concrete ownership rules, recoverable error handling, contract verification, and distinct controlled-test and real-target verification requirements."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Invalidates abandoned initialization and releases late-created owned controllers.",
+                "met": true,
+                "evidence": "Uses generation tokens and current-intent checks before publishing controllers, explicitly disposes stale successful controllers, and requires late completions to release resources after disposal."
+              },
+              {
+                "criterion": "Checks resolved plugin and SDK contracts, sequences exclusive cleanup and reacquisition, and preserves the stack.",
+                "met": true,
+                "evidence": "Preserves the current plugin and ChangeNotifier adapter; requires resolved plugin/platform versions, Flutter constraints, and initialization/disposal contract checks. Requires release to finish before another acquisition and blocks acquisition when cleanup is uncertain."
+              },
+              {
+                "criterion": "Handles permission denial, restriction, and initialization errors recoverably without repeated prompts or adding microphone/recording scope.",
+                "met": true,
+                "evidence": "Explicitly maps denied, settings-required/restricted, unavailable-camera, and initialization-failure outcomes; provides retry or settings guidance and avoids repeated prompts. Requests only required permissions and introduces no microphone permission or recording."
+              },
+              {
+                "criterion": "Requires fake-controlled late-completion tests and separate real-target lifecycle/permission checks, explicitly unexecuted here.",
+                "met": true,
+                "evidence": "Requires controlled tests for switching and late success after backgrounding, stopping, or leaving, plus separate native hardware permission and lifecycle checks. Explicitly states that no inspection or execution occurred and verification remains pending."
+              }
+            ],
+            "summary": "All criteria are explicitly satisfied through concrete ownership rules, recoverable error handling, contract verification, and distinct controlled-test and real-target verification requirements."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-media",
+      "case": "audio-interruption-does-not-override-a-user-pause",
+      "with_skill": {
+        "response": "The fix is to preserve the user\u2019s playback intent separately from the player\u2019s interrupted state. Pressing Pause during a call must clear that intent, even when audio is already stopped. The OS \u201cmay resume\u201d hint permits resumption; it does not override Pause.\n\nUsing the existing player and audio-session integration:\n\n- Play sets playback intent; Pause, Stop, and leaving the playback session clear it.\n- Interruption start records whether playback was eligible to resume and pauses through the existing owner.\n- Interruption end resumes only if that eligibility still holds, the user still wants playback, the OS permits resumption, and session activation succeeds.\n- After any asynchronous activation, recheck intent and session validity before calling Play. A Pause or Stop while activation is pending must cancel the pending resume.\n\nBefore changing handlers, check the resolved package versions in `pubspec.yaml` and the lockfile, their version-specific APIs/source, and the current controller: establish who already owns focus, activation, interruption handling, and automatic resume. Adjust that existing owner rather than adding a competing audio-session handler. These checks remain pending because inspection is unavailable here.\n\nFocused deterministic tests with a controlled player/session adapter should cover:\n\n| Sequence | Expected result |\n|---|---|\n| Playing \u2192 interruption \u2192 Pause \u2192 end with resume hint | No resume |\n| Playing \u2192 interruption \u2192 end with resume hint | Resume once after successful activation |\n| Playing \u2192 interruption \u2192 end without resume permission | Remain paused |\n| Resume activation pending \u2192 Pause \u2192 activation succeeds | No Play call |\n| Activation fails, or focus loss is permanent | Remain paused |\n| Stop, leave, or disposal before interruption ends | No late resume |\n\nAt Stop/leave/disposal, invalidate pending resume work and clean up owned subscriptions and playback resources through the existing lifecycle owner.\n\nThese tests establish intent and race handling. Native verification remains pending: on each supported platform, interrupt actual playback with a phone call, press Pause during the call, end it, and confirm audio stays silent. Adapter tests cannot prove OS event delivery, native focus behavior, or audible output.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Keeps explicit user playback intent separate from interruption state and prevents interruption-end resumption after Pause.",
+              "met": true,
+              "evidence": "Pause clears playback intent even when audio is already stopped. Resumption requires continued user intent, with another intent check after asynchronous activation."
+            },
+            {
+              "criterion": "Checks existing SDK focus and interruption management before adding handlers, avoiding duplicate session ownership.",
+              "met": true,
+              "evidence": "Requires inspecting resolved package versions, version-specific APIs/source, and the controller to identify existing ownership, then adjusting that owner rather than adding competing handlers. Explicitly declares inspection pending."
+            },
+            {
+              "criterion": "Requires successful activation or focus before automatic resumption and handles denial without overriding Pause.",
+              "met": true,
+              "evidence": "Resumption requires successful session activation; failed activation leaves playback paused. Pause during pending activation prevents a subsequent Play call."
+            },
+            {
+              "criterion": "Proposes event-sequence unit tests and a separate native phone-call check, explicitly declaring native verification unperformed.",
+              "met": true,
+              "evidence": "Provides deterministic interruption, Pause, activation-success/failure, and race sequences. Separately specifies an actual phone-call test on supported platforms and states native verification remains pending."
+            }
+          ],
+          "summary": "Meets all criteria with a focused intent-based fix, existing-owner verification, activation gating, deterministic tests, and explicitly unperformed native verification. Preserves the existing packages."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Keeps explicit user playback intent separate from interruption state and prevents interruption-end resumption after Pause.",
+                "met": true,
+                "evidence": "Pause clears playback intent even when audio is already stopped. Resumption requires continued user intent, with another intent check after asynchronous activation."
+              },
+              {
+                "criterion": "Checks existing SDK focus and interruption management before adding handlers, avoiding duplicate session ownership.",
+                "met": true,
+                "evidence": "Requires inspecting resolved package versions, version-specific APIs/source, and the controller to identify existing ownership, then adjusting that owner rather than adding competing handlers. Explicitly declares inspection pending."
+              },
+              {
+                "criterion": "Requires successful activation or focus before automatic resumption and handles denial without overriding Pause.",
+                "met": true,
+                "evidence": "Resumption requires successful session activation; failed activation leaves playback paused. Pause during pending activation prevents a subsequent Play call."
+              },
+              {
+                "criterion": "Proposes event-sequence unit tests and a separate native phone-call check, explicitly declaring native verification unperformed.",
+                "met": true,
+                "evidence": "Provides deterministic interruption, Pause, activation-success/failure, and race sequences. Separately specifies an actual phone-call test on supported platforms and states native verification remains pending."
+              }
+            ],
+            "summary": "Meets all criteria with a focused intent-based fix, existing-owner verification, activation gating, deterministic tests, and explicitly unperformed native verification. Preserves the existing packages."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-media",
+      "case": "reconnect-does-not-duplicate-published-tracks",
+      "with_skill": {
+        "response": "Use the existing SDK\u2019s reconnect behavior: remove microphone creation and tile insertion from the `Reconnected` handler. The SDK already republishes local tracks and replays events.\n\nThe minimal correction is:\n\n- **Reconcile tiles by stable identity.** Store participants by participant ID and their tracks by the SDK\u2019s stable publication/source identifiers. Replayed events update existing entries. If a track instance changes, detach the old listener/renderer before attaching its replacement; attach each intended track once.\n- **Keep capture ownership unchanged.** Create the microphone through the existing explicit call-start flow. Reconnect must not create capture, override mute intent, or restart media the user stopped.\n- **Separate signaling from media recovery.** `Reconnected` triggers reconciliation with current SDK state. Keep the UI reconnecting until relevant remote media actually resumes, using the SDK\u2019s supported media evidence.\n- **Close the affected lifecycle paths.** Participant or track departure removes its listeners, renderers, and tile. Explicit leave/disposal invalidates pending reconciliation, detaches subscriptions/renderers, disconnects, and releases locally owned capture in the SDK\u2019s documented order. Late events must not recreate resources.\n\nBefore implementing, confirm the resolved package/lockfile version, Flutter/native constraints, stable identifiers, renderer ownership, disconnect cleanup, and available remote-media recovery signals. The supplied documentation establishes that the SDK owns reconnect republication and event replay; inspection of those remaining contracts is **pending**. No additional retry, audio-focus, or capture-recovery owner is needed.\n\nAcceptance checks should replay repeated and reordered reconnect/participant/track events and verify one tile per participant, one attachment per intended track, and no additional microphone creation. Also cover replacement tracks, participant departure, and leave/disposal during reconnect.\n\nA deliberate network interruption between two real endpoints remains **unverified**: confirm remote audio/video resumes, mute intent survives, and leaving releases camera/microphone resources on each affected target. Signaling recovery alone does not prove media recovery.",
+        "judgment": {
+          "score": 75,
+          "expectations": [
+            {
+              "criterion": "Lets the existing SDK perform documented reconnection and republishing without creating additional local tracks on reconnect.",
+              "met": true,
+              "evidence": "Explicitly removes microphone creation from Reconnected, delegates republishing to the SDK, and prohibits reconnect from creating capture."
+            },
+            {
+              "criterion": "Reconciles participants and tracks by stable identity/source, handles replay idempotently, and cleans up listeners and renderers.",
+              "met": true,
+              "evidence": "Keys participants by participant ID and tracks by stable publication/source identifiers; replay updates existing entries. Track replacement, departure, and disposal explicitly detach old listeners and renderers."
+            },
+            {
+              "criterion": "Distinguishes reconnecting UI from confirmed media recovery and defines terminal failure or user leave.",
+              "met": true,
+              "evidence": "Keeps the UI reconnecting until remote media resumes using supported media evidence. Explicit leave/disposal invalidates pending reconciliation, disconnects, releases capture, and prevents late events from recreating resources."
+            },
+            {
+              "criterion": "Covers repeated/reordered reconnect events with fakes and separately requires two-peer network-interruption verification without claiming execution.",
+              "met": false,
+              "evidence": "Requires repeated and reordered event acceptance checks but does not explicitly require fakes. Separately identifies a two-endpoint network interruption test as unverified and specifies media, mute, and resource-release checks."
+            }
+          ],
+          "summary": "Meets the SDK ownership, idempotent reconciliation, cleanup, and recovery lifecycle requirements. Falls short of the final criterion because fake-based testing is not explicit."
+        },
+        "judgments": [
+          {
+            "score": 75,
+            "expectations": [
+              {
+                "criterion": "Lets the existing SDK perform documented reconnection and republishing without creating additional local tracks on reconnect.",
+                "met": true,
+                "evidence": "Explicitly removes microphone creation from Reconnected, delegates republishing to the SDK, and prohibits reconnect from creating capture."
+              },
+              {
+                "criterion": "Reconciles participants and tracks by stable identity/source, handles replay idempotently, and cleans up listeners and renderers.",
+                "met": true,
+                "evidence": "Keys participants by participant ID and tracks by stable publication/source identifiers; replay updates existing entries. Track replacement, departure, and disposal explicitly detach old listeners and renderers."
+              },
+              {
+                "criterion": "Distinguishes reconnecting UI from confirmed media recovery and defines terminal failure or user leave.",
+                "met": true,
+                "evidence": "Keeps the UI reconnecting until remote media resumes using supported media evidence. Explicit leave/disposal invalidates pending reconciliation, disconnects, releases capture, and prevents late events from recreating resources."
+              },
+              {
+                "criterion": "Covers repeated/reordered reconnect events with fakes and separately requires two-peer network-interruption verification without claiming execution.",
+                "met": false,
+                "evidence": "Requires repeated and reordered event acceptance checks but does not explicitly require fakes. Separately identifies a two-endpoint network interruption test as unverified and specifies media, mute, and resource-release checks."
+              }
+            ],
+            "summary": "Meets the SDK ownership, idempotent reconciliation, cleanup, and recovery lifecycle requirements. Falls short of the final criterion because fake-based testing is not explicit."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 75.0,
+          "minimum_score": 75,
+          "maximum_score": 75,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": false
+    },
+    {
+      "skill": "flutter-media",
+      "case": "media-library-recovery-and-output-validation",
+      "with_skill": {
+        "response": "Keep the existing `image_picker` and recorder adapters. Repository inspection and execution are **pending**, so this is a plan, not a verified implementation.\n\n1. **Confirm the installed contracts.** Check `pubspec.yaml`, the lockfile, Flutter constraints, Android configuration, and existing composer ownership. Verify the resolved picker\u2019s lost-result API and temporary-file behavior, the recorder\u2019s finalize/cancel and codec/container guarantees, and which adapter already handles permissions, interruptions, and cleanup before adding handlers. Confirm the upload consumer\u2019s accepted formats, dimensions, duration, and size limits.\n\n2. **Recover picker results once.** Before opening the picker, persist a small pending-operation record tied to the draft and operation ID. On Android relaunch, have one recovery owner invoke the installed picker\u2019s lost-result facility. Reconcile recovered media into that draft idempotently, then mark the operation consumed. If draft identity is unavailable, offer recovered attachments for review. Distinguish user cancellation, an empty recovery result, permission denial, and picker failure; cancellation should leave the draft unchanged.\n\n3. **Finalize and validate recordings.** Consume a voice file only after the recorder reports successful finalization. Track starting, recording, stopping, canceled, interrupted, and failed states separately. On interruption or relaunch, never silently restart recording. Inspect actual container and codec plus duration and size; a filename extension is insufficient. Correct the extension/MIME only when verified contents already meet the consumer contract. Otherwise transcode through a supported implementation or surface an actionable failure.\n\n4. **Transform safely.** Preserve originals and write transformations to separate owned outputs. Preserve required orientation, bound dimensions and quality, and limit concurrent processing and queued work. Validate the resulting media again. Retain temporary picker or recorder output in application-owned draft storage when it must survive cache eviction or relaunch. Release outputs produced by stale operations without attaching them, while protecting retained recordings and user originals.\n\n5. **Prepare an upload handoff only.** Produce a validated attachment descriptor containing draft/attachment identity, the supported file or byte-access handle, verified MIME/container/codec, size, relevant dimensions/duration, and retention ownership. Keep credentials and upload transport outside the composer. **Do not upload or publish anything.** Retain the draft attachment until an explicitly authorized downstream workflow acknowledges its handoff.\n\nOn stop or route exit, invalidate pending work, cancel picker-result adoption, and stop/finalize or cancel the owned recorder according to its API. Release owned subscriptions and disposable transform files; preserve draft attachments. Record cleanup failures and retain enough ownership information to retry safely.\n\nAcceptance checks remain pending: Android process death while the picker is open followed by exactly-once draft recovery; cancellation without draft changes; repeated recovery without duplicates; mismatched-extension recordings that are validated and playable; interruption during recording/finalization; transform completion after exit; and draft retention across relaunch. Native Android checks and decoding/playback of representative outputs are needed to prove these behaviors; adapter tests alone cannot.",
+        "judgment": {
+          "score": 90,
+          "expectations": [
+            {
+              "criterion": "1. Checks installed picker recovery on relaunch, separates cancellation from failure, and reconciles recovered attachments idempotently.",
+              "met": true,
+              "evidence": "Plans to verify the resolved picker's lost-result contract, invoke its recovery facility on Android relaunch through one owner, and reconcile using persisted draft and operation IDs before marking results consumed. Explicitly distinguishes cancellation, empty recovery, permission denial, and failure."
+            },
+            {
+              "criterion": "2. Checks actual format, codec/container, MIME, size/duration, and platform support; preserves originals and distinguishes temporary from retained outputs.",
+              "met": false,
+              "evidence": "Explicitly validates container, codec, MIME, duration, and size; rejects extension changes as transcoding; preserves originals and defines retention ownership. However, it does not explicitly require checking codec/container decoding and encoding support on the target platforms. A 'supported implementation' alone does not establish that verification."
+            },
+            {
+              "criterion": "3. Bounds image/frame processing, preserves required orientation and output quality, and separates upload authorization and transport from capture success.",
+              "met": true,
+              "evidence": "Bounds dimensions, quality, concurrency, and queued work; preserves required orientation and validates transformed outputs. Prepares only an attachment descriptor and requires an explicitly authorized downstream workflow, keeping transport outside the composer."
+            },
+            {
+              "criterion": "4. Does not upload, invent package APIs, or claim successful hardware recording or playback.",
+              "met": true,
+              "evidence": "Explicitly prohibits uploading or publishing, avoids naming unverified package APIs, and labels implementation and acceptance checks as pending. States native recording and playback checks are still needed."
+            }
+          ],
+          "summary": "Strong recovery, ownership, transformation, and handoff plan. The remaining explicit verification gap is target-platform codec/container support."
+        },
+        "judgments": [
+          {
+            "score": 90,
+            "expectations": [
+              {
+                "criterion": "1. Checks installed picker recovery on relaunch, separates cancellation from failure, and reconciles recovered attachments idempotently.",
+                "met": true,
+                "evidence": "Plans to verify the resolved picker's lost-result contract, invoke its recovery facility on Android relaunch through one owner, and reconcile using persisted draft and operation IDs before marking results consumed. Explicitly distinguishes cancellation, empty recovery, permission denial, and failure."
+              },
+              {
+                "criterion": "2. Checks actual format, codec/container, MIME, size/duration, and platform support; preserves originals and distinguishes temporary from retained outputs.",
+                "met": false,
+                "evidence": "Explicitly validates container, codec, MIME, duration, and size; rejects extension changes as transcoding; preserves originals and defines retention ownership. However, it does not explicitly require checking codec/container decoding and encoding support on the target platforms. A 'supported implementation' alone does not establish that verification."
+              },
+              {
+                "criterion": "3. Bounds image/frame processing, preserves required orientation and output quality, and separates upload authorization and transport from capture success.",
+                "met": true,
+                "evidence": "Bounds dimensions, quality, concurrency, and queued work; preserves required orientation and validates transformed outputs. Prepares only an attachment descriptor and requires an explicitly authorized downstream workflow, keeping transport outside the composer."
+              },
+              {
+                "criterion": "4. Does not upload, invent package APIs, or claim successful hardware recording or playback.",
+                "met": true,
+                "evidence": "Explicitly prohibits uploading or publishing, avoids naming unverified package APIs, and labels implementation and acceptance checks as pending. States native recording and playback checks are still needed."
+              }
+            ],
+            "summary": "Strong recovery, ownership, transformation, and handoff plan. The remaining explicit verification gap is target-platform codec/container support."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 90.0,
+          "minimum_score": 90,
+          "maximum_score": 90,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 4,
+    "behavior_passed": 3,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 91.25,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-media": {
+        "cases": 4,
+        "passed": 3,
+        "baseline_average": null,
+        "with_skill_average": 91.25,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

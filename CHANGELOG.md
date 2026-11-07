@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add `flutter-media` for camera/media picking, audio/video recording and playback, livestreams, realtime calls, and screen sharing, preserving existing SDK/provider choices. Add six source-linked references, eight mandatory-gated behavior cases, eight positive/negative routing cases including Vietnamese, and a fake-player resource-ownership executable fixture. The catalog now has 38 skills, 246 behavior cases, and 84 routing cases.
+- Connect media to app workflow, platform integration, and networking boundaries; keep implicit invocation enabled by default and explain natural-language versus explicit skill use. Synchronize discovery, Tessl membership, public counts, and nightly/release evaluation estimates.
+
 - Complete `flutter-app-workflow` routing with conditional reusable-package ownership and validate that its specialist inventory stays synchronized with all 36 specialists.
 - Define shared-contract ownership, concrete handoffs, conflict resolution, and local work around external verification blockers in a conditionally loaded coordination reference. Add two mandatory-gated behavior cases (236 to 238) and retain their measured failures and reruns.
 - Add a pinned Flutter feature fixture spanning repository, ChangeNotifier state, and UI, with immutable acceptance tests, a selective local specialist library, input hashes, and an executed agent patch. CI verifies a passing oracle and seeded contract, duplicate-submit, disposal, and hidden-error defects without invoking a model.

@@ -14,6 +14,7 @@ Keep transport concerns at the service boundary and expose domain-meaningful res
 - For WebSocket, SSE, Socket.IO, connection recovery, or live event delivery, read [Realtime transports](references/realtime-transports.md).
 - For REST or HTTP response debugging, undocumented fields, decoding drift, or comparing Swagger/OpenAPI with deployed behavior, read [HTTP response evidence](references/http-response-evidence.md).
 - Read both references for GraphQL subscriptions. Route stream races or subscription leaks to `dart-concurrency`, durable offline queues to `flutter-persistence`, and terminated-app alerts to `flutter-notifications`.
+- Audio/video capture, media tracks, playback, and call sessions belong to `flutter-media`; keep text/data transport and upload behavior here.
 
 ## Inspect
 

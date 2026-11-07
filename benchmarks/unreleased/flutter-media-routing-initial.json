@@ -1,0 +1,173 @@
+{
+  "created_at": "2026-11-07T12:51:10.255118+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "d545e4a34197f1f96738496d5a89d5cf8554f485",
+    "dirty": true,
+    "branch": "feature/flutter-media"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [],
+  "routing": [
+    {
+      "case": "media-camera-using-existing-plugin",
+      "response": {
+        "skills": [
+          "flutter-media",
+          "dart-concurrency"
+        ],
+        "reason": "Fix camera controller lifecycle ownership and stale initialization results after route disposal while preserving the existing plugin."
+      },
+      "passed": true,
+      "selected": [
+        "dart-concurrency",
+        "flutter-media"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "media-hls-viewer-without-broadcast-ingest",
+      "response": {
+        "skills": [
+          "flutter-media"
+        ],
+        "reason": "Playback controls and buffering/retry states for an existing HLS player are a contained media task."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-media"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "media-vietnamese-live-host-viewer",
+      "response": {
+        "skills": [
+          "flutter-media"
+        ],
+        "reason": "S\u1eeda livestream, ph\u00e2n quy\u1ec1n camera/mic theo host/viewer, k\u1ebft n\u1ed1i l\u1ea1i v\u00e0 gi\u1ea3i ph\u00f3ng t\u00e0i nguy\u00ean khi r\u1eddi ph\u00f2ng thu\u1ed9c flutter-media; gi\u1eef nguy\u00ean SDK, API token v\u00e0 ki\u1ebfn tr\u00fac hi\u1ec7n c\u00f3."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-media"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "media-call-reconnect-track-replay",
+      "response": {
+        "skills": [
+          "flutter-media"
+        ],
+        "reason": "Reconcile participant and media track lifecycles idempotently using the existing SDK to prevent duplicate tiles and microphone tracks."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-media"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "media-screen-share-sdk-integration",
+      "response": {
+        "skills": [
+          "flutter-media"
+        ],
+        "reason": "Screen sharing, platform consent, and user-stop handling belong to media integration using the existing provider\u2019s documented SDK setup."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-media"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "media-negative-text-only-websocket",
+      "response": {
+        "skills": [
+          "flutter-networking"
+        ],
+        "reason": "Reconnect and duplicate JSON-message delivery are contained WebSocket transport issues; text-only chat needs no media skill."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-networking"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "media-negative-pdf-upload-retry",
+      "response": {
+        "skills": [
+          "flutter-networking"
+        ],
+        "reason": "Duplicate retry uploads are a contained HTTP transport retry issue in the existing adapter."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-networking"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "media-negative-measured-gallery-jank",
+      "response": {
+        "skills": [
+          "flutter-performance"
+        ],
+        "reason": "Profile and reduce gallery frame-time jank and decoded-image memory using runtime performance evidence."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-performance"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    }
+  ],
+  "summary": {
+    "behavior_cases": 0,
+    "behavior_passed": 0,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": null,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {},
+    "routing_cases": 8,
+    "routing_passed": 8
+  }
+}

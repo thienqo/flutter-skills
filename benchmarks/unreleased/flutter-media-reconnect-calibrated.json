@@ -1,0 +1,126 @@
+{
+  "created_at": "2026-11-07T13:01:01.262304+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "d545e4a34197f1f96738496d5a89d5cf8554f485",
+    "dirty": true,
+    "branch": "feature/flutter-media"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-media",
+      "case": "reconnect-does-not-duplicate-published-tracks",
+      "with_skill": {
+        "response": "Make `Reconnected` trigger an idempotent reconciliation of the SDK\u2019s current state, removing both \u201cappend tile\u201d and \u201ccreate microphone\u201d from that handler.\n\n- **Keep SDK ownership:** the existing SDK republishes local tracks during full reconnect. Retain the feature\u2019s local capture ownership; do not create another microphone or add a separate retry loop.\n- **Reconcile tiles by stable identity:** key participants by SDK participant ID and their tracks by documented stable identifiers/source. Upsert existing entries, remove absent entries, and replace track bindings when the SDK supplies a new track instance. Attach each listener/renderer once and detach superseded bindings.\n- **Separate connection from media recovery:** show reconnecting until the relevant remote media actually resumes. A `Reconnected` signaling event alone does not prove recovery.\n- **Respect exit:** explicit leave or disposal invalidates pending reconciliation and prevents replayed events from restoring tiles or capture. On participant departure, detach its listeners/renderers. On call exit, cancel subscriptions, dispose renderers, and disconnect/release locally owned capture in the SDK\u2019s documented order; handle cleanup failures.\n\nBefore implementation, confirm the resolved package/Flutter/native versions, stable-ID guarantees, renderer rebinding rules, media-recovery signals, and whether disconnect already stops local capture. Those inspections remain pending here; the supplied reconnect contract supports the correction above.\n\nVerify with controlled events: repeated/reordered reconnects and participant/track replay produce one tile per intended participant/source, no extra microphone creation, and no duplicate subscriptions. Include track replacement, participant departure, and leave/disposal during reconnect. Actual recovery and hardware release still require a deliberate network interruption between two endpoints on each affected target. No execution is claimed.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "1. Lets the existing SDK perform documented reconnection and republishing without creating duplicate local tracks.",
+              "met": true,
+              "evidence": "Removes microphone creation from Reconnected, explicitly relies on SDK republishing, and rejects a separate retry loop."
+            },
+            {
+              "criterion": "2. Reconciles participants and tracks by stable identity/source, handles replay idempotently, and cleans up listeners and renderers.",
+              "met": true,
+              "evidence": "Specifies participant-ID and stable track-ID/source keys, upserts, removal of absent entries, replacement bindings, single attachment, and cleanup on departure or disposal."
+            },
+            {
+              "criterion": "3. Distinguishes reconnecting UI from confirmed media recovery and defines terminal failure or user leave.",
+              "met": true,
+              "evidence": "Keeps reconnecting visible until remote media resumes and defines explicit leave/disposal that invalidates pending reconciliation, prevents replay restoration, and releases resources."
+            },
+            {
+              "criterion": "4. Specifies deterministic repeated/reordered replay verification with duplicate assertions and separately requires two-peer network-interruption verification without claiming execution.",
+              "met": true,
+              "evidence": "Requires controlled repeated/reordered reconnect and participant/track events, asserting one tile per participant/source, no extra microphone creation, and no duplicate subscriptions. Separately requires network interruption between two endpoints on affected targets and explicitly claims no execution."
+            }
+          ],
+          "summary": "The response explicitly satisfies all four criteria with a minimal SDK-owned reconnect correction, idempotent reconciliation, recovery-aware UI, cleanup, and separate controlled-event and two-peer verification requirements."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "1. Lets the existing SDK perform documented reconnection and republishing without creating duplicate local tracks.",
+                "met": true,
+                "evidence": "Removes microphone creation from Reconnected, explicitly relies on SDK republishing, and rejects a separate retry loop."
+              },
+              {
+                "criterion": "2. Reconciles participants and tracks by stable identity/source, handles replay idempotently, and cleans up listeners and renderers.",
+                "met": true,
+                "evidence": "Specifies participant-ID and stable track-ID/source keys, upserts, removal of absent entries, replacement bindings, single attachment, and cleanup on departure or disposal."
+              },
+              {
+                "criterion": "3. Distinguishes reconnecting UI from confirmed media recovery and defines terminal failure or user leave.",
+                "met": true,
+                "evidence": "Keeps reconnecting visible until remote media resumes and defines explicit leave/disposal that invalidates pending reconciliation, prevents replay restoration, and releases resources."
+              },
+              {
+                "criterion": "4. Specifies deterministic repeated/reordered replay verification with duplicate assertions and separately requires two-peer network-interruption verification without claiming execution.",
+                "met": true,
+                "evidence": "Requires controlled repeated/reordered reconnect and participant/track events, asserting one tile per participant/source, no extra microphone creation, and no duplicate subscriptions. Separately requires network interruption between two endpoints on affected targets and explicitly claims no execution."
+              }
+            ],
+            "summary": "The response explicitly satisfies all four criteria with a minimal SDK-owned reconnect correction, idempotent reconciliation, recovery-aware UI, cleanup, and separate controlled-event and two-peer verification requirements."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-media": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

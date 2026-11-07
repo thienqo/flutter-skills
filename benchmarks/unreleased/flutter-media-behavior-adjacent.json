@@ -1,0 +1,351 @@
+{
+  "created_at": "2026-11-07T13:01:02.413375+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "d545e4a34197f1f96738496d5a89d5cf8554f485",
+    "dirty": true,
+    "branch": "feature/flutter-media"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-media",
+      "case": "playback-source-switch-preserves-the-latest-owner",
+      "with_skill": {
+        "response": "Use the existing player and give the page\u2019s state owner responsibility for every controller returned by `open`. A generation counter prevents obsolete results from becoming active; explicit ownership ensures they are released.\n\n1. **Confirm the installed contract\u2014pending inspection.** Check `pubspec.yaml`, the lockfile, Flutter constraints, adapter/controller code, native configuration, and existing tests against the resolved player\u2019s documentation/source. Establish who already handles lifecycle pauses, audio focus, listeners, and disposal; whether replacement initialization can overlap playback; and whether release is asynchronous or requires ordering. Add no duplicate handlers or packages.\n\n2. **Make source requests invalidate older work.** Increment a generation for each source request and capture it before awaiting `open(source)`. On page exit or explicit stop, mark the owner inactive and increment the generation immediately, before asynchronous cleanup. Cancellation may save work, but cannot replace handling late successful results.\n\n3. **Treat each successful result as locally owned until transferred.**\n   - After `open` succeeds, check that the owner remains active and the generation is current.\n   - If stale, release the returned controller\u2014even after page disposal.\n   - If current, transfer it into the active-controller slot, attach owned listeners, and retire the previous controller following the SDK\u2019s required ordering.\n   - Detach controllers from owner slots before awaiting cleanup, so competing exit/replacement paths cannot release them twice. Listener callbacks must also reject obsolete controller identities.\n\n   For the reported sequence: B becomes active; leaving invalidates requests and releases B; A\u2019s later success releases A without updating UI or starting playback.\n\n4. **Define failures and user intent.**\n   - **Current initialization failure:** show an error with retry. Use a declared replacement policy: retain the previous playable source until replacement succeeds, provided the SDK permits overlap.\n   - **Stale initialization failure:** do not change current UI; ensure the adapter releases any partial resources it allocated before throwing.\n   - **Cleanup failure:** observe and report it through the owner\u2019s error handling without credentials or signed URLs. Retry only if the SDK supports it safely; do not silently discard errors or blindly double-dispose.\n   - **Stop/exit during initialization:** immediately invalidate pending work and release owned active resources; eventual successful results still require release.\n   - Keep desired playback separate from readiness. Initialization completion, foregrounding, or reconnecting must not override a user pause.\n\n5. **Require focused evidence.**\n   - Controlled adapter tests reproduce reversed A/B completion, exit before A completes, stop while pending, current/stale failures, and cleanup failures. Assert each successful returned controller receives exactly one release attempt and stale results never become active.\n   - Widget tests using the real state owner verify loading, retained-source behavior, error/retry, and absence of updates after exit.\n   - On each affected supported native target, exercise rapid switching and navigation with the installed backend. Confirm decoded video/audible output, old playback stopping, and resource release. Fake tests cannot establish those native behaviors.\n\nInspection and execution remain pending. Record the resolved package/native versions, documentation references, target/build, and observed results before claiming the fix verified.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "1. Accepts only the latest still-owned initialization, invalidates pending opens on stop or disposal, and releases stale successful controllers.",
+              "met": true,
+              "evidence": "Requires both an active owner and a current generation before transfer; stop and exit immediately invalidate pending requests. Explicitly releases stale successful results, including A completing after disposal."
+            },
+            {
+              "criterion": "2. Releases replaced active controllers exactly once without overwriting a newer owner and defines replacement-open failure behavior.",
+              "met": true,
+              "evidence": "Transfers only current results, detaches owned controllers before awaiting cleanup, and rejects obsolete listener identities. Requires exactly one release attempt per successful controller. On current replacement failure, retains the previous playable source when overlap is supported and shows an error with retry."
+            },
+            {
+              "criterion": "3. Preserves the compatible player and proposes deterministic reversed-completion, stop-during-open, and disposal tests.",
+              "met": true,
+              "evidence": "Keeps the existing player without adding packages. Controlled adapter tests cover reversed A/B completion, exit before A completes, and stop while pending, with release-count and stale-activation assertions."
+            },
+            {
+              "criterion": "4. Does not claim playback, codec compatibility, or target behavior from fake-controller tests alone.",
+              "met": true,
+              "evidence": "Explicitly states fake tests cannot establish native behaviors and requires installed-backend testing on affected supported native targets for decoded video, audible output, stopping old playback, and resource release. Verification remains pending."
+            }
+          ],
+          "summary": "The response explicitly satisfies all four criteria with ownership rules, failure handling, deterministic lifecycle tests, and separate native verification."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "1. Accepts only the latest still-owned initialization, invalidates pending opens on stop or disposal, and releases stale successful controllers.",
+                "met": true,
+                "evidence": "Requires both an active owner and a current generation before transfer; stop and exit immediately invalidate pending requests. Explicitly releases stale successful results, including A completing after disposal."
+              },
+              {
+                "criterion": "2. Releases replaced active controllers exactly once without overwriting a newer owner and defines replacement-open failure behavior.",
+                "met": true,
+                "evidence": "Transfers only current results, detaches owned controllers before awaiting cleanup, and rejects obsolete listener identities. Requires exactly one release attempt per successful controller. On current replacement failure, retains the previous playable source when overlap is supported and shows an error with retry."
+              },
+              {
+                "criterion": "3. Preserves the compatible player and proposes deterministic reversed-completion, stop-during-open, and disposal tests.",
+                "met": true,
+                "evidence": "Keeps the existing player without adding packages. Controlled adapter tests cover reversed A/B completion, exit before A completes, and stop while pending, with release-count and stale-activation assertions."
+              },
+              {
+                "criterion": "4. Does not claim playback, codec compatibility, or target behavior from fake-controller tests alone.",
+                "met": true,
+                "evidence": "Explicitly states fake tests cannot establish native behaviors and requires installed-backend testing on affected supported native targets for decoded video, audible output, stopping old playback, and resource release. Verification remains pending."
+              }
+            ],
+            "summary": "The response explicitly satisfies all four criteria with ownership rules, failure handling, deterministic lifecycle tests, and separate native verification."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-media",
+      "case": "livestream-viewer-role-is-enforced-by-the-service",
+      "with_skill": {
+        "response": "Keep the existing realtime media SDK and provider. Correct the plan at three boundaries: credentials, publish authority, and delivery evidence.\n\n- **Credentials:** Never ship the provider server secret in Flutter or mint privileged tokens locally. The authorized backend must issue short-lived credentials bound to the authenticated identity, room, and host/viewer role. Without backend access, document this contract and use controlled adapters for local development; credential issuance remains pending.\n- **Authority:** Enforce viewer publish denial through the provider\u2019s server-issued grants or equivalent permissions. Hiding Publish is useful UI, but cannot prevent unauthorized publishing. Hosts receive only the capabilities they need.\n- **Health:** `room.connect` proves a signaling connection. Track local capture, publication, remote subscription, and actual received video/audio separately. Declare delivery verified only after a distinct viewer endpoint renders video and receives audible audio.\n\nBefore implementation, confirm the resolved package and native SDK versions, Flutter constraints, existing controller/adapters, target permissions, and version-specific provider requirements. Identify which component already owns capture, audio-session activation, reconnect, republishing, and token renewal before adding handlers. These inspections are pending; preserve the current architecture.\n\nModel permission acquisition, local preview, connecting, ready to publish, live, reconnecting, ended, and failed separately. Start publication only after the host explicitly chooses Go Live. Use the installed SDK\u2019s supported reconnect behavior; do not add a competing retry loop or automatically restart after user stop. Reconcile role changes and token renewal with backend authority.\n\nGive the session one lifecycle owner. On stop or leave, invalidate pending work and release owned capture, tracks, subscriptions, renderers, and listeners in SDK-required order, including resources returned by stale initialization. Handle cleanup failures explicitly. Leaving locally and ending the broadcast for everyone are separate actions; service-wide ending requires backend authorization and confirmed service state.\n\nAcceptance checks should include:\n\n- Controlled unit/widget checks for pending initialization, stop/disposal races, role UI, errors, and cleanup.\n- Native checks for camera/microphone denial, hardware release, interruptions, and background/foreground behavior.\n- Separate host/viewer identities verifying service-enforced publish denial, explicit Go Live, late join, actual received audio/video, mute, network interruption/reconnect, leaving, and authorized ending.\n\nNo inspection or execution has occurred. Backend authorization, native behavior, and two-endpoint delivery remain unverified; mocks cannot establish those outcomes.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "1. Keeps server secrets out of Flutter, uses backend-issued scoped short-lived credentials, and enforces viewer publish denial at the service.",
+              "met": true,
+              "evidence": "Explicitly prohibits shipping secrets or minting privileged tokens locally, requires backend-issued credentials bound to identity, room, and role, and requires provider-enforced publish permissions."
+            },
+            {
+              "criterion": "2. Distinguishes signaling, local capture/publication, remote subscription, and received/decoded media.",
+              "met": true,
+              "evidence": "Separates connect success from capture, publication, subscription, and actual media delivery; requires a distinct viewer endpoint to render video and receive audible audio."
+            },
+            {
+              "criterion": "3. Defines preview versus live, role changes, recoverable failure, leaving versus authorized termination, and cleanup while retaining the SDK.",
+              "met": true,
+              "evidence": "Retains the existing SDK, separates preview from explicit Go Live, reconciles role changes with backend authority, specifies supported reconnect behavior, distinguishes local leaving from authorized service-wide ending, and details lifecycle cleanup."
+            },
+            {
+              "criterion": "4. Provides two-participant verification and explicitly records unavailable backend and runtime boundaries.",
+              "met": true,
+              "evidence": "Specifies separate host/viewer identities and delivery checks, states credential issuance and inspections remain pending, and explicitly records that no execution occurred and backend, native, and two-endpoint outcomes remain unverified."
+            }
+          ],
+          "summary": "The response explicitly satisfies all four criteria without changing providers or claiming runtime success."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "1. Keeps server secrets out of Flutter, uses backend-issued scoped short-lived credentials, and enforces viewer publish denial at the service.",
+                "met": true,
+                "evidence": "Explicitly prohibits shipping secrets or minting privileged tokens locally, requires backend-issued credentials bound to identity, room, and role, and requires provider-enforced publish permissions."
+              },
+              {
+                "criterion": "2. Distinguishes signaling, local capture/publication, remote subscription, and received/decoded media.",
+                "met": true,
+                "evidence": "Separates connect success from capture, publication, subscription, and actual media delivery; requires a distinct viewer endpoint to render video and receive audible audio."
+              },
+              {
+                "criterion": "3. Defines preview versus live, role changes, recoverable failure, leaving versus authorized termination, and cleanup while retaining the SDK.",
+                "met": true,
+                "evidence": "Retains the existing SDK, separates preview from explicit Go Live, reconciles role changes with backend authority, specifies supported reconnect behavior, distinguishes local leaving from authorized service-wide ending, and details lifecycle cleanup."
+              },
+              {
+                "criterion": "4. Provides two-participant verification and explicitly records unavailable backend and runtime boundaries.",
+                "met": true,
+                "evidence": "Specifies separate host/viewer identities and delivery checks, states credential issuance and inspections remain pending, and explicitly records that no execution occurred and backend, native, and two-endpoint outcomes remain unverified."
+              }
+            ],
+            "summary": "The response explicitly satisfies all four criteria without changing providers or claiming runtime success."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-media",
+      "case": "screen-sharing-consent-and-platform-setup-are-versioned",
+      "with_skill": {
+        "response": "Keep the existing call SDK and add screen sharing through its supported track and capture facilities. Capture consent is required; background capabilities and system-audio support must be established separately for each target.\n\nInspection and execution are **pending**. With no resolved plugin version or native configuration, concrete API calls and target compatibility cannot yet be specified.\n\n1. **Resolve the integration contract.** Inspect `pubspec.yaml`, the lockfile, Flutter constraints, call adapters, and native configuration. Check the installed Flutter wrapper\u2019s documentation and bundled native SDK versions for screen capture, consent, track publication, reconnect, and cleanup. Establish which existing SDK components own audio sessions, routing, lifecycle handling, and automatic republication before adding handlers.\n\n2. **Check each platform\u2019s requirements.**\n   - **Android:** Verify MediaProjection consent and any required foreground service, service type, permissions, and stop behavior against the resolved SDK, target SDK, and running OS.\n   - **iOS:** Verify whether the supported capture flow requires ReplayKit configuration, a broadcast extension, entitlements, or shared-container setup. Enable only documented capabilities needed for the intended sharing behavior.\n   - **Web:** Verify browser support, secure-context and user-gesture requirements, capture selection, and browser-controlled termination.\n   \n   Build a version-specific support matrix for screen video, microphone, camera, and system audio. Do not infer Flutter-wrapper support from newer native SDK documentation or promise system audio everywhere.\n\n3. **Implement explicit ownership and state.** Give one call-session owner responsibility for the local screen source, publication, listeners, and renderer. Model requesting consent, starting, sharing, reconnecting, stopping, denied/canceled, failed, and disposed states. Start capture from an explicit user action outside `build`. Publish through the existing SDK and enforce its service-side publish permissions.\n\n4. **Handle stop and recovery.** On user stop or platform capture termination, remove the screen publication and renderer, detach listeners, and release owned capture using the SDK\u2019s documented ordering. Preserve the intended microphone/camera state. On leave or disposal, invalidate pending starts and release resources returned by stale successful initialization. Surface cleanup failures. Never restart capture after cancellation, explicit stop, or leave.\n\n   Respect existing reconnect and republication behavior. Reconcile participants and tracks by stable identifiers so replayed events cannot create duplicate capture or tiles. Keep recovery visible until relevant remote media resumes.\n\n5. **Verify at the affected boundaries.**\n   - With fakes, exercise denied/canceled consent, repeated start/stop, disposal during initialization, platform stop, cleanup failure, participant departure, and repeated or reordered reconnect/track events.\n   - On supported Android/iOS versions and browsers, verify actual consent, capture indicators, platform stop, foreground/background behavior, and resource release.\n   - Between two endpoints, confirm that the remote participant receives the shared screen, then test deliberate network interruption, recovery without duplicates, screen-share stop, and call leave.\n   - Test system audio separately wherever the resolved contract claims support; also check microphone/camera coexistence and routing on affected hardware.\n\nThese checks remain pending. A local preview or successful publication callback alone does not prove remote delivery or cross-platform compatibility.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Requires platform capture consent and inspection of resolved Flutter SDK/native OS requirements without bypassing prompts or enabling unrelated capabilities.",
+              "met": true,
+              "evidence": "Requires capture consent; inspects the lockfile, wrapper documentation, bundled native SDK versions, and native configuration; checks Android foreground-service requirements and iOS broadcast-extension requirements; enables only documented, necessary capabilities."
+            },
+            {
+              "criterion": "Distinguishes camera, microphone, screen video, and screen/system audio support.",
+              "met": true,
+              "evidence": "Requires a version-specific support matrix covering all four capture types, rejects universal system-audio assumptions, and tests system audio and microphone/camera coexistence separately."
+            },
+            {
+              "criterion": "Handles denial, user/system stop, track cleanup, and return to camera or call state without silently restarting capture.",
+              "met": true,
+              "evidence": "Models denied/canceled states, handles user and platform termination, removes publications and renderers, releases capture resources, preserves intended microphone/camera state, and explicitly prohibits restarting after cancellation, stop, or leave."
+            },
+            {
+              "criterion": "Names per-target native/browser checks as unperformed and preserves the existing SDK.",
+              "met": true,
+              "evidence": "Explicitly retains the existing call SDK, lists Android, iOS, and browser checks, and states that inspection, execution, and verification remain pending."
+            }
+          ],
+          "summary": "Meets all supplied criteria with an explicit, platform-specific implementation and verification plan that preserves the SDK and avoids unsupported API or compatibility claims."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Requires platform capture consent and inspection of resolved Flutter SDK/native OS requirements without bypassing prompts or enabling unrelated capabilities.",
+                "met": true,
+                "evidence": "Requires capture consent; inspects the lockfile, wrapper documentation, bundled native SDK versions, and native configuration; checks Android foreground-service requirements and iOS broadcast-extension requirements; enables only documented, necessary capabilities."
+              },
+              {
+                "criterion": "Distinguishes camera, microphone, screen video, and screen/system audio support.",
+                "met": true,
+                "evidence": "Requires a version-specific support matrix covering all four capture types, rejects universal system-audio assumptions, and tests system audio and microphone/camera coexistence separately."
+              },
+              {
+                "criterion": "Handles denial, user/system stop, track cleanup, and return to camera or call state without silently restarting capture.",
+                "met": true,
+                "evidence": "Models denied/canceled states, handles user and platform termination, removes publications and renderers, releases capture resources, preserves intended microphone/camera state, and explicitly prohibits restarting after cancellation, stop, or leave."
+              },
+              {
+                "criterion": "Names per-target native/browser checks as unperformed and preserves the existing SDK.",
+                "met": true,
+                "evidence": "Explicitly retains the existing call SDK, lists Android, iOS, and browser checks, and states that inspection, execution, and verification remain pending."
+              }
+            ],
+            "summary": "Meets all supplied criteria with an explicit, platform-specific implementation and verification plan that preserves the SDK and avoids unsupported API or compatibility claims."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-media",
+      "case": "hls-playback-is-not-a-broadcast-ingest-pipeline",
+      "with_skill": {
+        "response": "Use the existing compatible player to view the authorized HTTPS HLS stream. WebRTC rooms and broadcast infrastructure are outside this playback scope. Keep provider server keys out of Flutter, and retain HTTPS without a broad cleartext exception. An `.m3u8` URL alone establishes no latency guarantee.\n\nThe bounded implementation should:\n\n- **Confirm the installed contract first.** Pending inspection: `pubspec.yaml`, lockfile, Flutter/iOS constraints, player adapters, native configuration, and version-specific player documentation/source. Confirm HLS/container/codec support on iOS and target browsers, plus which lifecycle, audio-session, interruption, and retry behavior the SDK already owns before adding handlers.\n- **Preserve authorized delivery.** Use the established source authorization flow. Check browser CORS and whether the player supports the required headers or cookies for every playlist and segment request. Handle expired authorization without exposing credentials or signed URLs in logs.\n- **Own playback explicitly.** Give each controller and listener one owner. Represent loading, ready, playing, user-paused, buffering, ended, and failed states separately, with a bounded retry action. Respect browser autoplay/user-gesture requirements and preserve user pause intent through interruptions.\n- **Handle replacement and exit.** Accept initialization only for the current source. Release stale successful controllers, including completions after stop or disposal. Transfer ownership before asynchronous cleanup to prevent duplicate disposal; follow SDK ordering and surface cleanup failures. Stop/exit invalidates pending work and releases owned controllers, listeners, and subscriptions. App resume must not independently restart playback.\n\nEvidence should match the claim:\n\n| Boundary | Focused acceptance evidence |\n|---|---|\n| State and ownership | Controlled tests for initialization failure, reversed source completions, stop/disposal while pending, stale-controller release, and retry without reviving an abandoned source |\n| Playback UI | Widget checks for loading, buffering, failure/retry, and user pause |\n| Flutter web | Actual decoded video and audible audio in supported browsers; autoplay behavior, CORS, playlist/segment authorization, expiration, buffering, source replacement, and exit |\n| iOS | Actual playback on the supported target; codec support, background/foreground and audio interruptions, preserved pause intent, and cleanup |\n| Live behavior | Live-edge/rejoin behavior where supported; measure source-to-viewer delay against a timestamped source or synchronized reference under named device, browser/build, and network conditions |\n\nSub-second latency remains unproven until the encoder, HLS packaging/delivery, player buffering, and measured output support it. A realtime two-participant room test is unnecessary for this viewer; actual receiving-end playback and a source timing reference are needed.\n\nNo inspection or execution was available. Package/native contract checks, automated checks, browser/iOS playback, and latency measurements are all pending; this plan makes no compatibility or delivery claim.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "1. Keeps playback scoped to existing authorized HTTPS HLS, without publishing rooms, embedded server keys, or weakened network security.",
+              "met": true,
+              "evidence": "Explicitly excludes WebRTC rooms and broadcast infrastructure, keeps provider server keys out of Flutter, and retains HTTPS without a broad cleartext exception."
+            },
+            {
+              "criterion": "2. Checks actual player/native/browser codec and HLS support, delivery authentication/CORS, and applicable autoplay behavior.",
+              "met": true,
+              "evidence": "Requires inspection of installed dependencies, adapters, native configuration, and version-specific documentation; checks iOS/browser HLS and codec support, playlist/segment headers or cookies, CORS, authorization expiration, and autoplay/user-gesture requirements."
+            },
+            {
+              "criterion": "3. Rejects latency inference from the m3u8 suffix and requires compatible delivery/player features plus measured source-to-viewer delay.",
+              "met": true,
+              "evidence": "States that an .m3u8 URL establishes no latency guarantee and leaves sub-second latency unproven until encoder, HLS packaging/delivery, player buffering, and measured output support it. Requires source-to-viewer measurement against a timestamped source or synchronized reference."
+            },
+            {
+              "criterion": "4. Covers startup, buffering, errors, retry, pause/exit cleanup, and labels target/live-stream checks unexecuted.",
+              "met": true,
+              "evidence": "Defines loading, buffering, failed, and user-paused states; bounded retry; initialization failure checks; and controller/listener/subscription cleanup on exit. Explicitly states that inspection, automated checks, browser/iOS playback, and latency measurements are all pending."
+            }
+          ],
+          "summary": "The response explicitly satisfies all four criteria with a bounded HLS viewer implementation and an evidence plan that clearly distinguishes proposed checks from executed verification."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "1. Keeps playback scoped to existing authorized HTTPS HLS, without publishing rooms, embedded server keys, or weakened network security.",
+                "met": true,
+                "evidence": "Explicitly excludes WebRTC rooms and broadcast infrastructure, keeps provider server keys out of Flutter, and retains HTTPS without a broad cleartext exception."
+              },
+              {
+                "criterion": "2. Checks actual player/native/browser codec and HLS support, delivery authentication/CORS, and applicable autoplay behavior.",
+                "met": true,
+                "evidence": "Requires inspection of installed dependencies, adapters, native configuration, and version-specific documentation; checks iOS/browser HLS and codec support, playlist/segment headers or cookies, CORS, authorization expiration, and autoplay/user-gesture requirements."
+              },
+              {
+                "criterion": "3. Rejects latency inference from the m3u8 suffix and requires compatible delivery/player features plus measured source-to-viewer delay.",
+                "met": true,
+                "evidence": "States that an .m3u8 URL establishes no latency guarantee and leaves sub-second latency unproven until encoder, HLS packaging/delivery, player buffering, and measured output support it. Requires source-to-viewer measurement against a timestamped source or synchronized reference."
+              },
+              {
+                "criterion": "4. Covers startup, buffering, errors, retry, pause/exit cleanup, and labels target/live-stream checks unexecuted.",
+                "met": true,
+                "evidence": "Defines loading, buffering, failed, and user-paused states; bounded retry; initialization failure checks; and controller/listener/subscription cleanup on exit. Explicitly states that inspection, automated checks, browser/iOS playback, and latency measurements are all pending."
+              }
+            ],
+            "summary": "The response explicitly satisfies all four criteria with a bounded HLS viewer implementation and an evidence plan that clearly distinguishes proposed checks from executed verification."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 4,
+    "behavior_passed": 4,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-media": {
+        "cases": 4,
+        "passed": 4,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

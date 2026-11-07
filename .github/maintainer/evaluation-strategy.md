@@ -27,11 +27,11 @@ The default [Codex matrix](../evals/codex-matrix.json) skips baselines and needs
 
 ### Nightly or periodic audit
 
-The [nightly representative profile](../evals/profiles/nightly-representative.json) contains one behavior case for every skill and all routing cases. The Codex-only matrix with skipped baselines needs 150 model invocations (two per behavior case plus one per routing case). Refresh baselines only when measuring skill lift.
+The [nightly representative profile](../evals/profiles/nightly-representative.json) contains one behavior case for every skill and all routing cases. The Codex-only matrix with skipped baselines needs 160 model invocations (two per behavior case plus one per routing case). Refresh baselines only when measuring skill lift.
 
 ### Release
 
-The [release profile](../evals/profiles/release-full.json) resolves all behavior and routing cases. The default Codex-only run with skipped baselines needs 552 model invocations before retries (two per behavior case plus one per routing case). Run it only with an explicit budget and retained output.
+The [release profile](../evals/profiles/release-full.json) resolves all behavior and routing cases. The default Codex-only run with skipped baselines needs 576 model invocations before retries (two per behavior case plus one per routing case). Run it only with an explicit budget and retained output.
 
 ## Holdout cases
 
@@ -113,3 +113,5 @@ The `responsive-checkout-geometry` case uses Flutter 3.44.8 and immutable widget
 The `app-workflow-task-completion` case uses the same pinned Flutter SDK and integrates a repository, ChangeNotifier owner, and widget with a controlled API. The agent can inspect a local catalog of optional specialists and read only relevant instructions/references; the copied library and acceptance tests are immutable. Only `lib` and agent-authored `test/regression` changes are allowed. The runner retains the prompt, input hashes, response, patch, and host checks; a final statement of skill selection is self-reported, not a tool-read audit. The host permits only the exact `flutter pub get --offline --enforce-lockfile` setup command in addition to ordinary checks, so populate the pinned package cache before execution.
 
 Run `python3 .github/scripts/verify_app_workflow_fixture.py` to prove the corrected oracle passes seven acceptance scenarios and seeded repository, duplicate-submit, late-disposal, and hidden-error defects fail. CI runs that deterministic proof without invoking an agent. Executed agent results demonstrate a bounded feature implementation against fake-API unit/widget checks, not a device test, live-backend test, or proof of native skill discovery in every agent host.
+
+The `media-source-ownership` case uses a dependency-free fake player that supports overlapping opens and returns distinct handles. Its six runtime scenarios verify latest-source ownership, stale-handle release, stop/disposal, replacement, and cleanup errors. `verify_media_fixture.py` proves the oracle and seeded failures in CI; it does not test exclusive camera acquisition or a real media backend. `check_media_discovery.py --output /tmp/media-install.json` smoke-tests local installation. Its optional `--execute` invokes Codex once with no skill named in the request and retains successful command-read evidence plus full events. That native smoke is separate from policy-assisted catalog routing and never runs a model in ordinary CI.

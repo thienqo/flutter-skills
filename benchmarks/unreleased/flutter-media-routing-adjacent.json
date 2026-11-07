@@ -1,0 +1,127 @@
+{
+  "created_at": "2026-11-07T13:01:03.570379+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "d545e4a34197f1f96738496d5a89d5cf8554f485",
+    "dirty": true,
+    "branch": "feature/flutter-media"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [],
+  "routing": [
+    {
+      "case": "complete-feature-delivery",
+      "response": {
+        "skills": [
+          "flutter-app-workflow",
+          "flutter-ui-patterns",
+          "flutter-state-management",
+          "flutter-networking",
+          "flutter-persistence",
+          "flutter-testing",
+          "flutter-device-testing"
+        ],
+        "reason": "End-to-end checkout delivery requires workflow coordination plus UI, state, API, offline persistence, tests, and concrete Android runtime verification."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-app-workflow",
+        "flutter-device-testing",
+        "flutter-networking",
+        "flutter-persistence",
+        "flutter-state-management",
+        "flutter-testing",
+        "flutter-ui-patterns"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "app-owned-native-bridge-not-package",
+      "response": {
+        "skills": [
+          "flutter-platform-integration"
+        ],
+        "reason": "An app-owned typed Android and iOS scanner bridge is a contained native platform integration task."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-platform-integration"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "human-support-chat-is-not-ai",
+      "response": {
+        "skills": [
+          "flutter-app-workflow",
+          "flutter-networking"
+        ],
+        "reason": "Deliver a complete human-support chat feature over WebSocket, including connection state, reconnection, and missed-message recovery; no AI integration is needed."
+      },
+      "passed": false,
+      "selected": [
+        "flutter-app-workflow",
+        "flutter-networking"
+      ],
+      "missing": [],
+      "forbidden_selected": [
+        "flutter-app-workflow"
+      ],
+      "unexpected": [
+        "flutter-app-workflow"
+      ]
+    },
+    {
+      "case": "existing-session-authenticated-http-transport",
+      "response": {
+        "skills": [
+          "flutter-networking",
+          "dart-concurrency"
+        ],
+        "reason": "Update Dio authentication transport, safe retries, and unauthorized error mapping while coordinating a single refresh across concurrent 401 responses."
+      },
+      "passed": true,
+      "selected": [
+        "dart-concurrency",
+        "flutter-networking"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    }
+  ],
+  "summary": {
+    "behavior_cases": 0,
+    "behavior_passed": 0,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": null,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {},
+    "routing_cases": 4,
+    "routing_passed": 3
+  }
+}
