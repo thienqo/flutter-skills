@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T11:24:40.649113+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "83122865736cc6ec6c3df3ddc56108654d40f92b",
+    "dirty": true,
+    "branch": "feature/flutter-location-maps"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-location-maps",
+      "case": "location-maps-camera-scope",
+      "with_skill": {
+        "response": "Keep follow mode and request validity separate. A manual pan ends camera following while the map remains active, so a pending location fix can still update the position indicator.\n\n- **Camera intent.** Use the installed map SDK\u2019s gesture contract to distinguish a user pan from a programmatic camera move. On pan, switch to browse mode and clear any queued follow move. A valid fix updates the position indicator in either mode and moves the camera only in follow mode. Recenter restores follow mode and uses the latest usable fix, or waits for one if needed. Recheck camera intent and controller identity before executing any deferred move. Keep the selected pin or result independent of the device fix and viewport.\n- **Ownership.** Have the existing map state owner manage its location requests, area searches, map callbacks, and queued camera commands. Give each active map/controller binding a generation and each operation its own request ID. Invalidate the generation before teardown or controller replacement, then cancel map-owned work where supported and release the old controller according to the SDK\u2019s ownership rules. Leave any independently owned tracking session under its existing owner.\n- **Late completions.** Apply the same guard to successes and errors. Accept a completion only if its binding generation and operation request ID are current. For area search, also check that the originating area and filters still match the active query. Invalidate the old query as soon as its scope changes, even if the next search waits for map idle or a debounce. A stale completion must leave the indicator, camera, results, selection, loading state, and error state untouched. A mounted check alone cannot detect controller replacement or a superseded query.\n\nUse fake controllers and manually completed futures to verify these orderings:\n\n| Sequence | Expected behavior |\n|---|---|\n| Start a fix, pan, then complete the fix | The indicator updates. The viewport and selection stay put. Recenter moves to the accepted fix and resumes following. |\n| Start search A, change the area, then complete A before the next search starts or after search B finishes | Neither A\u2019s success nor its error affects the current query\u2019s UI. B\u2019s current success or error is handled normally. |\n| Start a fix and search, then leave the map | Complete each with success and with error in separate cases. No map state changes or camera calls occur after exit. |\n| Replace the controller while the screen stays mounted | Old fixes, searches, controller callbacks, and queued camera moves cannot affect the replacement. Repeat with old successes and errors, then confirm fresh work reaches the new controller. |\n\nThe installed SDK\u2019s gesture classification and controller disposal rules still need confirmation. Verify pan, indicator updates, and Recenter on the affected device targets.",
+        "judgment": {
+          "score": 67,
+          "expectations": [
+            {
+              "criterion": "Separates position indicator, camera, and follow state so a manual pan stops auto movement and explicit recenter restores it.",
+              "met": true,
+              "evidence": "A manual pan switches to browse mode and clears queued follow moves. A valid fix still updates the indicator, and Recenter restores follow mode using the latest usable fix or waits for one."
+            },
+            {
+              "criterion": "Cancels owned subscriptions and invalidates pending successes and errors on exit or controller replacement, and distinguishes newer and older requests even while mounted.",
+              "met": false,
+              "evidence": "The plan uses binding generations and request IDs to reject stale successes and errors, including after controller replacement while mounted. It calls for canceling map-owned work where supported but does not explicitly require canceling owned subscriptions on exit or replacement."
+            },
+            {
+              "criterion": "Tests manual pan, recenter, and late completion without claiming actual map rendering was verified.",
+              "met": true,
+              "evidence": "The proposed fake-controller tests cover a fix completing after a pan, Recenter restoring follow mode, and late successes and errors after query changes, exit, and controller replacement. Device verification is left as a future check."
+            }
+          ],
+          "summary": "Two of three criteria are met. The ownership plan explicitly guards stale completions but leaves owned subscription cancellation implicit."
+        },
+        "judgments": [
+          {
+            "score": 67,
+            "expectations": [
+              {
+                "criterion": "Separates position indicator, camera, and follow state so a manual pan stops auto movement and explicit recenter restores it.",
+                "met": true,
+                "evidence": "A manual pan switches to browse mode and clears queued follow moves. A valid fix still updates the indicator, and Recenter restores follow mode using the latest usable fix or waits for one."
+              },
+              {
+                "criterion": "Cancels owned subscriptions and invalidates pending successes and errors on exit or controller replacement, and distinguishes newer and older requests even while mounted.",
+                "met": false,
+                "evidence": "The plan uses binding generations and request IDs to reject stale successes and errors, including after controller replacement while mounted. It calls for canceling map-owned work where supported but does not explicitly require canceling owned subscriptions on exit or replacement."
+              },
+              {
+                "criterion": "Tests manual pan, recenter, and late completion without claiming actual map rendering was verified.",
+                "met": true,
+                "evidence": "The proposed fake-controller tests cover a fix completing after a pan, Recenter restoring follow mode, and late successes and errors after query changes, exit, and controller replacement. Device verification is left as a future check."
+              }
+            ],
+            "summary": "Two of three criteria are met. The ownership plan explicitly guards stale completions but leaves owned subscription cancellation implicit."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 67.0,
+          "minimum_score": 67,
+          "maximum_score": 67,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": true,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 0,
+    "mandatory_failures": 1,
+    "baseline_average": null,
+    "with_skill_average": 67.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-location-maps": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 67.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

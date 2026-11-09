@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T11:24:40.649258+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "83122865736cc6ec6c3df3ddc56108654d40f92b",
+    "dirty": true,
+    "branch": "feature/flutter-location-maps"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-location-maps",
+      "case": "location-maps-background-tracking-boundary",
+      "with_skill": {
+        "response": "Make **Start shift** create a tracking session that outlives the map screen. The courier starts it while the app is visible. A shift-scoped owner manages location updates and uploads, and the map observes the session when it\u2019s open. Closing the map or locking the screen leaves the session active. Since the current SDK only tracks while the map is open, locked-screen delivery remains unverified until the background implementation is tested on target devices.\n\n| Specialist | Ownership |\n|---|---|\n| `flutter-location-maps` | Own permission and service checks, fix freshness and accuracy, and the location subscription. Keep tracking independent of map and camera state. |\n| `flutter-background-execution` | Own the session lifecycle outside the visible app. Check the resolved SDK and plugin, Android and iOS requirements, and permitted start and stop paths. Determine whether the existing adapter can support the session. |\n| `flutter-device-testing` | Verify the actual permission flows, lock-screen delivery, and process lifecycle on supported physical devices. |\n\n**Stop shift** should immediately end tracking authority for that shift. Cancel the location subscription, stop the native background session and upload retries, and guard callbacks so a late fix cannot enqueue another upload. Define what happens to queued and in-flight uploads. A practical default is to discard unsent fixes and allow for a request already received by the server to have been accepted. Test repeated stops and a stop racing with a fix or retry.\n\nBefore promising locked-screen delivery, run a shift on each supported platform with the map closed and the screen locked for a representative duration. Verify timestamped fixes **and server receipt** against the intended cadence. Exercise permission and location-service changes, power restrictions, and connectivity loss and recovery. Confirm that Stop shift ends collection and retries. Use deterministic tests for session ownership, stale callbacks, and stop races.\n\nTreat **process termination** as a separate claim. Test OS-initiated process death, user force-quit or force-stop, and relaunch separately. Record whether tracking resumes, what gaps occur, and whether the courier must act. Promise only the scenarios demonstrated on the supported devices and configurations.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "1. Pairs location-session behavior with background execution and requires checking the installed SDK, platform authorization and capabilities, and allowed start and stop conditions.",
+              "met": true,
+              "evidence": "A shift-scoped owner manages location and uploads independently of the map, while the background specialist owns the session lifecycle outside the visible app. The plan calls for checking the resolved SDK and plugin, permission and service availability, Android and iOS requirements, and permitted start and stop paths. It specifies that the courier starts the shift while the app is visible."
+            },
+            {
+              "criterion": "2. Stops owned tracking and prevents stale updates after the shift ends, and treats lock/background delivery and post-termination delivery as distinct claims requiring target evidence.",
+              "met": true,
+              "evidence": "Stop shift revokes tracking authority, cancels the location subscription, ends the native background session and retries, and blocks late callbacks from enqueueing uploads. The plan proposes discarding unsent fixes and accounting for requests the server already accepted. It separately requires locked-screen delivery tests and tests for OS process death, user force-quit or force-stop, and relaunch."
+            },
+            {
+              "criterion": "3. Proposes focused permission, interruption, and lifecycle checks and identifies device evidence as pending.",
+              "met": true,
+              "evidence": "The response explicitly says locked-screen delivery is unverified. It calls for physical-device checks of permission and location-service changes, power restrictions, connectivity loss and recovery, stop races, and process lifecycle events. It requires timestamped fixes and server receipt to verify delivery cadence."
+            }
+          ],
+          "summary": "All criteria are met. The plan assigns specialist ownership, defines how Stop shift prevents stale uploads, and conditions each delivery promise on separate evidence from supported devices."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "1. Pairs location-session behavior with background execution and requires checking the installed SDK, platform authorization and capabilities, and allowed start and stop conditions.",
+                "met": true,
+                "evidence": "A shift-scoped owner manages location and uploads independently of the map, while the background specialist owns the session lifecycle outside the visible app. The plan calls for checking the resolved SDK and plugin, permission and service availability, Android and iOS requirements, and permitted start and stop paths. It specifies that the courier starts the shift while the app is visible."
+              },
+              {
+                "criterion": "2. Stops owned tracking and prevents stale updates after the shift ends, and treats lock/background delivery and post-termination delivery as distinct claims requiring target evidence.",
+                "met": true,
+                "evidence": "Stop shift revokes tracking authority, cancels the location subscription, ends the native background session and retries, and blocks late callbacks from enqueueing uploads. The plan proposes discarding unsent fixes and accounting for requests the server already accepted. It separately requires locked-screen delivery tests and tests for OS process death, user force-quit or force-stop, and relaunch."
+              },
+              {
+                "criterion": "3. Proposes focused permission, interruption, and lifecycle checks and identifies device evidence as pending.",
+                "met": true,
+                "evidence": "The response explicitly says locked-screen delivery is unverified. It calls for physical-device checks of permission and location-service changes, power restrictions, connectivity loss and recovery, stop races, and process lifecycle events. It requires timestamped fixes and server receipt to verify delivery cadence."
+              }
+            ],
+            "summary": "All criteria are met. The plan assigns specialist ownership, defines how Stop shift prevents stale uploads, and conditions each delivery promise on separate evidence from supported devices."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-location-maps": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

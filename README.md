@@ -1,6 +1,6 @@
 # Flutter Skills
 
-[![Agent Skills](https://img.shields.io/badge/Agent%20Skills-38-2ea44f)](skills/)
+[![Agent Skills](https://img.shields.io/badge/Agent%20Skills-39-2ea44f)](skills/)
 [![Validation](https://github.com/thienqo/flutter-skills/actions/workflows/validate-repository.yml/badge.svg)](https://github.com/thienqo/flutter-skills/actions/workflows/validate-repository.yml)
 [![License](https://img.shields.io/badge/License-BSD--3--Clause-blue)](LICENSE)
 
@@ -59,7 +59,7 @@ Skills guide the agent through implementation and verification, with clear repor
 
 ## Catalog
 
-**38 skills** covering Dart, architecture, UI, media, APIs, testing, debugging, and release delivery.
+**39 skills** covering Dart, architecture, UI, media, APIs, testing, debugging, and release delivery.
 
 <details>
 <summary>Browse all skills</summary>
@@ -71,6 +71,7 @@ Skills guide the agent through implementation and verification, with clear repor
 | Architecture | `flutter-architecture`, `flutter-state-management` |
 | UI | `flutter-ui-design`, `flutter-figma-workflow`, `flutter-visual-effects`, `flutter-ui-patterns`, `flutter-responsive-layout`, `flutter-text-rendering`, `flutter-animation`, `flutter-navigation` |
 | Data & AI | `flutter-networking`, `flutter-openapi-client`, `flutter-persistence`, `flutter-ai-integration` |
+| Location & maps | `flutter-location-maps` (permissions, map interaction, nearby search, address picking) |
 | Media | `flutter-media` (capture, playback, livestreams, calls, screen sharing) |
 | Identity & product | `flutter-authentication`, `flutter-in-app-purchases`, `flutter-product-analytics` |
 | Quality | `flutter-code-review`, `flutter-security`, `flutter-testing`, `flutter-runtime-debugging`, `flutter-performance`, `flutter-observability`, `flutter-accessibility`, `flutter-localization` |
@@ -80,7 +81,7 @@ Skills guide the agent through implementation and verification, with clear repor
 
 ## Quality
 
-**246 behavior-focused evaluation cases** and **84 cross-catalog routing cases** define expected behavior and skill selection. See [measured results](benchmarks/README.md) and [contribution guidelines](CONTRIBUTING.md).
+**251 behavior-focused evaluation cases** and **90 cross-catalog routing cases** define expected behavior and skill selection. See [measured results](benchmarks/README.md) and [contribution guidelines](CONTRIBUTING.md).
 
 ## License
 

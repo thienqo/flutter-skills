@@ -598,5 +598,47 @@
     "required": ["flutter-performance"],
     "optional": ["flutter-testing"],
     "forbidden": ["flutter-media", "flutter-app-workflow", "flutter-platform-integration"]
+  },
+  {
+    "name": "location-maps-nearby",
+    "prompt": "Fix an existing Flutter store finder so it can use approximate location, show when location services are disabled, and let the user select an area manually. Keep the current map SDK and API.",
+    "required": ["flutter-location-maps"],
+    "optional": ["flutter-state-management", "flutter-testing", "flutter-ui-patterns"],
+    "forbidden": ["flutter-app-workflow", "flutter-background-execution", "flutter-navigation"]
+  },
+  {
+    "name": "location-maps-manual-pan",
+    "prompt": "On our Flutter map screen, device location updates keep undoing a user pan. Preserve the current SDK, update the location indicator, and resume camera follow only on Recenter.",
+    "required": ["flutter-location-maps"],
+    "optional": ["flutter-state-management", "flutter-testing", "dart-concurrency"],
+    "forbidden": ["flutter-animation", "flutter-navigation", "flutter-app-workflow"]
+  },
+  {
+    "name": "location-maps-reverse-geocode-selection",
+    "prompt": "Fix an existing Flutter map pin picker where an older reverse-geocoding response replaces the selected pin's address after the user moves it. Keep the geocoding service and transport.",
+    "required": ["flutter-location-maps"],
+    "optional": ["dart-concurrency", "flutter-state-management", "flutter-testing"],
+    "forbidden": ["flutter-app-workflow", "flutter-platform-integration", "flutter-navigation"]
+  },
+  {
+    "name": "location-maps-background-courier",
+    "prompt": "Extend the existing Flutter courier location tracker to continue during an explicitly started shift when the screen is locked. Handle platform permissions and stop tracking when the user ends the shift.",
+    "required": ["flutter-location-maps", "flutter-background-execution"],
+    "optional": ["flutter-platform-integration", "flutter-device-testing", "flutter-testing", "flutter-security"],
+    "forbidden": ["flutter-app-workflow", "flutter-navigation", "flutter-notifications"]
+  },
+  {
+    "name": "location-maps-negative-deep-link",
+    "prompt": "Fix a Flutter deep link that opens the wrong screen in the app's router. The link should open the existing store map tab by store ID and preserve back-stack behavior. The map itself needs no changes.",
+    "required": ["flutter-navigation"],
+    "optional": ["flutter-testing"],
+    "forbidden": ["flutter-location-maps", "flutter-app-workflow"]
+  },
+  {
+    "name": "location-maps-negative-http-retry",
+    "prompt": "Fix duplicate retries in a Flutter HTTP adapter used by a store locator. The endpoint takes a store ID and returns opening hours. Only request retry behavior changes, with no coordinate, map, or location work.",
+    "required": ["flutter-networking"],
+    "optional": ["flutter-testing", "dart-concurrency"],
+    "forbidden": ["flutter-location-maps", "flutter-app-workflow"]
   }
 ]

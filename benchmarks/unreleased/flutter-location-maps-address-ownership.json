@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T11:30:44.986736+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "e98e77737107ebb679ea031a6f59206e237001fa",
+    "dirty": true,
+    "branch": "feature/flutter-location-maps"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-location-maps",
+      "case": "location-maps-address-and-viewport-order",
+      "with_skill": {
+        "response": "Keep the current provider and make each pin selection own its nearby search and reverse-geocoded label.\n\n1. **Update the selection as soon as the pin moves.** When the user drags from A to B, store B as the selected coordinate, increment a selection revision, and clear A\u2019s label and nearby results. Start B\u2019s lookups when the drag settles. Invalidate A\u2019s requests immediately, including during any debounce window.\n2. **Guard both successes and errors.** Capture the selection revision and coordinates in each request. Apply a completion only if the picker is still active and the request is still current for that lookup. Cancel obsolete requests where the provider supports it, and keep the guard even with cancellation. Track the two lookups independently so a nearby-search failure can\u2019t overwrite the address label. Invalidate both when the picker closes.\n3. **Convert coordinates at the boundaries.** Keep a named latitude and longitude in picker state. Construct the map point with `(latitude, longitude)` and serialize backend GeoJSON positions as `[longitude, latitude]`. Use the same conversion for nearby search and saving the confirmed pin.\n4. **Save the confirmed selection.** Reverse geocoding supplies a provisional label while the pin remains the source of truth. On confirmation, snapshot the selected coordinates and associate a label only if it belongs to that selection. If the existing save contract requires a label, keep confirmation pending until B\u2019s label is available and show B\u2019s lookup failure or no-match state if it occurs.\n\nUse fake provider responses to complete both B lookups before A\u2019s, then verify that late A successes and errors leave B\u2019s pin, label, nearby results, and confirmation payload intact. Also test a completion during the debounce window and after the picker closes. Use asymmetric coordinates such as latitude `10.77` and longitude `106.70` to assert map arguments `(10.77, 106.70)` and GeoJSON `[106.70, 10.77]`.\n\nThe installed adapter\u2019s drag callbacks, the provider\u2019s cancellation support, and the backend\u2019s label requirement remain to be checked during implementation.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "1. Key searches and labels to the current viewport or pin and reject stale results.",
+              "met": true,
+              "evidence": "The plan stores B immediately, clears A\u2019s nearby results and label, and guards both lookup completions using the selection revision and coordinates. It explicitly tests that late A successes and errors leave B\u2019s pin, label, nearby results, and confirmation payload intact."
+            },
+            {
+              "criterion": "2. Identify GeoJSON coordinate order, convert explicitly at the adapter boundary, and propose an asymmetric swap test.",
+              "met": true,
+              "evidence": "The plan constructs the map point as (latitude, longitude) and serializes GeoJSON as [longitude, latitude]. It tests map arguments (10.77, 106.70) and GeoJSON [106.70, 10.77]."
+            },
+            {
+              "criterion": "3. Treat the label as provisional, preserve the pin on no-match or failure, and require confirmation before saving.",
+              "met": true,
+              "evidence": "The plan treats the label as provisional and the selected coordinates as authoritative. It snapshots those coordinates on confirmation, associates only a label belonging to that selection, and shows failure or no-match if a required label is unavailable while keeping confirmation pending."
+            }
+          ],
+          "summary": "All three criteria are met. The plan keeps the current provider and specifies how to verify stale-response rejection and coordinate order."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "1. Key searches and labels to the current viewport or pin and reject stale results.",
+                "met": true,
+                "evidence": "The plan stores B immediately, clears A\u2019s nearby results and label, and guards both lookup completions using the selection revision and coordinates. It explicitly tests that late A successes and errors leave B\u2019s pin, label, nearby results, and confirmation payload intact."
+              },
+              {
+                "criterion": "2. Identify GeoJSON coordinate order, convert explicitly at the adapter boundary, and propose an asymmetric swap test.",
+                "met": true,
+                "evidence": "The plan constructs the map point as (latitude, longitude) and serializes GeoJSON as [longitude, latitude]. It tests map arguments (10.77, 106.70) and GeoJSON [106.70, 10.77]."
+              },
+              {
+                "criterion": "3. Treat the label as provisional, preserve the pin on no-match or failure, and require confirmation before saving.",
+                "met": true,
+                "evidence": "The plan treats the label as provisional and the selected coordinates as authoritative. It snapshots those coordinates on confirmation, associates only a label belonging to that selection, and shows failure or no-match if a required label is unavailable while keeping confirmation pending."
+              }
+            ],
+            "summary": "All three criteria are met. The plan keeps the current provider and specifies how to verify stale-response rejection and coordinate order."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-location-maps": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

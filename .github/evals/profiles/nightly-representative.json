@@ -19,6 +19,7 @@
     {"skill": "flutter-figma-workflow", "case": "maps-figma-frame-to-existing-design-system"},
     {"skill": "flutter-in-app-purchases", "case": "pending-purchase-does-not-grant-access"},
     {"skill": "flutter-localization", "case": "plural-and-formatting"},
+    {"skill": "flutter-location-maps", "case": "location-maps-approximate-nearby"},
     {"skill": "flutter-media", "case": "camera-lifecycle-does-not-revive-an-abandoned-preview"},
     {"skill": "flutter-navigation", "case": "preserves-existing-go-router"},
     {"skill": "flutter-networking", "case": "runtime-response-does-not-become-the-whole-contract"},

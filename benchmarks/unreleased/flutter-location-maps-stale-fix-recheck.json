@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T11:25:52.614610+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "83122865736cc6ec6c3df3ddc56108654d40f92b",
+    "dirty": true,
+    "branch": "feature/flutter-location-maps"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-location-maps",
+      "case": "location-maps-stale-fix-disabled-service",
+      "with_skill": {
+        "response": "Keep the map interactive and let users place, move, and confirm a pickup pin while location services are off. If a pin is already selected, keep it in place. Show an inline message such as \u201cLocation services are off. Turn them on to use your current location, or pick a pin on the map.\u201d Offer a settings shortcut where supported. The 30-minute-old fix is outside the two-minute limit, so leave the current-location indicator hidden and keep the camera where it is.\n\nWhen the user taps **Use current location**, check permission and service availability separately. With permission granted and services off, show the recovery message without requesting permission again or starting a fix. If the user opens settings from that action, recheck both on return. If permission still allows access, services are on, and the action is still pending, make a bounded, one-time fix request. If the user has moved on to picking a pin or left the screen, cancel the pending action and ignore late results.\n\nAccept a fix only if it is **at most two minutes old** and has reported accuracy of **100 meters or better**. A qualifying fix can center the map while the current-location action still owns the camera. Keep pickup selection separate. If the request times out or yields no qualifying fix, explain that the app couldn\u2019t get a usable location and keep manual pin selection available.\n\nTest with a fake location adapter and a controlled clock:\n\n- **Services off, permission granted, 30-minute-old fix.** Verify the recovery message, no permission prompt or fresh request, no current-location indicator or camera jump, and successful pin confirmation.\n- **Return from settings.** Verify that both permission and service availability are rechecked. Start exactly one bounded request when both allow it and the action is still pending. Verify that no request starts if services remain off or access has been revoked.\n- **Fix quality and timeout.** Accept a fix at exactly two minutes and 100 meters. Reject fixes just beyond either limit and fixes with missing accuracy. Verify that a null result or timeout leaves pin picking usable.\n- **Late results.** Move the pin or leave the screen while a request is pending. Verify that a late success or error cannot move the camera, replace the pin, or surface an obsolete message.\n\nOn each supported mobile platform, verify the real settings round trip and confirm that the map still renders and accepts a pickup pin with location services off.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Rejects the 30-minute fix for current-location confirmation, checks both fix age and accuracy, and keeps service-off distinct from denied permission.",
+              "met": true,
+              "evidence": "Rejects the 30-minute fix, accepts only fixes at most two minutes old with reported accuracy of 100 meters or better, and checks permission and service availability separately. When permission is granted and services are off, it shows a service-off message without prompting for permission."
+            },
+            {
+              "criterion": "Preserves manual pin selection, rechecks service and permission after settings return, and only requests a bounded fresh fix when allowed and still wanted.",
+              "met": true,
+              "evidence": "Keeps manual pin placement and confirmation available and preserves any existing pin. On return from settings, it rechecks both permission and services and starts one bounded request only if both allow it and the action is still pending."
+            },
+            {
+              "criterion": "Covers disabled service, stale or null fix, timeout, and qualified fresh fix with focused checks.",
+              "met": true,
+              "evidence": "Tests that disabled services prevent a fresh request, the stale fix cannot move the camera, null and timeout results leave manual pin selection usable, and a fix at the exact age and accuracy limits is accepted. It also tests rejection just beyond either limit."
+            }
+          ],
+          "summary": "All three criteria are met, including both mandatory criteria."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Rejects the 30-minute fix for current-location confirmation, checks both fix age and accuracy, and keeps service-off distinct from denied permission.",
+                "met": true,
+                "evidence": "Rejects the 30-minute fix, accepts only fixes at most two minutes old with reported accuracy of 100 meters or better, and checks permission and service availability separately. When permission is granted and services are off, it shows a service-off message without prompting for permission."
+              },
+              {
+                "criterion": "Preserves manual pin selection, rechecks service and permission after settings return, and only requests a bounded fresh fix when allowed and still wanted.",
+                "met": true,
+                "evidence": "Keeps manual pin placement and confirmation available and preserves any existing pin. On return from settings, it rechecks both permission and services and starts one bounded request only if both allow it and the action is still pending."
+              },
+              {
+                "criterion": "Covers disabled service, stale or null fix, timeout, and qualified fresh fix with focused checks.",
+                "met": true,
+                "evidence": "Tests that disabled services prevent a fresh request, the stale fix cannot move the camera, null and timeout results leave manual pin selection usable, and a fix at the exact age and accuracy limits is accepted. It also tests rejection just beyond either limit."
+              }
+            ],
+            "summary": "All three criteria are met, including both mandatory criteria."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-location-maps": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

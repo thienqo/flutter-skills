@@ -1,0 +1,53 @@
+[
+  {
+    "name": "location-maps-approximate-nearby",
+    "prompt": "Plan a fix for an existing Flutter store finder. Android users can grant approximate location and iOS users can grant reduced accuracy. A rough area is sufficient for browsing stores, but the screen currently refuses to show results until precise access is granted. Keep the existing map and search adapters. The user can choose a city manually. Describe the state transitions, implementation, and focused checks without claiming device execution.",
+    "resources": ["references/location-access-and-fixes.md", "references/nearby-search-and-address-picking.md"],
+    "expectations": [
+      {"id": "accept-sufficient-precision", "text": "Uses approximate or reduced access for nearby browsing without requiring precision or repeatedly prompting, and makes the rough origin clear.", "mandatory": true},
+      {"id": "permission-and-service-distinct", "text": "Keeps permission, precision, service availability, and usable fix state distinct and retains manual city selection when a device fix is unavailable.", "mandatory": true},
+      "Preserves existing adapters and distinguishes deterministic state checks from target permission and settings checks."
+    ]
+  },
+  {
+    "name": "location-maps-stale-fix-disabled-service",
+    "prompt": "Plan the behavior for an existing Flutter pickup map. Location permission is granted, location services are off, and the last fix is 30 minutes old. The current-location action requires a fix at most two minutes old with accuracy within 100 meters. Users can still pick a pin. Explain what to display, when to try a fresh fix, and how to test it.",
+    "resources": ["references/location-access-and-fixes.md"],
+    "expectations": [
+      {"id": "stale-fix-not-current", "text": "Rejects the 30-minute fix for current-location confirmation, checks both fix age and accuracy, and keeps service-off distinct from denied permission.", "mandatory": true},
+      {"id": "bounded-recovery", "text": "Preserves manual pin selection, rechecks service and permission after settings return, and only requests a bounded fresh fix when allowed and still wanted.", "mandatory": true},
+      "Covers disabled service, stale or null fix, timeout, and qualified fresh fix with focused checks."
+    ]
+  },
+  {
+    "name": "location-maps-camera-scope",
+    "prompt": "Plan a fix for an existing Flutter map with follow-me mode. Each map controller binding owns a position subscription and area search requests. The screen state separately owns a one-shot location fix. The user pans away while an area search and fix are pending. An in-scope fix should still update the position indicator after a pan, without moving the viewport until Recenter is tapped. Describe what happens if the controller is replaced while the screen stays active, then the user leaves. Include subscription cleanup and regression checks for late successes and errors.",
+    "resources": ["references/map-interaction-and-lifecycle.md", "references/nearby-search-and-address-picking.md"],
+    "expectations": [
+      {"id": "pan-preserves-camera-intent", "text": "Separates position indicator, camera, and follow state so a manual pan stops auto movement and explicit recenter restores it.", "mandatory": true},
+      {"id": "invalidate-late-work", "text": "Cancels the retiring binding's subscription and rejects its pending successes and errors on exit or replacement, and distinguishes newer and older requests even while mounted.", "mandatory": true},
+      {"id": "preserve-screen-owned-fix", "text": "Allows a still-current screen-owned fix to update the position indicator after controller replacement, guards camera work with the current controller and camera intent, and rejects the screen-owned result or error after exit.", "mandatory": true},
+      "Tests manual pan, recenter, and late completion without claiming actual map rendering was verified."
+    ]
+  },
+  {
+    "name": "location-maps-address-and-viewport-order",
+    "prompt": "Plan a fix for a Flutter delivery address picker. A user drags from pin A to pin B. B's nearby search and reverse-geocoded label return first, followed by A's older responses. The backend uses GeoJSON coordinates and the installed map adapter uses a latitude/longitude constructor. The user confirms the selected pin before saving. Keep the current provider.",
+    "resources": ["references/nearby-search-and-address-picking.md", "references/map-interaction-and-lifecycle.md"],
+    "expectations": [
+      {"id": "latest-accepted-selection", "text": "Keys searches and labels to the current viewport or pin and rejects stale results, keeping B's selected coordinates and list-marker results consistent.", "mandatory": true},
+      {"id": "coordinate-contract", "text": "Identifies GeoJSON longitude-then-latitude order, converts explicitly at the adapter boundary, and proposes asymmetric coordinates for a swap test.", "mandatory": true},
+      "Treats the address label as provisional, handles no-match or provider failure without changing the selected pin, and preserves user confirmation before saving."
+    ]
+  },
+  {
+    "name": "location-maps-background-tracking-boundary",
+    "prompt": "Plan a Flutter courier feature that keeps sending location during an explicitly started shift when the screen locks. The current SDK tracks only while the map is open and we have no target-device evidence. Explain specialist ownership, how Stop shift affects tracking, and what must be verified before promising behavior while locked or after process termination.",
+    "resources": ["references/location-access-and-fixes.md"],
+    "expectations": [
+      {"id": "explicit-session-and-native-contract", "text": "Pairs location-session behavior with background execution and requires checking the installed SDK and platform authorization/capabilities and allowed start and stop conditions.", "mandatory": true},
+      {"id": "stop-and-evidence", "text": "Stops owned tracking and prevents stale updates after the shift ends, and treats lock/background delivery and post-termination delivery as distinct claims requiring target evidence.", "mandatory": true},
+      "Proposes focused permission, interruption, and lifecycle checks and identifies device evidence as pending."
+    ]
+  }
+]

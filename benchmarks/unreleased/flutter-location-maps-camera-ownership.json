@@ -1,0 +1,126 @@
+{
+  "created_at": "2026-11-09T11:30:44.986807+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "e98e77737107ebb679ea031a6f59206e237001fa",
+    "dirty": true,
+    "branch": "feature/flutter-location-maps"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-location-maps",
+      "case": "location-maps-camera-scope",
+      "with_skill": {
+        "response": "Keep the device fix, displayed viewport, selected point or result, and camera mode separate. Give the screen and each controller binding distinct lifecycle identities so a controller replacement can retire binding work while preserving the screen\u2019s pending one-shot fix.\n\n1. **When the user pans**, switch from Follow to Browse using the installed map SDK\u2019s gesture contract. Search for the new viewport once it settles. Invalidate the previous search as soon as its viewport becomes obsolete, including during the gap before the next search starts. Cancel it if supported, and accept a success or error only if the binding and query are still current. The pending screen fix can still update the position indicator. While in Browse, it leaves the viewport, search origin, and selection alone.\n2. **When the user taps Recenter**, switch back to Follow and use the latest usable fix, or wait for one if needed. Send the camera command through the current ready controller. If readiness delays the command, recheck the binding and camera mode before issuing it so a subsequent pan can supersede it.\n3. **When the controller is replaced**, retire the old binding before cleanup. Cancel its position subscription and search requests where supported, detach callbacks, and release the controller according to the SDK contract. Ignore queued position events and late search successes or errors from the retired binding. Start a fresh subscription on the new binding and preserve the screen\u2019s camera mode and selection. The still-current one-shot fix can update the indicator after replacement. If the user has resumed Follow, any resulting camera command goes through the new controller once it\u2019s ready.\n4. **When the user leaves**, invalidate both the screen and its active binding before cleanup. Cancel the active position subscription and any cancellable searches or fix, release the controller, and discard deferred camera commands. Late successes and errors from either scope have no effect on UI state or camera.\n\nUse fake controllers and manually completed requests to verify the ordering. Cover a pan with both requests pending, with the obsolete search completing both before and after the replacement query starts. Exercise both stale success and stale error, and verify that the one-shot fix updates the indicator without moving the camera or changing selection. Replace the controller while the screen stays active and verify subscription cancellation, rejection of queued events and old search completions, and acceptance of the screen fix. Verify that Recenter targets only the current ready controller. In separate route-exit cases, complete the fix and search with both success and error after teardown and assert that no UI or camera update occurs.\n\nThis plan assumes controller replacement occurs within the same screen. Gesture identification, readiness, and controller cleanup depend on the installed SDK and still need verification on the affected targets.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Separates position indicator, camera, and follow state so a manual pan stops auto movement and explicit recenter restores it.",
+              "met": true,
+              "evidence": "A pan switches from Follow to Browse. The pending fix can update the position indicator while the viewport stays put. Recenter restores Follow and uses the latest usable fix or waits for one."
+            },
+            {
+              "criterion": "Cancels the retiring binding's subscription and rejects its pending successes and errors on exit or replacement, and distinguishes newer and older requests even while mounted.",
+              "met": true,
+              "evidence": "Replacement and exit invalidate the retiring binding before cleanup and cancel its position subscription. Search successes and errors are accepted only when both the binding and query are current. A pan invalidates the obsolete query even before the next search starts."
+            },
+            {
+              "criterion": "Allows a still-current screen-owned fix to update the position indicator after controller replacement, guards camera work with the current controller and camera intent, and rejects the screen-owned result or error after exit.",
+              "met": true,
+              "evidence": "The screen-owned fix can update the indicator after controller replacement. Deferred camera work rechecks the binding and follow mode before issuing a command to the current ready controller. Exit invalidates the screen and discards late fix successes and errors."
+            },
+            {
+              "criterion": "Tests manual pan, recenter, and late completion without claiming actual map rendering was verified.",
+              "met": true,
+              "evidence": "The plan specifies fake-controller tests for pan, Recenter, controller replacement, and late successes and errors. It leaves SDK and target verification pending."
+            }
+          ],
+          "summary": "The plan explicitly covers all four criteria, including the gap before a newer search begins and the screen-owned fix surviving controller replacement."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Separates position indicator, camera, and follow state so a manual pan stops auto movement and explicit recenter restores it.",
+                "met": true,
+                "evidence": "A pan switches from Follow to Browse. The pending fix can update the position indicator while the viewport stays put. Recenter restores Follow and uses the latest usable fix or waits for one."
+              },
+              {
+                "criterion": "Cancels the retiring binding's subscription and rejects its pending successes and errors on exit or replacement, and distinguishes newer and older requests even while mounted.",
+                "met": true,
+                "evidence": "Replacement and exit invalidate the retiring binding before cleanup and cancel its position subscription. Search successes and errors are accepted only when both the binding and query are current. A pan invalidates the obsolete query even before the next search starts."
+              },
+              {
+                "criterion": "Allows a still-current screen-owned fix to update the position indicator after controller replacement, guards camera work with the current controller and camera intent, and rejects the screen-owned result or error after exit.",
+                "met": true,
+                "evidence": "The screen-owned fix can update the indicator after controller replacement. Deferred camera work rechecks the binding and follow mode before issuing a command to the current ready controller. Exit invalidates the screen and discards late fix successes and errors."
+              },
+              {
+                "criterion": "Tests manual pan, recenter, and late completion without claiming actual map rendering was verified.",
+                "met": true,
+                "evidence": "The plan specifies fake-controller tests for pan, Recenter, controller replacement, and late successes and errors. It leaves SDK and target verification pending."
+              }
+            ],
+            "summary": "The plan explicitly covers all four criteria, including the gap before a newer search begins and the screen-owned fix surviving controller replacement."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-location-maps": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

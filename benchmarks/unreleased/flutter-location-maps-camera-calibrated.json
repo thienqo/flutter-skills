@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T11:25:52.614547+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "83122865736cc6ec6c3df3ddc56108654d40f92b",
+    "dirty": true,
+    "branch": "feature/flutter-location-maps"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-location-maps",
+      "case": "location-maps-camera-scope",
+      "with_skill": {
+        "response": "Keep the device fix, viewport, selected point or result, and camera mode as separate state. A user pan switches the camera from Follow to Browse. While browsing, an in-scope location fix still updates the position indicator and the latest usable fix, while the viewport and selection stay where the user left them. Recenter switches back to Follow and centers on the latest usable fix. If none is available, the next usable fix can center the camera while Follow is still active. Use the installed map SDK\u2019s gesture contract to distinguish a user pan from a programmatic camera move.\n\n**Ownership and cleanup**\n\n- Give each controller binding a unique identity and ownership of its position subscription and controller callbacks. Tag the one-shot fix and area search with the binding that started them. When the route exits or the controller is replaced, invalidate the old binding first, then cancel its subscription, cancel pending requests where supported, and detach callbacks or dispose the controller according to the SDK\u2019s ownership rules. Only the new binding can drive its controller.\n- Guard both success and error handlers. A location completion must belong to the active binding and, for a one-shot fix, the latest request of that kind. Panning changes camera intent and leaves that fix eligible to update the indicator. An area-search completion must also match the latest query, including its area and filters. Invalidate the old query when its scope changes, even if the replacement search is still waiting for viewport idle. This prevents an old response from changing markers, results, loading state, or errors.\n\n**Regression checks**\n\nUse fake controllers, a controllable position stream, and manually completed requests.\n\n- Pan while a fix is pending, then complete it while the binding is active. Verify the indicator updates without a camera command or selection change. Tap Recenter and verify the camera uses the accepted fix.\n- Change the search area and complete the older search with a success and, in a separate run, an error. Verify the newer query\u2019s results, markers, loading state, and error state are unaffected, including before its request starts.\n- Repeat with route exit and with controller replacement while both operations are pending. Deliver late successes, errors, and queued position events from the old binding. Verify its subscription was canceled, no late event changes state or moves either camera, and the replacement binding accepts its own events. Controller replacement should be tested while the widget stays mounted.\n\nConfirm the installed SDK\u2019s gesture callbacks and controller teardown rules during implementation. Those behaviors still need verification on the affected targets.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Separates position indicator, camera, and follow state so a manual pan stops auto movement and explicit recenter restores it.",
+              "met": true,
+              "evidence": "A user pan switches Follow to Browse. An eligible fix still updates the position indicator without moving the viewport. Recenter restores Follow and centers on the latest usable fix."
+            },
+            {
+              "criterion": "Cancels owned subscriptions and invalidates pending successes and errors on exit or controller replacement, and distinguishes newer and older requests even while mounted.",
+              "met": true,
+              "evidence": "Each binding owns its position subscription. Exit or replacement invalidates the old binding before canceling its subscription. Both success and error handlers check binding identity and whether the one-shot request or search query is still current."
+            },
+            {
+              "criterion": "Tests manual pan, recenter, and late completion without claiming actual map rendering was verified.",
+              "met": true,
+              "evidence": "The plan uses fake controllers and controllable completions to check indicator updates after a pan, camera movement on Recenter, and late successes, errors, and stream events after exit or replacement. It leaves SDK behavior for verification during implementation."
+            }
+          ],
+          "summary": "All three criteria are met. The plan explicitly covers camera behavior, binding and request invalidation, and regression checks without claiming rendering verification."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Separates position indicator, camera, and follow state so a manual pan stops auto movement and explicit recenter restores it.",
+                "met": true,
+                "evidence": "A user pan switches Follow to Browse. An eligible fix still updates the position indicator without moving the viewport. Recenter restores Follow and centers on the latest usable fix."
+              },
+              {
+                "criterion": "Cancels owned subscriptions and invalidates pending successes and errors on exit or controller replacement, and distinguishes newer and older requests even while mounted.",
+                "met": true,
+                "evidence": "Each binding owns its position subscription. Exit or replacement invalidates the old binding before canceling its subscription. Both success and error handlers check binding identity and whether the one-shot request or search query is still current."
+              },
+              {
+                "criterion": "Tests manual pan, recenter, and late completion without claiming actual map rendering was verified.",
+                "met": true,
+                "evidence": "The plan uses fake controllers and controllable completions to check indicator updates after a pan, camera movement on Recenter, and late successes, errors, and stream events after exit or replacement. It leaves SDK behavior for verification during implementation."
+              }
+            ],
+            "summary": "All three criteria are met. The plan explicitly covers camera behavior, binding and request invalidation, and regression checks without claiming rendering verification."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-location-maps": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}
