@@ -1,6 +1,6 @@
 ---
 name: flutter-in-app-purchases
-description: Implement, repair, or review Flutter purchases of digital goods and subscriptions through app stores, including catalog, transaction updates, verification, entitlements, acknowledgement, consumption, restoration, and sandbox testing. Use for App Store or Google Play billing; not physical-goods checkout, advertising, or generic payment forms.
+description: Use for App Store and Google Play billing in Flutter, including store products, verified transactions, entitlements, subscriptions, restoration, and sandbox testing.
 ---
 
 # Flutter In-App Purchases
@@ -29,6 +29,7 @@ Never grant an entitlement from a button tap, client assertion, unverified paylo
 
 ## Boundaries
 
+- `flutter-payments-checkout` owns order payments through external gateways for physical goods or services delivered outside the app.
 - `flutter-authentication` owns account sign-in and session lifecycle; this skill binds verified transactions to the correct account and prevents entitlement leakage during account switching.
 - `flutter-networking` owns generic transport; this skill owns store and entitlement protocol semantics.
 - `flutter-persistence` owns durable local storage; cached entitlement state must expose freshness and never override authoritative revocation.

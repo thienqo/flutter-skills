@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T12:33:47.367349+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "20eabdca5410afffd16e924ada06b16471f1c7bb",
+    "dirty": true,
+    "branch": "feature/flutter-payments-checkout"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-payments-checkout",
+      "case": "payments-checkout-recovers-pending-attempt-after-restart",
+      "with_skill": {
+        "response": "On reopen, recover the original food order from the backend for the **currently signed-in account**. The app can use a saved, non-secret order or payment-attempt ID as a lookup hint, or ask the backend for that account\u2019s active checkout. The backend must authorize the lookup before the app displays the order. On an account switch, clear the previous checkout from view and ignore any in-flight responses tied to the old session. If the original account signs back in, it can resume the same order.\n\nA gateway confirmation can arrive while the app is offline. The backend should verify the confirmation, reconcile it against the original attempt and order, and record the result independently of the app. Fulfillment should start once per order after verified payment, even if gateway events are duplicated or arrive out of order. Keep payment-attempt, order, and fulfillment states separate. Any redirect that eventually arrives through the existing gateway\u2019s supported return path only prompts an authorized status refresh.\n\n| What the app knows | What to show and allow |\n|---|---|\n| Backend confirms payment | Show **Paid** and the order\u2019s separate fulfillment status. |\n| Backend reports the attempt is pending | Show **Payment processing**. Refresh a bounded number of times while the screen is open and offer **Check status**. |\n| Backend is unreachable or the result is unresolved | Show **Payment status unavailable** and offer **Check status** when connectivity returns. Keep payment submission disabled until the backend reconciles the attempt. |\n| Backend confirms failure or cancellation | Show the confirmed outcome. Offer **Try payment again** only if the backend permits a new attempt for the same order. |\n| Current account has no authorized checkout | Show that account\u2019s normal order view. Keep the previous account\u2019s checkout out of view. |\n\n**Focused checks**\n\n- Kill the app while payment is pending. Reopen under the same account without a redirect and verify it recovers the same order and attempt without creating another.\n- Deliver a verified gateway confirmation while the app is offline. Reconnect and check that the order shows **Paid** and fulfillment starts once. Replay the confirmation and deliver an older event to verify neither can duplicate fulfillment or regress the paid state.\n- Switch accounts before reopening and during a status fetch. Verify the previous order stays hidden and a late response cannot update the new account\u2019s screen.\n- Exercise an early redirect before verification, duplicate and malformed returns, and no return at all. Verify that only backend status can move the order to **Paid**.\n- Simulate a status timeout, then a backend-confirmed failure. Verify the timeout leaves the result unresolved and that retry becomes available only when the backend explicitly permits it.\n\nThe gateway and API details were unspecified. This is a test plan, with no gateway sandbox, backend, or device paths exercised.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Uses non-secret order or attempt identity or a backend lookup scoped to the signed-in account, queries authorized backend status on reopening, and rejects recovery for a previous account.",
+              "met": true,
+              "evidence": "On reopening, the app queries the backend using a non-secret order or attempt ID or the current account\u2019s active checkout. The backend authorizes the lookup before display, and the app clears the old checkout and ignores responses from the previous session."
+            },
+            {
+              "criterion": "Distinguishes pending or offline unknown from confirmed failure or cancellation, resumes tracking the same attempt, and only allows another payment after the backend permits it.",
+              "met": true,
+              "evidence": "The response shows separate states for pending, unavailable, and backend-confirmed failure or cancellation. It refreshes the original attempt\u2019s status and offers another payment only with explicit backend permission."
+            },
+            {
+              "criterion": "Tests restart with no return link, offline recovery to a later confirmed result, and account switching.",
+              "met": true,
+              "evidence": "The test plan checks that reopening without a redirect recovers the same attempt, reconnecting after an offline confirmation shows Paid, and switching accounts before reopening or during a status fetch prevents the old checkout from appearing."
+            }
+          ],
+          "summary": "All three criteria are explicitly met."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Uses non-secret order or attempt identity or a backend lookup scoped to the signed-in account, queries authorized backend status on reopening, and rejects recovery for a previous account.",
+                "met": true,
+                "evidence": "On reopening, the app queries the backend using a non-secret order or attempt ID or the current account\u2019s active checkout. The backend authorizes the lookup before display, and the app clears the old checkout and ignores responses from the previous session."
+              },
+              {
+                "criterion": "Distinguishes pending or offline unknown from confirmed failure or cancellation, resumes tracking the same attempt, and only allows another payment after the backend permits it.",
+                "met": true,
+                "evidence": "The response shows separate states for pending, unavailable, and backend-confirmed failure or cancellation. It refreshes the original attempt\u2019s status and offers another payment only with explicit backend permission."
+              },
+              {
+                "criterion": "Tests restart with no return link, offline recovery to a later confirmed result, and account switching.",
+                "met": true,
+                "evidence": "The test plan checks that reopening without a redirect recovers the same attempt, reconnecting after an offline confirmation shows Paid, and switching accounts before reopening or during a status fetch prevents the old checkout from appearing."
+              }
+            ],
+            "summary": "All three criteria are explicitly met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-payments-checkout": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

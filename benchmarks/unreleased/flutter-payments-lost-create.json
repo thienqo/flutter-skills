@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T12:33:47.366526+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "20eabdca5410afffd16e924ada06b16471f1c7bb",
+    "dirty": true,
+    "branch": "feature/flutter-payments-checkout"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-payments-checkout",
+      "case": "payments-checkout-lost-create-response",
+      "with_skill": {
+        "response": "Treat the second tap and the retry after the timeout as the same payment operation for the unchanged order. The backend should recover the existing attempt so both requests lead to a single chargeable gateway attempt.\n\n### Flutter app\n\n- Disable **Pay** while the request is in flight and show progress. If the response times out, show that the payment status is uncertain and let the user check or resume it.\n- On retry or app restart, ask the backend for the current attempt for that order. If checkout can resume, reopen it through the existing gateway integration. If the result is pending, show that state and refresh it from the backend.\n- Show **Paid** only when the backend reports verified payment. A gateway callback or redirect should prompt a status refresh.\n\n### Backend\n\n- Authorize the order for the current account and derive the amount and currency from the stored order version. Atomically get or create an attempt for that version so concurrent requests share it. Persist the merchant attempt ID and gateway idempotency key before calling the gateway. Store the provider reference separately when it becomes available.\n- If the first request created the gateway attempt but the app missed the response, return the stored attempt. If the backend also missed the gateway response or failed to save the reference, recover the attempt through the gateway\u2019s supported lookup or replay creation with the original key and identical parameters within the gateway\u2019s idempotency window. If that window has expired and the outcome is still uncertain, reconcile before allowing a replacement.\n- Apply the backend\u2019s replacement policy after a verified terminal failure or a change to the order. Keep order, payment attempt, and fulfillment state separate. Advance the order to paid from verified gateway status and make fulfillment idempotent.\n\n### Verification\n\nUse deterministic tests for concurrent Pay requests, a dropped app response after successful creation, and a lost gateway response before the backend saves the reference. Retry the unchanged order after an app restart and from another device. Assert that each path recovers the same merchant attempt and yields at most one chargeable gateway attempt.\n\nAlso test an expired idempotency window, a changed order, and a legitimate retry after a verified terminal failure. Verify that pending results, redirects, and timeouts leave the order unpaid, and that duplicate or out-of-order gateway events cannot regress a paid order or trigger fulfillment twice. Confirm the gateway\u2019s actual idempotency scope, expiry, and recovery behavior in its sandbox. Record the gateway sandbox, backend environment, and Flutter device paths exercised.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Treats the lost response as an unknown result, recovers the original operation for the unchanged order, and prevents concurrent duplicate creation beyond the UI.",
+              "met": true,
+              "evidence": "The app shows an uncertain status and looks up the current attempt on retry or restart. The backend atomically gets or creates an attempt for the order version and persists the idempotency key before calling the gateway. If the provider reference is missing, it recovers through lookup or replay with the original key and identical parameters."
+            },
+            {
+              "criterion": "Requires backend authorization and derives amount and currency from trusted backend order data.",
+              "met": true,
+              "evidence": "The backend authorizes the order for the current account and derives the amount and currency from the stored order version."
+            },
+            {
+              "criterion": "Keeps the existing gateway and tests concurrent submission and a lost response after creation, asserting a single attempt.",
+              "met": true,
+              "evidence": "The app resumes through the existing gateway integration. The plan calls for deterministic tests of concurrent Pay requests and a dropped app response after successful creation, asserting that both paths recover the same merchant attempt and produce at most one chargeable gateway attempt."
+            }
+          ],
+          "summary": "All three criteria are met. The plan explicitly covers recovery of the original attempt, backend authorization and pricing, and verification that concurrent submissions and retries share one attempt."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Treats the lost response as an unknown result, recovers the original operation for the unchanged order, and prevents concurrent duplicate creation beyond the UI.",
+                "met": true,
+                "evidence": "The app shows an uncertain status and looks up the current attempt on retry or restart. The backend atomically gets or creates an attempt for the order version and persists the idempotency key before calling the gateway. If the provider reference is missing, it recovers through lookup or replay with the original key and identical parameters."
+              },
+              {
+                "criterion": "Requires backend authorization and derives amount and currency from trusted backend order data.",
+                "met": true,
+                "evidence": "The backend authorizes the order for the current account and derives the amount and currency from the stored order version."
+              },
+              {
+                "criterion": "Keeps the existing gateway and tests concurrent submission and a lost response after creation, asserting a single attempt.",
+                "met": true,
+                "evidence": "The app resumes through the existing gateway integration. The plan calls for deterministic tests of concurrent Pay requests and a dropped app response after successful creation, asserting that both paths recover the same merchant attempt and produce at most one chargeable gateway attempt."
+              }
+            ],
+            "summary": "All three criteria are met. The plan explicitly covers recovery of the original attempt, backend authorization and pricing, and verification that concurrent submissions and retries share one attempt."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-payments-checkout": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

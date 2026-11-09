@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T12:33:47.367851+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "20eabdca5410afffd16e924ada06b16471f1c7bb",
+    "dirty": true,
+    "branch": "feature/flutter-payments-checkout"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-payments-checkout",
+      "case": "payments-checkout-redirect-before-verification",
+      "with_skill": {
+        "response": "Use the existing gateway and deep-link route. Treat the link as a signal to fetch payment status from the authenticated backend endpoint. Only a verified backend result can show the order as paid. Fulfillment stays with the backend.\n\n### Which order to refresh\n\nValidate the return route and match the order and, where the integration exposes it, the payment attempt against the checkout for the signed-in account. Use the order ID from that checkout to call the status endpoint. If the checkout has to be restored after an app restart, recover its identity for the signed-in account before handling the return.\n\nIgnore a malformed return or one that refers to a previous order or attempt. If a return cannot be correlated, leave the current checkout alone. Coalesce duplicate returns while a refresh is in flight, and discard any response that arrives after the account or checkout has changed.\n\n### What the app displays\n\n- On a matching return, show **Checking payment status** while the request is in flight. The URL\u2019s `success` value has no effect on the displayed result.\n- If the backend says verification is pending, show **Payment confirmation pending** and offer **Check status**. If the request fails or times out, show **Couldn\u2019t confirm payment status** with the same action.\n- Show **Paid** only after the backend confirms payment. Show failure or cancellation only when the backend confirms it. Allow a new payment only when the backend permits it after reconciliation.\n\nRefresh the active checkout on resume or reopen as well, so a missing deep link does not strand a pending payment.\n\n### How to test it\n\nUse a fake status endpoint and controlled response timing for deterministic Flutter tests.\n\n- Deliver a success link before verification. Return pending, then verified paid. Assert that **Paid** appears only after the verified response.\n- While order B is open, deliver order A\u2019s link twice. Assert that the link triggers no refresh and leaves B\u2019s screen intact. Repeat with an old attempt for B if attempt identity is available.\n- Deliver B\u2019s valid link twice while its request is in flight. Assert that only one request runs. Switch orders or accounts before it completes and assert that the late response is ignored.\n- Exercise a timeout, a missing return, and a restart while pending. Assert that the app can recover and check the correct order, and that switching accounts prevents recovery of the previous account\u2019s checkout.\n\nThen exercise the existing gateway\u2019s sandbox return on the affected iOS or Android devices, using the test backend with verification delayed. Cover a warm return and a cold launch, and record the gateway sandbox, backend environment, and device paths actually exercised.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Treats the deep link as untrusted, never marks the order paid or triggers fulfillment from it, and shows pending or checking until the authorized backend confirms the result.",
+              "met": true,
+              "evidence": "The link only prompts a fetch from the authenticated status endpoint. The URL\u2019s success value has no effect, the app shows checking or pending during verification, and only verified backend success can show Paid. Fulfillment stays with the backend."
+            },
+            {
+              "criterion": "Checks the expected return route and correlates the return to the authenticated account and relevant order or attempt, preventing a repeated or stale link from overwriting the active checkout.",
+              "met": true,
+              "evidence": "The plan validates the route and matches the return to the signed-in account\u2019s checkout and payment attempt when available. It queries using the checkout\u2019s order ID, ignores stale or uncorrelated returns, coalesces duplicates, and discards responses after an account or checkout change."
+            },
+            {
+              "criterion": "Tests a return before verification, a stale or repeated return, and confirmed backend success without claiming native link delivery was exercised.",
+              "met": true,
+              "evidence": "The Flutter test plan covers a success link followed by pending and verified paid responses, a previous order\u2019s link delivered twice, and duplicate valid returns. It proposes separate native sandbox checks for warm and cold returns without claiming they were run."
+            }
+          ],
+          "summary": "All three mandatory criteria are met."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Treats the deep link as untrusted, never marks the order paid or triggers fulfillment from it, and shows pending or checking until the authorized backend confirms the result.",
+                "met": true,
+                "evidence": "The link only prompts a fetch from the authenticated status endpoint. The URL\u2019s success value has no effect, the app shows checking or pending during verification, and only verified backend success can show Paid. Fulfillment stays with the backend."
+              },
+              {
+                "criterion": "Checks the expected return route and correlates the return to the authenticated account and relevant order or attempt, preventing a repeated or stale link from overwriting the active checkout.",
+                "met": true,
+                "evidence": "The plan validates the route and matches the return to the signed-in account\u2019s checkout and payment attempt when available. It queries using the checkout\u2019s order ID, ignores stale or uncorrelated returns, coalesces duplicates, and discards responses after an account or checkout change."
+              },
+              {
+                "criterion": "Tests a return before verification, a stale or repeated return, and confirmed backend success without claiming native link delivery was exercised.",
+                "met": true,
+                "evidence": "The Flutter test plan covers a success link followed by pending and verified paid responses, a previous order\u2019s link delivered twice, and duplicate valid returns. It proposes separate native sandbox checks for warm and cold returns without claiming they were run."
+              }
+            ],
+            "summary": "All three mandatory criteria are met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-payments-checkout": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

@@ -359,14 +359,21 @@
     "prompt": "Add App Store and Play subscriptions to the existing Flutter app, verify transactions with its backend, restore access after reinstall, and handle pending, grace, expiration, and account switching without changing the billing provider.",
     "required": ["flutter-in-app-purchases"],
     "optional": ["flutter-authentication", "flutter-networking", "flutter-persistence", "flutter-product-analytics", "flutter-testing"],
-    "forbidden": ["flutter-app-workflow", "flutter-build-release"]
+    "forbidden": ["flutter-app-workflow", "flutter-build-release", "flutter-payments-checkout"]
   },
   {
     "name": "physical-goods-checkout-is-not-iap",
-    "prompt": "Build a card checkout form for physical grocery delivery through the existing payment processor API. No digital content or app-store product is sold.",
-    "required": ["flutter-networking", "flutter-ui-patterns"],
-    "optional": ["flutter-security", "flutter-testing"],
+    "prompt": "Connect the existing Flutter grocery order checkout to the payment gateway already used by the backend. Prevent duplicate payment attempts after timeout and show the verified order status. No digital content or app-store product is sold.",
+    "required": ["flutter-payments-checkout"],
+    "optional": ["flutter-networking", "flutter-security", "flutter-state-management", "flutter-testing", "flutter-ui-patterns"],
     "forbidden": ["flutter-app-workflow", "flutter-in-app-purchases"]
+  },
+  {
+    "name": "payments-checkout-return-and-pending-status",
+    "prompt": "Fix a Flutter food delivery checkout that reports payment success after the existing wallet redirects back. Keep the router and gateway. Reconcile the pending attempt against the merchant backend and recover it after app restart.",
+    "required": ["flutter-payments-checkout"],
+    "optional": ["flutter-navigation", "flutter-networking", "flutter-persistence", "flutter-security", "flutter-testing"],
+    "forbidden": ["flutter-app-workflow", "flutter-in-app-purchases", "flutter-notifications"]
   },
   {
     "name": "oauth-pkce-session-lifecycle",

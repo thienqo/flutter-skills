@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T12:33:47.361687+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "20eabdca5410afffd16e924ada06b16471f1c7bb",
+    "dirty": true,
+    "branch": "feature/flutter-payments-checkout"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-payments-checkout",
+      "case": "payments-checkout-duplicate-and-reordered-notifications",
+      "with_skill": {
+        "response": "Flutter should display the backend\u2019s verified order payment state. The backend should commit the qualifying payment transition and a durable fulfillment job in the same transaction, then process that job with an order-scoped idempotency key.\n\n### Flutter and API contract\n\n- Return separate **order payment**, **payment attempt**, and **fulfillment** states from the existing order API. An order can be `paid` while fulfillment is still `queued`. The backend defines which verified outcome qualifies as paid under the existing gateway and business policy, including whether authorization is sufficient or capture is required.\n- Refresh the order after a gateway return, on app resume, and when reopening a pending order after restart. While the backend reports a pending payment, show \u201cConfirming payment\u201d and allow status refresh. A redirect, client callback, or timeout only prompts a refresh.\n- If the user retries after an ambiguous timeout, have the backend return or reconcile the existing unresolved attempt before allowing another charge. Use a stable idempotency key when retrying creation of the same attempt.\n\n### Backend contract\n\n1. **Verify and match the notification.** Use the existing gateway\u2019s documented server-side verification. Match the verified result to the expected merchant, environment, order, attempt, amount, and currency wherever the gateway supplies those fields. Keep verification secrets on the backend.\n2. **Serialize changes for the same order.** In one database transaction, lock the order or use an equivalent conditional write, record the gateway\u2019s documented delivery identity under a uniqueness constraint, and apply the payment transition. When the order first reaches the outcome required for fulfillment, insert a durable fulfillment job with a unique key such as `(order_id, fulfillment_operation)`. Commit before acknowledging the notification. A crash before commit leaves the notification eligible for retry or reconciliation. A crash after commit leaves the job available to a worker.\n3. **Apply transition rules to webhooks and reconciliation alike.** The two concurrent success handlers converge on one paid order and one fulfillment job. A later-arriving `processing` notification cannot move a confirmed payment backward. If verified outcomes conflict and their ordering is unclear, use the gateway\u2019s authenticated status query. Handle refunds through a separate transition and policy.\n4. **Make the fulfillment effect idempotent.** Retry unfinished jobs with the same order-scoped key. For fulfillment performed in the same database, commit the effect and completion together. For an external system, pass the stable key to its idempotency mechanism or reconcile the prior operation before repeating it. This covers a worker crash after the effect succeeds but before the job is marked complete.\n\n### Acceptance checks\n\n- Run two success handlers concurrently, then deliver the older `processing` event. Assert that the order stays paid, exactly one fulfillment job exists, and the fulfillment effect occurs once. Also test distinct event IDs reporting the same success.\n- Race webhook processing against an authenticated status query. Test invalid signatures, mismatched amounts or currency, and the wrong environment. Assert that none of those invalid notifications can change the order or queue fulfillment.\n- Inject crashes before the payment transaction commits, after commit but before job processing, and after the fulfillment effect but before job completion. Verify recovery in each case.\n- Exercise the existing gateway\u2019s sandbox against the backend notification and status-query endpoints. On each supported device platform, verify gateway return, app resume, and cold restart while payment is pending.\n\nThe gateway, backend implementation, and supported device platforms were unspecified, so the plan leaves provider-specific event IDs and status mappings to the existing integration. No sandbox, backend, or device paths were exercised.",
+        "judgment": {
+          "score": 33,
+          "expectations": [
+            {
+              "criterion": "Requires signature verification and matching the expected order, attempt and amount, and prevents an older processing notification from regressing verified success.",
+              "met": false,
+              "evidence": "The plan explicitly prevents processing from regressing confirmed payment. It calls for documented server-side verification and tests invalid signatures, but does not explicitly require signature verification before accepting a notification. It also conditions matching the order, attempt, and amount on the gateway supplying those fields without specifying how to establish a match otherwise."
+            },
+            {
+              "criterion": "Deduplicates deliveries and uses a durable fulfillment intent or equivalent atomic mechanism plus an idempotent fulfillment operation so concurrency or crash recovery cannot fulfill the order twice.",
+              "met": true,
+              "evidence": "The plan records delivery identities under a uniqueness constraint, serializes updates per order, and commits the payment transition and unique fulfillment job together. It explicitly specifies an order-scoped idempotency key and covers retry after the effect succeeds but before the job is marked complete."
+            },
+            {
+              "criterion": "Keeps the app reading authorized backend state and tests duplicate, reordered, and interrupted delivery paths.",
+              "met": false,
+              "evidence": "The app reads payment state from the backend, and the plan specifies tests for concurrent duplicates, older processing events, and crashes around commit and fulfillment. It does not explicitly require the order API to authorize the caller to read the requested order."
+            }
+          ],
+          "summary": "One of three criteria is fully met. The fulfillment design covers deduplication, concurrency, and crash recovery. The verification and app contracts leave required checks implicit or conditional."
+        },
+        "judgments": [
+          {
+            "score": 33,
+            "expectations": [
+              {
+                "criterion": "Requires signature verification and matching the expected order, attempt and amount, and prevents an older processing notification from regressing verified success.",
+                "met": false,
+                "evidence": "The plan explicitly prevents processing from regressing confirmed payment. It calls for documented server-side verification and tests invalid signatures, but does not explicitly require signature verification before accepting a notification. It also conditions matching the order, attempt, and amount on the gateway supplying those fields without specifying how to establish a match otherwise."
+              },
+              {
+                "criterion": "Deduplicates deliveries and uses a durable fulfillment intent or equivalent atomic mechanism plus an idempotent fulfillment operation so concurrency or crash recovery cannot fulfill the order twice.",
+                "met": true,
+                "evidence": "The plan records delivery identities under a uniqueness constraint, serializes updates per order, and commits the payment transition and unique fulfillment job together. It explicitly specifies an order-scoped idempotency key and covers retry after the effect succeeds but before the job is marked complete."
+              },
+              {
+                "criterion": "Keeps the app reading authorized backend state and tests duplicate, reordered, and interrupted delivery paths.",
+                "met": false,
+                "evidence": "The app reads payment state from the backend, and the plan specifies tests for concurrent duplicates, older processing events, and crashes around commit and fulfillment. It does not explicitly require the order API to authorize the caller to read the requested order."
+              }
+            ],
+            "summary": "One of three criteria is fully met. The fulfillment design covers deduplication, concurrency, and crash recovery. The verification and app contracts leave required checks implicit or conditional."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 33.0,
+          "minimum_score": 33,
+          "maximum_score": 33,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": true,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 0,
+    "mandatory_failures": 1,
+    "baseline_average": null,
+    "with_skill_average": 33.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-payments-checkout": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 33.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}
