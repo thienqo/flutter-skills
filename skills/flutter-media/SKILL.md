@@ -1,6 +1,6 @@
 ---
 name: flutter-media
-description: Implement Flutter camera capture, audio/video recording and playback, livestreams, calls, and screen sharing. Use for media resources, tracks, permissions, and interruptions; route text-only realtime transport to flutter-networking and native bridges to flutter-platform-integration.
+description: Implement Flutter camera capture, audio/video recording and playback, music players, livestreams, calls, and screen sharing. Use for media tracks, permissions, and interruptions; route text-only realtime transport to flutter-networking and native bridges to flutter-platform-integration.
 ---
 
 # Flutter Media
@@ -21,6 +21,7 @@ Use the current SDK's supported facilities before adding another player, audio-s
 
 - [Capture and recording](references/capture-and-recording.md): camera, microphone, media picking, transforms, encoded outputs, and recovery.
 - [Playback and streaming](references/playback-and-streaming.md): audio/video controllers, source switching, buffering, HLS/live viewing, and browser constraints.
+- [Music playback](references/music-playback.md) for music queues, system media controls, and restoring listening progress.
 - [Audio interruptions and routing](references/audio-interruptions-and-routing.md): focus, session activation, user pause intent, calls, and output-device changes.
 - [Live broadcasting](references/live-broadcasting.md): preview, going live, host/viewer authority, delivery stages, and ending a broadcast.
 - [Realtime calls and screen sharing](references/realtime-calls-and-screen-sharing.md): participants/tracks, reconnect, device selection, capture consent, and screen-share setup.

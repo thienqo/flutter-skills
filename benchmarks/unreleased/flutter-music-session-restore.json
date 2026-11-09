@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T11:40:39.732847+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "684254e678549212fee9d09a7c2cc7133cd7153f",
+    "dirty": true,
+    "branch": "feature/flutter-music-playback"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-media",
+      "case": "music-session-restores-progress-without-autoplay",
+      "with_skill": {
+        "response": "Restore the listening session as **paused**. An explicit Play command from the app or a supported system control starts playback through the existing player.\n\n### Plan\n\n1. **Confirm the existing contracts.** Inspection is pending. Check `pubspec.yaml`, the lockfile, Flutter and platform constraints, the playback owner, the auth adapter, session storage, and native media-session configuration. Verify which layer already owns queue advancement, remote commands, audio focus and interruptions, and source cleanup. Confirm whether each target can deliver system Play after a cold launch and whether loading or seeking can happen while paused. Keep those responsibilities with their current owners.\n\n2. **Restore by queue-entry identity.** Persist the queue context, stable queue-entry ID, position, and paused intent together. Use an entry ID that distinguishes duplicate appearances of the same track. Reconcile against the current queue and derive the index from its current order. If the entry moved, restore it at its saved position. If it was removed or is no longer accessible, use the existing fallback policy and start any replacement at its default position. If the app has no fallback policy, leave the remaining queue paused with no selected item.\n\n3. **Resolve a fresh source and validate the seek.** Persist stable identifiers and ask the existing auth adapter for a playable source when the player needs one. If the source expires before playback, resolve it again through that adapter. Once the player reports the current seekable range, clamp the saved position to it and apply the seek. If the range is unavailable, defer the seek until the SDK can validate it. Surface source or authorization failures in the paused session so the user can retry.\n\n4. **Use one command path and guard asynchronous work.** Publish the restored selection and paused state to the app and supported system controls through the existing playback owner. App and system Play should both record explicit play intent, then wait for the current source and restore seek to be ready. A later Pause or Stop cancels that intent. Invalidate pending loads and seeks when the selection changes or the session stops, and release resources returned by stale loads according to the SDK contract. On playback-owner disposal, detach owned subscriptions and release owned resources. Screen navigation should follow the owner\u2019s existing lifetime.\n\n### Acceptance checks\n\nUse a controllable player and auth adapter to verify a reordered queue with duplicate tracks, a removed entry, an expired URL, and a shortened seek range. Confirm that reopening stays silent after readiness, that either Play path starts at the validated position, and that Pause or Stop during loading prevents late playback. Check that stale results leave the current selection intact and that abandoned resources are released.\n\nExecution is pending. On each affected native target, reopen a saved session and verify silence, correct system metadata where supported, and audible playback from the restored position after app Play and supported system Play. Test cold-launch system Play separately on targets whose resolved media-session integration supports it.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "1. Restore by stable entry identity, validate the seek position, define a fallback for missing or inaccessible entries, and reacquire authorized sources without persisting signed URLs.",
+              "met": true,
+              "evidence": "Persists a stable queue-entry ID that distinguishes duplicate tracks and derives the index from the current queue. For a missing or inaccessible entry, it applies the existing fallback at the replacement's default position or leaves the queue paused with no selection. It persists stable identifiers, resolves and renews sources through the existing auth adapter, and clamps the saved position to the current seekable range or defers seeking until validation is possible."
+            },
+            {
+              "criterion": "2. Restore silently in a paused state, separate explicit app or supported system Play from restoration, and avoid promising playback resumption after termination from ordinary restoration alone.",
+              "met": true,
+              "evidence": "Reopening must stay silent after readiness. App and supported system Play both record explicit play intent before starting audio. Cold-launch system Play is tested separately and only on targets whose media-session integration supports it."
+            },
+            {
+              "criterion": "3. Propose deterministic restore checks for moved or missing entries, changed seek limits, and expired authorization.",
+              "met": true,
+              "evidence": "Uses a controllable player and auth adapter to exercise queue reordering with duplicate tracks, entry removal, URL expiry, and a shortened seek range. The plan defines the expected outcomes as identity-based selection, the stated fallback, source renewal through the adapter, and playback from the validated position after explicit Play."
+            }
+          ],
+          "summary": "The plan meets all three criteria and retains the existing player and auth adapter. Platform-specific system Play support remains subject to verification."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "1. Restore by stable entry identity, validate the seek position, define a fallback for missing or inaccessible entries, and reacquire authorized sources without persisting signed URLs.",
+                "met": true,
+                "evidence": "Persists a stable queue-entry ID that distinguishes duplicate tracks and derives the index from the current queue. For a missing or inaccessible entry, it applies the existing fallback at the replacement's default position or leaves the queue paused with no selection. It persists stable identifiers, resolves and renews sources through the existing auth adapter, and clamps the saved position to the current seekable range or defers seeking until validation is possible."
+              },
+              {
+                "criterion": "2. Restore silently in a paused state, separate explicit app or supported system Play from restoration, and avoid promising playback resumption after termination from ordinary restoration alone.",
+                "met": true,
+                "evidence": "Reopening must stay silent after readiness. App and supported system Play both record explicit play intent before starting audio. Cold-launch system Play is tested separately and only on targets whose media-session integration supports it."
+              },
+              {
+                "criterion": "3. Propose deterministic restore checks for moved or missing entries, changed seek limits, and expired authorization.",
+                "met": true,
+                "evidence": "Uses a controllable player and auth adapter to exercise queue reordering with duplicate tracks, entry removal, URL expiry, and a shortened seek range. The plan defines the expected outcomes as identity-based selection, the stated fallback, source renewal through the adapter, and playback from the validated position after explicit Play."
+              }
+            ],
+            "summary": "The plan meets all three criteria and retains the existing player and auth adapter. Platform-specific system Play support remains subject to verification."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-media": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

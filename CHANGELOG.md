@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Extend `flutter-media` with music queues, shared app and system media controls, and paused-session restoration. Add three behavior cases and one routing case.
+
 - Add `flutter-location-maps` for permission-aware location, map camera and marker behavior, nearby search, and address picking. Add three source-linked references, five behavior cases, and six routing cases. The catalog now has 39 skills, 251 behavior cases, and 90 routing cases.
 
 - Add `flutter-media` for camera/media picking, audio/video recording and playback, livestreams, realtime calls, and screen sharing, preserving existing SDK/provider choices. Add six source-linked references, eight mandatory-gated behavior cases, eight positive/negative routing cases including Vietnamese, and a fake-player resource-ownership executable fixture. The catalog now has 38 skills, 246 behavior cases, and 84 routing cases.

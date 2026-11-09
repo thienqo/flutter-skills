@@ -72,7 +72,7 @@ Skills guide the agent through implementation and verification, with clear repor
 | UI | `flutter-ui-design`, `flutter-figma-workflow`, `flutter-visual-effects`, `flutter-ui-patterns`, `flutter-responsive-layout`, `flutter-text-rendering`, `flutter-animation`, `flutter-navigation` |
 | Data & AI | `flutter-networking`, `flutter-openapi-client`, `flutter-persistence`, `flutter-ai-integration` |
 | Location & maps | `flutter-location-maps` (permissions, map interaction, nearby search, address picking) |
-| Media | `flutter-media` (capture, playback, livestreams, calls, screen sharing) |
+| Media | `flutter-media` (capture, music and video playback, livestreams, calls, screen sharing) |
 | Identity & product | `flutter-authentication`, `flutter-in-app-purchases`, `flutter-product-analytics` |
 | Quality | `flutter-code-review`, `flutter-security`, `flutter-testing`, `flutter-runtime-debugging`, `flutter-performance`, `flutter-observability`, `flutter-accessibility`, `flutter-localization` |
 | Platform & packages | `flutter-background-execution`, `flutter-platform-integration`, `flutter-package-development`, `flutter-notifications`, `flutter-webview` |
@@ -81,7 +81,7 @@ Skills guide the agent through implementation and verification, with clear repor
 
 ## Quality
 
-**251 behavior-focused evaluation cases** and **90 cross-catalog routing cases** define expected behavior and skill selection. See [measured results](benchmarks/README.md) and [contribution guidelines](CONTRIBUTING.md).
+**254 behavior-focused evaluation cases** and **91 cross-catalog routing cases** define expected behavior and skill selection. See [measured results](benchmarks/README.md) and [contribution guidelines](CONTRIBUTING.md).
 
 ## License
 
