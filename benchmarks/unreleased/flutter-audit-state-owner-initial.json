@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T14:31:59.782417+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "a2a9d72922a42b76024e2998b5f655fddce713a8",
+    "dirty": false,
+    "branch": "main"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-state-management",
+      "case": "state-disposed-with-lifecycle-owner",
+      "with_skill": {
+        "response": "Close the `StreamController` in the `ChangeNotifier` that creates it. Add the close call to its existing `dispose()` method, or add this override if it has none:\n\n```dart\n@override\nvoid dispose() {\n  _controller.close();\n  super.dispose();\n}\n```\n\nIf the notifier also owns a subscription, cancel it before closing the controller. Check that the notifier\u2019s owner calls `dispose()` when its scope ends. A focused test can dispose the notifier and verify that an active stream listener receives `onDone`.\n\nI haven\u2019t applied or tested the change because the notifier source wasn\u2019t provided.",
+        "judgment": {
+          "score": 33,
+          "expectations": [
+            {
+              "criterion": "Implements dispose to close controllers and cancel subscriptions owned by the notifier",
+              "met": false,
+              "evidence": "The response proposes a dispose override that closes one controller and advises canceling owned subscriptions, but explicitly says it did not apply the change."
+            },
+            {
+              "criterion": "Tests that disposal is called and resources are released when the owner is removed",
+              "met": false,
+              "evidence": "The response suggests manually disposing the notifier and checking onDone. It provides no test that removes the owner and verifies that removal triggers disposal and releases resources."
+            },
+            {
+              "criterion": "Does not introduce global or static lifetime to avoid disposal",
+              "met": true,
+              "evidence": "The proposed override closes the controller within the notifier's existing lifecycle and introduces no global or static state."
+            }
+          ],
+          "summary": "The response preserves notifier ownership, but it leaves the mandatory fix unapplied and provides no owner-removal test."
+        },
+        "judgments": [
+          {
+            "score": 33,
+            "expectations": [
+              {
+                "criterion": "Implements dispose to close controllers and cancel subscriptions owned by the notifier",
+                "met": false,
+                "evidence": "The response proposes a dispose override that closes one controller and advises canceling owned subscriptions, but explicitly says it did not apply the change."
+              },
+              {
+                "criterion": "Tests that disposal is called and resources are released when the owner is removed",
+                "met": false,
+                "evidence": "The response suggests manually disposing the notifier and checking onDone. It provides no test that removes the owner and verifies that removal triggers disposal and releases resources."
+              },
+              {
+                "criterion": "Does not introduce global or static lifetime to avoid disposal",
+                "met": true,
+                "evidence": "The proposed override closes the controller within the notifier's existing lifecycle and introduces no global or static state."
+              }
+            ],
+            "summary": "The response preserves notifier ownership, but it leaves the mandatory fix unapplied and provides no owner-removal test."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 33.0,
+          "minimum_score": 33,
+          "maximum_score": 33,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": true,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 0,
+    "mandatory_failures": 1,
+    "baseline_average": null,
+    "with_skill_average": 33.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-state-management": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 33.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

@@ -61,7 +61,7 @@ class RepositoryTests(unittest.TestCase):
         errors, _, counts = VALIDATOR.validate_repository()
         self.assertEqual(errors, [])
         self.assertEqual(counts["skills"], 40)
-        self.assertEqual(counts["evals"], 261)
+        self.assertEqual(counts["evals"], 263)
         self.assertEqual(counts["routing_evals"], 94)
 
     def test_workflow_routing_tracks_new_removed_and_duplicate_specialists(self):
@@ -429,7 +429,7 @@ class RepositoryTests(unittest.TestCase):
         expectations = {
             "pr-smoke.json": (6, 7),
             "nightly-representative.json": (40, 94),
-            "release-full.json": (261, 94),
+            "release-full.json": (263, 94),
         }
         for filename, counts in expectations.items():
             profile = BEHAVIOR_EVAL.load_json(BEHAVIOR_EVAL.PROFILES_DIR / filename)

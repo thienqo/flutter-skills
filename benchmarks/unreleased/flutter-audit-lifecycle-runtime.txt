@@ -1,0 +1,19 @@
+Flutter 3.44.8, Dart 3.12.2, macOS arm64
+$ bash .github/maintainer/verification/run-lifecycle-checks.sh
+Running Flutter widget tests with flutter_riverpod 2.6.1
++ flutter_riverpod 2.6.1 (3.5.0 available)
++ riverpod 2.6.1 (3.5.0 available)
+00:00 +0: remove watching screen before late success
+00:00 +1: remove watching screen before late error
+00:00 +2: a rebuilt provider rejects its old completion
+00:00 +3: All tests passed!
+Running Flutter widget tests with flutter_riverpod 3.2.0
++ flutter_riverpod 3.2.0 (3.5.0 available)
++ riverpod 3.2.0 (3.5.0 available)
+00:00 +0: remove watching screen before late success
+00:00 +1: remove watching screen before late error
+00:00 +2: a rebuilt provider rejects its old completion
+00:00 +3: All tests passed!
+Play consume-first recovery passed
+Play grant-first recovery passed
+StoreKit delivery-before-finish recovery passed

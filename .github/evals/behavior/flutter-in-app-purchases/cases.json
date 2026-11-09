@@ -1,23 +1,33 @@
 [
   {
     "name": "pending-purchase-does-not-grant-access",
-    "prompt": "Our Flutter app unlocks premium as soon as the Play purchase callback arrives, including when the transaction is pending. Keep the existing billing package and fix the flow.",
+    "prompt": "Our Flutter app unlocks a non-consumable premium upgrade as soon as the Play purchase callback arrives, including when the transaction is pending. Keep the existing billing package and plan the fix.",
     "resources": ["references/purchase-lifecycle-and-entitlements.md"],
     "expectations": [
       "preserves the existing billing package",
       {"text": "does not grant entitlement for a pending or unverified transaction", "mandatory": true},
-      {"text": "defines verified idempotent delivery followed by the correct acknowledgement or finish step", "mandatory": true},
+      {"text": "defines verified idempotent delivery followed by required Google Play acknowledgement", "mandatory": true},
       "reconciles completion after backgrounding restart or a later store update"
     ]
   },
   {
     "name": "duplicate-updates-do-not-redeliver-consumable",
-    "prompt": "A consumable coin pack is sometimes delivered twice after the app crashes between granting coins and consuming the purchase. Add a delay before consume so callbacks stop racing.",
+    "prompt": "A Flutter app already grants Google Play consumable coin packs before consuming the purchase. It sometimes delivers twice after a crash between those operations. Plan a fix that preserves this sequence. A teammate proposes adding a delay before consume.",
     "resources": ["references/purchase-lifecycle-and-entitlements.md"],
     "expectations": [
       {"text": "rejects timing delays as an exactly-once strategy", "mandatory": true},
       {"text": "uses stable transaction identity and durable idempotent delivery", "mandatory": true},
       {"text": "orders recoverable delivery before consumption and handles duplicate callbacks after restart", "mandatory": true}
+    ]
+  },
+  {
+    "name": "play-consume-first-reconciles-without-double-grant",
+    "prompt": "An existing Flutter billing integration waits for confirmed consumption before granting Google Play coin packs. The backend can verify purchases and query consumption by saved token. A consume request succeeds at Play, its response is lost, and the app dies before any coins are granted. On restart the token may be absent from the client purchase list, and callbacks can replay. Plan recovery without changing the ordering. State where finish belongs on Apple StoreKit, and separate deterministic fake-store tests from pending real sandbox checks.",
+    "resources": ["references/purchase-lifecycle-and-entitlements.md"],
+    "expectations": [
+      {"text": "preserves Play consume-first, durably records the verified token before consuming, and queries authoritative consumption status to reconcile the lost response without relying on the client purchase list", "mandatory": true},
+      {"text": "grants coins once only after confirmed consumption, ties credit and processing state to one durable idempotency identity, and requires delivery before StoreKit finish", "mandatory": true},
+      "plans restart and duplicate replay checks that assert exactly one grant and keeps real sandbox verification separate"
     ]
   },
   {

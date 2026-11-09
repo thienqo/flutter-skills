@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T14:38:03.871383+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "a2a9d72922a42b76024e2998b5f655fddce713a8",
+    "dirty": true,
+    "branch": "fix/riverpod-and-iap-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-state-management",
+      "case": "riverpod-2-invalidates-before-late-completion",
+      "with_skill": {
+        "response": "Keep `flutter_riverpod` 2.6.1 and `autoDispose`. `Ref.mounted` was introduced in Riverpod 3. On 2.6.1, register a lifetime guard with `ref.onDispose` before the fetch starts. When the provider is disposed, invalidate the guard and cancel the request if the client supports cancellation. Check the guard before publishing either data or an error, since cancellation can itself complete the future with an error.\n\nFor a fetch started by a notifier method:\n\n```dart\nFuture<void> fetch() async {\n  var disposed = false;\n  ref.onDispose(() => disposed = true);\n\n  state = const AsyncLoading();\n\n  final result = await AsyncValue.guard(() => repository.fetch());\n  if (disposed) return;\n\n  state = result;\n}\n```\n\n`AsyncValue.guard` captures both success and failure, so one check protects both paths. If the screen can trigger overlapping fetches, also track which request is current and publish only that request\u2019s result. The lifetime guard handles disposal, while the request identity handles out-of-order completion within the same lifetime.\n\nVerify this with a fake repository backed by a `Completer`:\n\n1. Mount the screen, start the fetch, and confirm it shows loading. Pop the screen, pump until the provider\u2019s disposal callback runs, and confirm cancellation if the client supports it.\n2. In separate tests, complete the original future with data and with an error **after disposal**. Pump again and assert that neither completion publishes state or causes an uncaught exception. Let the fake complete even if cancellation was requested so the test exercises the guard.\n3. Keep the screen mounted in control tests and verify that success shows data and failure shows the error UI. If the provider can recompute during a fetch, also verify that a completion from the old lifetime cannot overwrite the new one.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Preserves Riverpod 2.6.1 and automatic disposal, and registers ref.onDispose before the async gap to cancel work or invalidate a lifetime token instead of using ref.mounted.",
+              "met": true,
+              "evidence": "The response explicitly keeps flutter_riverpod 2.6.1 and autoDispose. The code registers ref.onDispose before awaiting the fetch and sets the captured disposed flag when the provider is disposed."
+            },
+            {
+              "criterion": "Guards success and error before writing state, and verifies that neither completion writes state after the watching screen is removed during the pending request.",
+              "met": true,
+              "evidence": "AsyncValue.guard captures either outcome, and the disposal check precedes the shared state assignment. Separate tests pop the screen while the request is pending, wait for disposal, complete the request with data or an error, and assert that neither outcome publishes state."
+            },
+            {
+              "criterion": "Tests a current successful request as a control.",
+              "met": true,
+              "evidence": "The response explicitly proposes keeping the screen mounted and verifying that a successful completion displays the data."
+            }
+          ],
+          "summary": "All three criteria are met."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Preserves Riverpod 2.6.1 and automatic disposal, and registers ref.onDispose before the async gap to cancel work or invalidate a lifetime token instead of using ref.mounted.",
+                "met": true,
+                "evidence": "The response explicitly keeps flutter_riverpod 2.6.1 and autoDispose. The code registers ref.onDispose before awaiting the fetch and sets the captured disposed flag when the provider is disposed."
+              },
+              {
+                "criterion": "Guards success and error before writing state, and verifies that neither completion writes state after the watching screen is removed during the pending request.",
+                "met": true,
+                "evidence": "AsyncValue.guard captures either outcome, and the disposal check precedes the shared state assignment. Separate tests pop the screen while the request is pending, wait for disposal, complete the request with data or an error, and assert that neither outcome publishes state."
+              },
+              {
+                "criterion": "Tests a current successful request as a control.",
+                "met": true,
+                "evidence": "The response explicitly proposes keeping the screen mounted and verifying that a successful completion displays the data."
+              }
+            ],
+            "summary": "All three criteria are met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-state-management": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

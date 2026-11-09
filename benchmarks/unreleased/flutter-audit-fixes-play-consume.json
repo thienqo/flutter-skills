@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T14:38:03.887184+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "a2a9d72922a42b76024e2998b5f655fddce713a8",
+    "dirty": true,
+    "branch": "fix/riverpod-and-iap-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-in-app-purchases",
+      "case": "play-consume-first-reconciles-without-double-grant",
+      "with_skill": {
+        "response": "Keep the Google Play ordering: **verify the purchase \u2192 persist a recovery record \u2192 confirm consumption \u2192 grant coins once**. Drive recovery from the backend record so it works even when Play no longer returns the token to the Flutter client.\n\n1. **Before requesting consumption**, verify the completed purchase and durably save the purchase token, product ID, owning account, and coin amount. Key the record by purchase token and mark it as awaiting consumption confirmation. Keep the token out of logs.\n2. **After a lost response or restart**, reconcile unresolved records by querying Play with the saved token. If Play confirms consumption, proceed to delivery. If Play confirms the purchase is still unconsumed and eligible, retry consumption through the existing flow. If the query fails or the outcome is ambiguous, keep the record pending and retry reconciliation. Absence from the client purchase list is not proof of consumption.\n3. **Grant coins atomically.** In one backend transaction, insert a coin credit uniquely keyed by the purchase token and mark the record delivered. Route reconciliation and replayed callbacks through that same operation. Concurrent attempts produce one credit, and an account switch cannot redirect it because delivery uses the verified owner saved in the record.\n\nTo test the failure path, let Play consume a verified coin pack, drop the response, and kill the app before delivery. Restart with an empty client purchase list, reconcile using the saved token, then replay the callback. The backend should show confirmed consumption, one credit for the original account, and a delivered record. Also test an interruption after the recovery record is saved but before consumption is sent. If the original failure happened before a token was saved anywhere recoverable, this plan requires another trusted source for that token.\n\n**Apple StoreKit** uses the opposite delivery order for this step. Verify the transaction, durably credit the coins once using the StoreKit transaction ID, then call `finish()`. If the app dies after the credit and before `finish()`, the unfinished transaction can replay. Use the existing credit record to finish it without adding coins again.",
+        "judgment": {
+          "score": 67,
+          "expectations": [
+            {
+              "criterion": "1. Preserve Play consume-first ordering, durably record the verified token before consuming, and reconcile using authoritative consumption status without relying on the client purchase list.",
+              "met": true,
+              "evidence": "The response saves the verified purchase token before requesting consumption and queries Play with that token after a lost response or restart. It leaves ambiguous outcomes pending and explicitly rejects client-list absence as proof of consumption."
+            },
+            {
+              "criterion": "2. Grant coins exactly once after confirmed consumption, tie credit and processing state to one durable idempotency identity, and require delivery before StoreKit finish.",
+              "met": true,
+              "evidence": "After Play confirms consumption, one backend transaction inserts a credit uniquely keyed by the purchase token and marks the corresponding record delivered. For StoreKit, the response durably credits coins by transaction ID before calling finish()."
+            },
+            {
+              "criterion": "3. Plan restart and duplicate replay checks that assert exactly one grant, and keep real sandbox verification separate.",
+              "met": false,
+              "evidence": "The restart and callback replay test expects exactly one credit, but the response does not explicitly separate controlled failure-injection checks from real sandbox verification."
+            }
+          ],
+          "summary": "Both mandatory criteria are met. The testing criterion is unmet because the response omits a separate real sandbox verification plan."
+        },
+        "judgments": [
+          {
+            "score": 67,
+            "expectations": [
+              {
+                "criterion": "1. Preserve Play consume-first ordering, durably record the verified token before consuming, and reconcile using authoritative consumption status without relying on the client purchase list.",
+                "met": true,
+                "evidence": "The response saves the verified purchase token before requesting consumption and queries Play with that token after a lost response or restart. It leaves ambiguous outcomes pending and explicitly rejects client-list absence as proof of consumption."
+              },
+              {
+                "criterion": "2. Grant coins exactly once after confirmed consumption, tie credit and processing state to one durable idempotency identity, and require delivery before StoreKit finish.",
+                "met": true,
+                "evidence": "After Play confirms consumption, one backend transaction inserts a credit uniquely keyed by the purchase token and marks the corresponding record delivered. For StoreKit, the response durably credits coins by transaction ID before calling finish()."
+              },
+              {
+                "criterion": "3. Plan restart and duplicate replay checks that assert exactly one grant, and keep real sandbox verification separate.",
+                "met": false,
+                "evidence": "The restart and callback replay test expects exactly one credit, but the response does not explicitly separate controlled failure-injection checks from real sandbox verification."
+              }
+            ],
+            "summary": "Both mandatory criteria are met. The testing criterion is unmet because the response omits a separate real sandbox verification plan."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 67.0,
+          "minimum_score": 67,
+          "maximum_score": 67,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 0,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 67.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-in-app-purchases": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 67.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

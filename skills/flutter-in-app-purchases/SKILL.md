@@ -19,7 +19,7 @@ Keep three concepts separate:
 - Transaction: pending, purchased, restored, cancelled, failed, consumed, acknowledged, or finished as supported by the store.
 - Entitlement: the product capability the application currently grants to an account or device.
 
-Never grant an entitlement from a button tap, client assertion, unverified payload, or pending transaction. Process verified completed transactions idempotently, then perform the store-required acknowledgement, consumption, or finish step exactly as the product type requires.
+Never grant an entitlement from a button tap, client assertion, unverified payload, or pending transaction. Persist verified transaction identity, deliver entitlements idempotently, and follow the store and product-specific ordering for acknowledgement, consumption, or finish.
 
 ## Load references conditionally
 
@@ -39,7 +39,7 @@ Never grant an entitlement from a button tap, client assertion, unverified paylo
 
 ## Verification
 
-Use fakes for deterministic state-machine tests and store sandbox or test tracks for end-to-end evidence. Cover success, cancellation, failure, pending completion after restart, duplicates, delivery-before-acknowledgement recovery, restore, account switching, offline reconciliation, subscription state changes, and unavailable products.
+Use fakes for deterministic state-machine tests and store sandbox or test tracks for end-to-end evidence. Cover success, cancellation, failure, pending completion after restart, duplicates, recovery between delivery and the store operation in the selected flow, restore, account switching, offline reconciliation, subscription state changes, and unavailable products.
 
 For sandbox-readiness work, do not stop at a scenario checklist. Explicitly require inspection of application and bundle identifiers, flavors and environments, Android and Apple signing, entitlements or manifests, existing store products, test accounts, and backend routing before changing configuration. Provide concrete reproducible cases with preconditions, actions and interruption point, expected store and entitlement states, acknowledgement or finish outcome, and observable pass/fail evidence. Include at least one interrupted purchase and one restore or reconciliation case when those flows are in scope.
 
