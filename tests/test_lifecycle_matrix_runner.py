@@ -472,6 +472,11 @@ class LifecycleMatrixRunnerTests(unittest.TestCase):
         self.assertNotIn("physical-serial-123", rendered)
         self.assertIn("[DEVICE_ID]", rendered)
         self.assertNotIn("token=secret", rendered)
+        steps = report["scenarios"][0]["steps"]
+        self.assertEqual(
+            steps[0]["command"][-3:], ["am", "force-stop", "com.example.app.staging"]
+        )
+        self.assertEqual(steps[1]["command"][4:7], ["am", "start", "-W"])
 
     def test_version_two_preflight_failure_skips_scenarios(self):
         matrix = RUNNER.validate_matrix(
@@ -511,6 +516,57 @@ class LifecycleMatrixRunnerTests(unittest.TestCase):
         self.assertEqual(report["status"], "failed")
         self.assertEqual(report["preflight"][-1]["status"], "failed")
         self.assertEqual(report["scenarios"][0]["status"], "skipped")
+
+    def test_android_custom_trigger_requires_an_explicit_process_state(self):
+        scenario = {
+            "name": "push",
+            "lifecycle": "cold",
+            "trigger": {"name": "send", "argv": ["tool/send-push"]},
+            "assert": [{"name": "destination", "argv": ["tool/assert-flow"]}],
+        }
+        data = {
+            "matrix_version": 2,
+            "platform": "android",
+            "device_id": "emulator-5554",
+            "target_kind": "android-emulator",
+            "target_label": "test-emulator",
+            "app_id": "com.example.app",
+            "scenarios": [scenario],
+        }
+        with self.assertRaisesRegex(RUNNER.MatrixError, "Android cold requires a URI"):
+            RUNNER.validate_matrix(data)
+
+        scenario["lifecycle"] = "terminated"
+        with self.assertRaisesRegex(
+            RUNNER.MatrixError, "verify the terminated app state"
+        ):
+            RUNNER.validate_matrix(data)
+
+        scenario["before"] = [
+            {"name": "prepare process state", "argv": ["tool/prepare-terminated"]}
+        ]
+        scenario["precondition"] = [
+            {"name": "verify process state", "argv": ["tool/assert-terminated"]}
+        ]
+        report = RUNNER.run_matrix(RUNNER.validate_matrix(data), execute=False)
+        self.assertEqual(report["scenarios"][0]["lifecycle"], "terminated")
+        self.assertEqual(
+            [step["command"][0] for step in report["scenarios"][0]["steps"]],
+            [
+                "tool/prepare-terminated",
+                "tool/assert-terminated",
+                "tool/send-push",
+                "tool/assert-flow",
+            ],
+        )
+
+        scenario["lifecycle"] = "force-stop"
+        scenario.pop("before")
+        scenario.pop("precondition")
+        report = RUNNER.run_matrix(RUNNER.validate_matrix(data), execute=False)
+        steps = report["scenarios"][0]["steps"]
+        self.assertEqual(steps[0]["command"][-3:], ["am", "force-stop", "com.example.app"])
+        self.assertEqual(steps[1]["command"], ["tool/send-push"])
 
     def test_device_id_can_be_retained_only_by_explicit_opt_in(self):
         matrix = RUNNER.validate_matrix(

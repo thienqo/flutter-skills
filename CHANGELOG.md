@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Separate terminated notification delivery from Android force-stop in the lifecycle runner. Correct OpenAPI 3.1 schema reference resolution, disabled semantics actions, and iOS Reduce Motion guidance. Add four focused behavior cases.
+
 - Analyze the documented integration-test snippet in pinned Flutter CI and add manual VS Code tasks for maintainer checks. Clarify how to verify version-sensitive skill guidance.
 
 - Fix the integration-test `Key` import, transformed geometry, shell restoration, reduced-motion signal, and build_runner flag guidance. Add five targeted evals and shorten README usage guidance.

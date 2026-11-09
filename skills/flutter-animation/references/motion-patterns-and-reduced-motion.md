@@ -20,9 +20,9 @@ When implementing complex motion or addressing accessibility in Flutter, apply t
 See the [Hero contract](https://api.flutter.dev/flutter/widgets/Hero-class.html) for matching tags and nested-navigator participation.
 
 ## Reduced Motion
-- Read the platform's reduced-motion request via `MediaQuery.disableAnimationsOf(context)` or its equivalent for the resolved Flutter SDK. `accessibleNavigation` describes assistive interaction such as a running screen reader. Apply any screen-reader-specific animation policy separately.
+- On Android, read Remove animations through `MediaQuery.disableAnimationsOf(context)`. On iOS, read Reduce Motion separately through `PlatformDispatcher.accessibilityFeatures.reduceMotion` when the resolved Flutter SDK exposes it. If the SDK does not expose the signal, use a compatible existing platform adapter or bridge the native `UIAccessibility.isReduceMotionEnabled` setting. Observe changes if the affected UI stays mounted. Keep `accessibleNavigation` for assistive interaction such as a running screen reader.
 - Replace nonessential motion with immediate state changes or minimal fade transitions.
-- Ensure the user can still complete tasks regardless of the motion setting.
+- Verify reduced motion with screen-reader mode off, and screen-reader mode with reduced motion off. Cover the iOS case where Reduce Motion is on and `disableAnimations` is false. Assert the same essential actions remain reachable and work after the decorative animation is suppressed.
 
 ## AnimatedSwitcher Identity
 - `AnimatedSwitcher` treats the new child as the same child — and skips the transition — when `Widget.canUpdate` holds: same `runtimeType` and same `key`. Swapping between two widgets of the same type with no explicit key (two `Text` widgets, two instances of one custom widget) updates in place and no transition plays. Children of different types already animate without keys.
@@ -39,4 +39,6 @@ See the [Hero contract](https://api.flutter.dev/flutter/widgets/Hero-class.html)
 ## Sources
 
 - [Flutter reduced-motion signal](https://api.flutter.dev/flutter/dart-ui/AccessibilityFeatures/disableAnimations.html)
+- [Flutter iOS Reduce Motion signal](https://api.flutter.dev/flutter/dart-ui/AccessibilityFeatures/reduceMotion.html)
+- [Apple UIAccessibility Reduce Motion](https://developer.apple.com/documentation/uikit/uiaccessibility/isreducemotionenabled)
 - [Flutter accessible navigation signal](https://api.flutter.dev/flutter/dart-ui/AccessibilityFeatures/accessibleNavigation.html)

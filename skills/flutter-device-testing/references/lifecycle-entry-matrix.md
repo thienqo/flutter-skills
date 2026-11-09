@@ -4,7 +4,7 @@ Use a replayable matrix when a deep link or notification tap crosses application
 
 ## Scenario design
 
-Give every row a stable name and state its entry kind, cold or warm lifecycle, account/auth fixture, current UI state, trigger identity, data behavior, expected destination, Back outcome, and allowed side effects. Include duplicate delivery when multiple listeners or initial-message handoff can receive the same intent.
+Give every row a stable name and state its entry kind, lifecycle, account/auth fixture, current UI state, trigger identity, data behavior, expected destination, Back outcome, and allowed side effects. Include duplicate delivery when multiple listeners or initial-message handoff can receive the same intent.
 
 Useful rows include cold signed-in entry, cold signed-out continuation after login, warm entry over a dialog or sheet, duplicate link or notification, slow/error destination API, and account switch between receipt and interaction. A launch command only proves that the OS accepted the trigger; use semantic integration assertions, running-app inspection, or focused screenshots/logs to prove the destination and side effects.
 
@@ -16,7 +16,13 @@ Every scenario hook, including `precondition`, inherits the top-level `timeout_s
 
 Use `matrix_version: 2` for new matrices. Version 2 requires an explicit `precondition` command for every warm scenario so a fixture-only setup cannot be mislabeled as a warm app state. Version 1 remains accepted for existing callers but does not gain the stronger warm-state guarantee.
 
-Each project supplies shell-free `before`, `trigger`, `assert`, and `after` commands for its own auth fixture, provider send, API delay, semantic assertion, and cleanup. Put credentials in the command's existing environment or secret store; never place them in the matrix or command arguments.
+- `cold` retains automatic preparation for Android URI entry (`am force-stop` followed by the explicit deep-link launch) and iOS Simulator entry (`simctl terminate`).
+- `terminated` leaves process preparation to `before` and requires a `precondition` that verifies process absence. For Android FCM delivery, establish registration in setup and also verify the package is outside the force-stopped state in `precondition` immediately before sending. The runner inserts no termination command.
+- `force-stop` is Android-only and explicitly requests `am force-stop` before the trigger. An existing Android `cold` row with a custom trigger must choose `terminated` or `force-stop` before it can run. FCM delivery remains blocked until the app is manually reopened.
+
+Each project supplies shell-free `before`, `precondition`, `trigger`, `assert`, and `after` commands for its own auth fixture, provider send, API delay, semantic assertion, and cleanup. Put credentials in the command's existing environment or secret store; never place them in the matrix or command arguments.
+
+For a notification tap, a send-only `trigger` can be followed by ordered `assert` hooks that verify device receipt or presentation, tap the notification, and verify the destination or side effect. A combined project hook can also perform these steps when it reports separate pass/fail evidence for delivery and navigation. For the Android force-stop row, send and verify the expected lack of FCM delivery during a bounded observation. Test delivery after reopening as a distinct check.
 
 The `tool/...` commands below illustrate project-owned hooks; replace them with commands already provided by the target repository.
 
@@ -100,3 +106,4 @@ Keep reports only when they contain redacted, useful evidence and the repository
 - [Flutter deep linking](https://docs.flutter.dev/ui/navigation/deep-linking)
 - [Flutter: set up universal links for iOS](https://docs.flutter.dev/cookbook/navigation/set-up-universal-links)
 - [Android: create deep links](https://developer.android.com/training/app-links/create-deeplinks)
+- [Firebase: FCM receive preconditions on Android and iOS](https://firebase.google.com/docs/cloud-messaging/flutter/receive-messages)

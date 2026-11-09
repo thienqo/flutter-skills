@@ -1,0 +1,126 @@
+{
+  "created_at": "2026-11-09T15:46:24.490333+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "aeaab3a12d89bafac44ea8dd8fcb2998e924032c",
+    "dirty": true,
+    "branch": "fix/priority-skill-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": "gpt-5.6-terra",
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": "gpt-5.6-terra",
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": "gpt-5.6-terra"
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-openapi-client",
+      "case": "openapi-31-schema-id-changes-reference-origin",
+      "with_skill": {
+        "response": "- Nested schema reference resolves via its own `$id`:\n\n  `https://schemas.example.org/v1/billing/address.json`\n\n  Acquisition: do not forward the `Authorization` header from `api.example.org` to `schemas.example.org`. The unauthenticated schema request returns 401, and no schema-host credentials are approved, so this reference is inaccessible and excluded from the resolved inventory.\n\n- Document-level response reference resolves against the OpenAPI document URL:\n\n  `https://api.example.org/spec/responses.json#/NotFound`\n\n  Acquisition: fetch `https://api.example.org/spec/responses.json` (the fragment is resolved locally) using the approved authorization mechanism for `api.example.org`, subject to the normal HTTPS and redirect checks.\n\nThe nested `$id` is resolved against the enclosing schema identifier: `billing/` becomes `https://schemas.example.org/v1/billing/`; it therefore does not affect the separate document-level response reference.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "resolves the schema reference to https://schemas.example.org/v1/billing/address.json using the nested and enclosing schema IDs",
+              "met": true,
+              "evidence": "Explicitly resolves `billing/` against the enclosing schema ID, then `address.json` to `https://schemas.example.org/v1/billing/address.json`."
+            },
+            {
+              "criterion": "resolves the response reference against the referring document to https://api.example.org/spec/responses.json#/NotFound",
+              "met": true,
+              "evidence": "Explicitly gives `https://api.example.org/spec/responses.json#/NotFound` and states it is resolved against the OpenAPI document URL."
+            },
+            {
+              "criterion": "checks the resolved schema origin before retrieval and does not forward Authorization or other credentials across origins",
+              "met": true,
+              "evidence": "Explicitly says not to forward Authorization from `api.example.org` to `schemas.example.org` and handles the unauthenticated 401."
+            },
+            {
+              "criterion": "records unresolved or unauthorized references without claiming complete inventory",
+              "met": true,
+              "evidence": "Records the schema reference as inaccessible because it returns 401 and no schema-host credentials are approved; it does not claim the inventory is complete."
+            }
+          ],
+          "summary": "The response explicitly resolves both references correctly, makes the cross-origin credential decision, and records the unauthorized schema reference as inaccessible."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "resolves the schema reference to https://schemas.example.org/v1/billing/address.json using the nested and enclosing schema IDs",
+                "met": true,
+                "evidence": "Explicitly resolves `billing/` against the enclosing schema ID, then `address.json` to `https://schemas.example.org/v1/billing/address.json`."
+              },
+              {
+                "criterion": "resolves the response reference against the referring document to https://api.example.org/spec/responses.json#/NotFound",
+                "met": true,
+                "evidence": "Explicitly gives `https://api.example.org/spec/responses.json#/NotFound` and states it is resolved against the OpenAPI document URL."
+              },
+              {
+                "criterion": "checks the resolved schema origin before retrieval and does not forward Authorization or other credentials across origins",
+                "met": true,
+                "evidence": "Explicitly says not to forward Authorization from `api.example.org` to `schemas.example.org` and handles the unauthenticated 401."
+              },
+              {
+                "criterion": "records unresolved or unauthorized references without claiming complete inventory",
+                "met": true,
+                "evidence": "Records the schema reference as inaccessible because it returns 401 and no schema-host credentials are approved; it does not claim the inventory is complete."
+              }
+            ],
+            "summary": "The response explicitly resolves both references correctly, makes the cross-origin credential decision, and records the unauthorized schema reference as inaccessible."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-openapi-client": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

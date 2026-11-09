@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T15:47:01.376562+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "aeaab3a12d89bafac44ea8dd8fcb2998e924032c",
+    "dirty": true,
+    "branch": "fix/priority-skill-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": "gpt-5.6-terra",
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": "gpt-5.6-terra",
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": "gpt-5.6-terra"
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-animation",
+      "case": "ios-reduce-motion-uses-ios-flag",
+      "with_skill": {
+        "response": "Read both platform signals for motion reduction:\n\n```dart\nfinal mediaReducedMotion = MediaQuery.disableAnimationsOf(context);\nfinal iosReducedMotion =\n    PlatformDispatcher.instance.accessibilityFeatures.reduceMotion;\n\nfinal reduceMotion = mediaReducedMotion || iosReducedMotion;\n```\n\nUse `reduceMotion` only to suppress nonessential decorative motion. Do not use `accessibleNavigation` for this: it reflects assistive-navigation needs such as screen-reader use, and some users intentionally keep Reduce Motion off.\n\nWhen reduced motion is active, immediately show the animation\u2019s end state and make the primary action available\u2014do not wait for an animation completion callback:\n\n```dart\n@override\nvoid didChangeDependencies() {\n  super.didChangeDependencies();\n  _applyMotionPreference();\n}\n\nvoid _applyMotionPreference() {\n  final reduceMotion =\n      MediaQuery.disableAnimationsOf(context) ||\n      PlatformDispatcher.instance.accessibilityFeatures.reduceMotion;\n\n  if (reduceMotion) {\n    _controller.stop();\n    _controller.value = 1.0; // decorative end state\n    setState(() => _showPrimaryAction = true);\n  } else if (!_controller.isAnimating && !_showPrimaryAction) {\n    _controller.forward().whenComplete(() {\n      if (mounted) setState(() => _showPrimaryAction = true);\n    });\n  }\n}\n```\n\nIf the screen must react while mounted, observe accessibility changes\u2014for example by implementing `WidgetsBindingObserver` and handling `didChangeAccessibilityFeatures`, then rerun `_applyMotionPreference()`:\n\n```dart\n@override\nvoid didChangeAccessibilityFeatures() {\n  _applyMotionPreference();\n}\n```\n\nRegister/remove the observer in `initState`/`dispose`, and dispose the `AnimationController`.\n\nVerify:\n\n- iOS: Reduce Motion on while `MediaQuery.disableAnimationsOf` is false: decoration stops/snaps to its meaningful final state and the primary action is immediately usable.\n- Android: Remove animations still suppresses the decoration.\n- Toggle iOS Reduce Motion while the screen remains open: animation stops and action appears immediately; toggling it off restores normal behavior for a not-yet-completed sequence.\n- Screen reader on with Reduce Motion off: normal motion behavior remains, and the action is still reachable.\n- Test initial, in-progress, completed, reversed/interrupted states, and confirm no ticker leaks after navigating away.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "reads the iOS AccessibilityFeatures.reduceMotion flag independently of disableAnimations and preserves the Android disableAnimations path",
+              "met": true,
+              "evidence": "Explicitly reads both `MediaQuery.disableAnimationsOf(context)` and `PlatformDispatcher.instance.accessibilityFeatures.reduceMotion`, combining them with OR; Android Remove animations verification is included."
+            },
+            {
+              "criterion": "keeps accessibleNavigation separate from reduced motion and tests iOS with reduceMotion true and disableAnimations false",
+              "met": true,
+              "evidence": "Explicitly says not to use `accessibleNavigation` for motion reduction and verifies iOS Reduce Motion on while `MediaQuery.disableAnimationsOf` is false."
+            },
+            {
+              "criterion": "handles setting changes while mounted and preserves essential interaction when decorative motion is reduced",
+              "met": true,
+              "evidence": "Uses `WidgetsBindingObserver.didChangeAccessibilityFeatures` to reapply preferences while mounted, snaps decorative animation to its end state, and immediately exposes the primary action."
+            }
+          ],
+          "summary": "The response explicitly covers every required decision, implementation behavior, and verification scenario."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "reads the iOS AccessibilityFeatures.reduceMotion flag independently of disableAnimations and preserves the Android disableAnimations path",
+                "met": true,
+                "evidence": "Explicitly reads both `MediaQuery.disableAnimationsOf(context)` and `PlatformDispatcher.instance.accessibilityFeatures.reduceMotion`, combining them with OR; Android Remove animations verification is included."
+              },
+              {
+                "criterion": "keeps accessibleNavigation separate from reduced motion and tests iOS with reduceMotion true and disableAnimations false",
+                "met": true,
+                "evidence": "Explicitly says not to use `accessibleNavigation` for motion reduction and verifies iOS Reduce Motion on while `MediaQuery.disableAnimationsOf` is false."
+              },
+              {
+                "criterion": "handles setting changes while mounted and preserves essential interaction when decorative motion is reduced",
+                "met": true,
+                "evidence": "Uses `WidgetsBindingObserver.didChangeAccessibilityFeatures` to reapply preferences while mounted, snaps decorative animation to its end state, and immediately exposes the primary action."
+              }
+            ],
+            "summary": "The response explicitly covers every required decision, implementation behavior, and verification scenario."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-animation": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

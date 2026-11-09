@@ -1,5 +1,15 @@
 [
   {
+    "name": "disabled-custom-control-has-no-semantic-tap",
+    "prompt": "A custom Flutter checkout button is disabled during submit. It uses Semantics(enabled: false, onTap: submit) and its custom child handles pointer and keyboard input. An accessibility activation can still call submit. Show a small fix that preserves the disabled label and tests the enabled and disabled paths.",
+    "resources": ["references/semantics-and-screen-readers.md"],
+    "expectations": [
+      {"text": "preserves the disabled semantic node and removes the semantic tap callback while disabled", "mandatory": true},
+      {"text": "uses the same enabled condition for semantic, pointer, and keyboard activation", "mandatory": true},
+      "tests the disabled label and state, absence of semantic tap and side effects, and a single activation when enabled"
+    ]
+  },
+  {
     "name": "announcements-use-the-owning-view",
     "prompt": "A Flutter desktop app with multiple windows asserts in SemanticsService.announce when saving. Its pinned SDK exposes sendAnnouncement, View.of, and MediaQuery.supportsAnnounceOf. We also target Android and web. Explain a compatible fix without duplicate screen-reader feedback.",
     "resources": ["references/semantics-and-screen-readers.md"],

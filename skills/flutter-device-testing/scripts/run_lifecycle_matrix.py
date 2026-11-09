@@ -177,12 +177,21 @@ def validate_matrix(data: Any) -> dict[str, Any]:
             raise MatrixError(f"duplicate scenario name: {name}")
         names.add(name)
         lifecycle = scenario.get("lifecycle")
-        if lifecycle not in {"cold", "warm"}:
-            raise MatrixError(f"{name}.lifecycle must be cold or warm")
+        if lifecycle not in {"cold", "warm", "terminated", "force-stop"}:
+            raise MatrixError(
+                f"{name}.lifecycle must be cold, warm, terminated, or force-stop"
+            )
+        if lifecycle == "force-stop" and platform != "android":
+            raise MatrixError(f"{name}.lifecycle force-stop requires Android")
         has_uri = isinstance(scenario.get("uri"), str) and bool(scenario["uri"])
         has_trigger = scenario.get("trigger") is not None
         if has_uri == has_trigger:
             raise MatrixError(f"{name} must define exactly one of uri or trigger")
+        if platform == "android" and lifecycle == "cold" and has_trigger:
+            raise MatrixError(
+                f"{name}: Android cold requires a URI. For a custom trigger, "
+                "use terminated with a precondition, or force-stop explicitly."
+            )
         trigger_count = scenario.get("trigger_count", 1)
         if not isinstance(trigger_count, int) or not 1 <= trigger_count <= 10:
             raise MatrixError(f"{name}.trigger_count must be an integer from 1 to 10")
@@ -204,6 +213,10 @@ def validate_matrix(data: Any) -> dict[str, Any]:
         ):
             raise MatrixError(
                 f"{name}.precondition must verify the warm app and UI state"
+            )
+        if lifecycle == "terminated" and not checked["precondition"]:
+            raise MatrixError(
+                f"{name}.precondition must verify the terminated app state"
             )
         if not checked["assert"]:
             raise MatrixError(f"{name}.assert must contain at least one verification step")
@@ -459,11 +472,13 @@ def run_matrix(matrix: dict[str, Any], execute: bool) -> dict[str, Any]:
                     if failed:
                         break
 
-            if not failed and scenario["lifecycle"] == "cold":
+            if not failed and scenario["lifecycle"] in {"cold", "force-stop"}:
                 result = normalize_lifecycle_result(
                     platform,
                     run_step(
-                        "prepare: terminate app",
+                        "prepare: force-stop app"
+                        if platform == "android"
+                        else "prepare: terminate app",
                         lifecycle_command(platform, device_id, app_id),
                         timeout,
                         execute,
