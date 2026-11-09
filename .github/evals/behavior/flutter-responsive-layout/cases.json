@@ -1,5 +1,14 @@
 [
   {
+    "name": "rotated-widget-needs-four-corner-bounds",
+    "prompt": "A Flutter widget test checks whether a square action rotated 45 degrees overlaps a field. WidgetTester.getRect reports zero width. Explain what to measure instead and how to avoid claiming more than the new check proves.",
+    "resources": ["references/geometry-viewport-and-fixture-testing.md"],
+    "expectations": [
+      {"text": "explains the two-corner getRect limitation and computes the axis-aligned bounds from min and max over all four transformed corners in the same coordinate space", "mandatory": true},
+      "separates a broad bounds check from actual shape overlap and adds a hit-test or rendered check when appropriate"
+    ]
+  },
+  {
     "name": "fixes-root-overflow-cause",
     "prompt": "Fix a RenderFlex overflow on a narrow phone with 200% text scale.",
     "expectations": ["reproduces the actual constraints", "fixes the incompatible sizing rather than hiding overflow", "verifies large text and nearby widths"]

@@ -1,0 +1,106 @@
+{
+  "created_at": "2026-11-09T14:56:08.003226+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "9c1cbd08269c3dbac776425c0b4f96af00cd7d41",
+    "dirty": true,
+    "branch": "fix/verified-flutter-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-responsive-layout",
+      "case": "rotated-widget-needs-four-corner-bounds",
+      "with_skill": {
+        "response": "At 45\u00b0, the square\u2019s local top-left and bottom-right corners can land on the same screen-space x-coordinate. `WidgetTester.getRect` uses those two transformed corners, so it can report zero width even though the rotated square has a visible footprint.\n\nTransform **all four corners** of the action\u2019s local render box into the same coordinate space as the field. Take the minimum and maximum x and y values to build an axis-aligned bounding box. Measure the field the same way if it\u2019s transformed.\n\n- **Disjoint bounding boxes** establish that the two transformed box footprints are disjoint. **Intersecting bounding boxes** establish only possible overlap. A corner of the action\u2019s bounding box can intersect the field while the rotated square itself clears it.\n- If the contract is that the **actual box footprints** must be disjoint, test the transformed quadrilaterals for intersection. If the contract is about **visible paint**, account for clipping and paint outside the box, or verify the rendered result.\n- If the contract is **reachability**, tap the action at the intended point and assert its observable result. A center-point hit test establishes reachability at that point only.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Explains the two-corner getRect limitation and computes axis-aligned bounds from all four transformed corners in the same coordinate space.",
+              "met": true,
+              "evidence": "The response explains why the two corners can share an x-coordinate at 45\u00b0 and explicitly directs the reader to transform all four corners into the field\u2019s coordinate space and take the minimum and maximum x and y values."
+            },
+            {
+              "criterion": "Separates a broad bounds check from actual shape overlap and adds a hit-test or rendered check when appropriate.",
+              "met": true,
+              "evidence": "The response says intersecting bounds establish only possible overlap, calls for quadrilateral intersection to check actual box footprints, and distinguishes rendered paint verification from a tap assertion that checks reachability at one point."
+            }
+          ],
+          "summary": "Both criteria are met. The response gives the replacement measurement and explicitly limits what each check establishes."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Explains the two-corner getRect limitation and computes axis-aligned bounds from all four transformed corners in the same coordinate space.",
+                "met": true,
+                "evidence": "The response explains why the two corners can share an x-coordinate at 45\u00b0 and explicitly directs the reader to transform all four corners into the field\u2019s coordinate space and take the minimum and maximum x and y values."
+              },
+              {
+                "criterion": "Separates a broad bounds check from actual shape overlap and adds a hit-test or rendered check when appropriate.",
+                "met": true,
+                "evidence": "The response says intersecting bounds establish only possible overlap, calls for quadrilateral intersection to check actual box footprints, and distinguishes rendered paint verification from a tap assertion that checks reachability at one point."
+              }
+            ],
+            "summary": "Both criteria are met. The response gives the replacement measurement and explicitly limits what each check establishes."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 2,
+          "unanimous_expectations": 2,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-responsive-layout": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

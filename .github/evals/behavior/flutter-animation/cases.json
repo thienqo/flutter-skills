@@ -1,5 +1,14 @@
 [
   {
+    "name": "reduced-motion-uses-independent-platform-signal",
+    "prompt": "A Flutter app disables decorative motion only when accessibleNavigation is true. A user enabled the OS reduce-motion preference without a screen reader and still gets the animation. Explain the smallest change and test both signals independently.",
+    "resources": ["references/motion-patterns-and-reduced-motion.md"],
+    "expectations": [
+      {"text": "uses disableAnimations or its equivalent for reduced motion and treats accessibleNavigation as an independent assistive interaction signal", "mandatory": true},
+      "tests reduce motion without a screen reader and screen-reader mode without a reduce-motion request while preserving usable transitions"
+    ]
+  },
+  {
     "name": "chooses-implicit-animation",
     "prompt": "Animate a card's color and elevation when it becomes selected.",
     "resources": [

@@ -5,7 +5,7 @@ Use this reference when a class in scope is annotated for `build_runner`-driven 
 ## Regenerate through the project's own command
 
 - Never hand-edit a generated file (`*.g.dart`, `*.freezed.dart`, `*.gr.dart`, or any file whose header marks it as generated). Edit the annotated source class, then regenerate.
-- Run the project's existing generation command (typically `dart run build_runner build --delete-conflicting-outputs` or an equivalent documented script) rather than inventing flags; `--delete-conflicting-outputs` is routine once a generator's output shape changes, not a sign something is broken.
+- Use the project's documented generation command, typically `dart run build_runner build`, and check the resolved version before recommending flags. In `build_runner` 2.15.0, `--delete-conflicting-outputs` is accepted for compatibility and ignored. For older versions, follow the installed version's documented conflict behavior and confirm which files are generated before removing any outputs.
 - Prefer a single `build` for a one-off change. Use `watch` only when the project's own workflow expects a long-running watcher, and do not leave a watcher running silently across unrelated work.
 - A generated file that is missing or stale immediately after editing an annotated class is expected until the next build, not evidence of a broken generator.
 
@@ -26,3 +26,8 @@ Use this reference when a class in scope is annotated for `build_runner`-driven 
 - A `part of`/`part` mismatch, two generators targeting the same output, or a missing `build.yaml` entry usually surfaces as a build_runner failure that names the file and generator; read that message before changing annotations speculatively.
 - A code-generator or build_runner version bump belongs to `flutter-dependency-upgrades` ("Regenerate only through project-owned commands, inspect API and generated diffs..."); this reference covers writing and regenerating against an already-pinned generator version.
 - A successful `build_runner build` proves the generator ran, not that the generated code is behaviorally correct. Still run analysis and the narrowest relevant tests against the regenerated output.
+
+## Sources
+
+- [build_runner 2.15.0 command-line options](https://github.com/dart-lang/build/blob/build_runner-v2.15.0/build_runner/lib/src/build_runner_command_line.dart#L166-L178)
+- [build_runner 2.15.0 handling of removed options](https://github.com/dart-lang/build/blob/build_runner-v2.15.0/build_runner/lib/src/build_runner.dart#L114-L121)

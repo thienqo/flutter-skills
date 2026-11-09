@@ -1,0 +1,106 @@
+{
+  "created_at": "2026-11-09T14:56:07.999669+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "9c1cbd08269c3dbac776425c0b4f96af00cd7d41",
+    "dirty": true,
+    "branch": "fix/verified-flutter-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "dart-language",
+      "case": "build-runner-215-ignores-legacy-delete-flag",
+      "with_skill": {
+        "response": "In `build_runner` 2.15.0, `--delete-conflicting-outputs` is accepted for compatibility and ignored. Keep the pinned version and run the repository\u2019s documented generation command. If it uses the standard command, run this from the Flutter package root. [build_runner 2.15.0 flag handling](https://github.com/dart-lang/build/blob/build_runner-v2.15.0/build_runner/lib/src/build_runner.dart#L114-L121)\n\n```sh\ndart run build_runner build\n```\n\n1. Check `git status --short` before running the build so you can distinguish pre-existing changes from regeneration.\n2. If generation fails, use the error to identify the file and generator involved. Make any needed fixes in the annotated source or generator configuration, then rerun the build. Leave generated files to the generator.\n3. Review `git status --short` and `git diff` afterward. Confirm the generated changes match the model declarations and investigate any unexpected changes.\n4. Format any Dart source you edited, run `flutter analyze`, and run the narrowest relevant tests with `flutter test <test-path>`. Cover serialization or `copyWith` behavior if the regenerated models expose it.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Identifies the legacy flag as ignored in 2.15.0 and uses the project's supported generation command without treating the flag as a remedy.",
+              "met": true,
+              "evidence": "Explicitly says the flag is ignored in 2.15.0, keeps the pinned version, and directs the user to run the repository\u2019s documented command. It gives `dart run build_runner build` without the flag if the repository uses the standard command."
+            },
+            {
+              "criterion": "Inspects generation errors and generated diffs without hand editing or indiscriminately deleting files, then runs relevant analysis or tests.",
+              "met": true,
+              "evidence": "Checks Git status before generation, uses errors to identify the affected file and generator, and directs fixes to annotated source or generator configuration while leaving generated files to the generator. It then checks Git status and diffs against the model declarations and runs `flutter analyze` and targeted tests."
+            }
+          ],
+          "summary": "Both criteria are met. The response keeps the pinned generator and gives explicit steps for diagnosing failures, reviewing generated changes, and validating the result."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Identifies the legacy flag as ignored in 2.15.0 and uses the project's supported generation command without treating the flag as a remedy.",
+                "met": true,
+                "evidence": "Explicitly says the flag is ignored in 2.15.0, keeps the pinned version, and directs the user to run the repository\u2019s documented command. It gives `dart run build_runner build` without the flag if the repository uses the standard command."
+              },
+              {
+                "criterion": "Inspects generation errors and generated diffs without hand editing or indiscriminately deleting files, then runs relevant analysis or tests.",
+                "met": true,
+                "evidence": "Checks Git status before generation, uses errors to identify the affected file and generator, and directs fixes to annotated source or generator configuration while leaving generated files to the generator. It then checks Git status and diffs against the model declarations and runs `flutter analyze` and targeted tests."
+              }
+            ],
+            "summary": "Both criteria are met. The response keeps the pinned generator and gives explicit steps for diagnosing failures, reviewing generated changes, and validating the result."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 2,
+          "unanimous_expectations": 2,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "dart-language": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

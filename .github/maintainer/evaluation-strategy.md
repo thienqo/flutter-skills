@@ -31,7 +31,7 @@ The [nightly representative profile](../evals/profiles/nightly-representative.js
 
 ### Release
 
-The [release profile](../evals/profiles/release-full.json) resolves all behavior and routing cases. The default Codex-only run with skipped baselines needs 620 model invocations before retries (two per behavior case plus one per routing case). Run it only with an explicit budget and retained output.
+The [release profile](../evals/profiles/release-full.json) resolves all behavior and routing cases. The default Codex-only run with skipped baselines needs 630 model invocations before retries (two per behavior case plus one per routing case). Run it only with an explicit budget and retained output.
 
 ## Holdout cases
 

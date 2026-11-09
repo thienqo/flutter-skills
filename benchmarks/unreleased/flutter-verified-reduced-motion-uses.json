@@ -1,0 +1,106 @@
+{
+  "created_at": "2026-11-09T14:56:08.012284+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "9c1cbd08269c3dbac776425c0b4f96af00cd7d41",
+    "dirty": true,
+    "branch": "fix/verified-flutter-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-animation",
+      "case": "reduced-motion-uses-independent-platform-signal",
+      "with_skill": {
+        "response": "Use `MediaQuery.disableAnimationsOf(context)` to gate decorative motion. It reads the platform\u2019s reduce-motion preference, while `accessibleNavigation` describes assistive navigation, such as a screen reader. For older Flutter SDKs, use `MediaQuery.of(context).disableAnimations`.\n\n```dart\nfinal reduceMotion = MediaQuery.disableAnimationsOf(context);\n```\n\nWhen `reduceMotion` is true, render the final state immediately so the underlying UI update still happens. If the app has a separate screen-reader policy, keep it separate from this check.\n\nIn widget tests, inject `MediaQueryData` and set both flags explicitly:\n\n| `disableAnimations` | `accessibleNavigation` | Expected decorative motion |\n| --- | --- | --- |\n| `true` | `false` | Final state appears immediately. This reproduces the reported case. |\n| `false` | `true` | Animation plays under the reduced-motion rule alone. |\n| `false` | `false` | Animation plays as usual. |\n\nTrigger the same state change in each case. After the first pump, assert that the reduced-motion case has reached the final state. In the animated cases, pump partway through the duration and assert an intermediate state, then pump through completion and assert the same final state. Checking only after `pumpAndSettle()` would miss the regression because both paths end in the same state.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Uses disableAnimations or its equivalent for reduced motion and treats accessibleNavigation as an independent assistive interaction signal.",
+              "met": true,
+              "evidence": "Uses MediaQuery.disableAnimationsOf(context) to gate decorative motion and explicitly keeps any screen-reader policy separate."
+            },
+            {
+              "criterion": "Tests reduce motion without a screen reader and screen-reader mode without a reduce-motion request while preserving usable transitions.",
+              "met": true,
+              "evidence": "Sets both flags explicitly in each case. Checks that reduce motion alone produces the final state immediately and that screen-reader mode alone passes through an intermediate state before reaching the same final state."
+            }
+          ],
+          "summary": "The response identifies the minimal flag change and specifies tests that distinguish the two signals while verifying that the UI reaches the intended final state in both cases."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Uses disableAnimations or its equivalent for reduced motion and treats accessibleNavigation as an independent assistive interaction signal.",
+                "met": true,
+                "evidence": "Uses MediaQuery.disableAnimationsOf(context) to gate decorative motion and explicitly keeps any screen-reader policy separate."
+              },
+              {
+                "criterion": "Tests reduce motion without a screen reader and screen-reader mode without a reduce-motion request while preserving usable transitions.",
+                "met": true,
+                "evidence": "Sets both flags explicitly in each case. Checks that reduce motion alone produces the final state immediately and that screen-reader mode alone passes through an intermediate state before reaching the same final state."
+              }
+            ],
+            "summary": "The response identifies the minimal flag change and specifies tests that distinguish the two signals while verifying that the UI reaches the intended final state in both cases."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 2,
+          "unanimous_expectations": 2,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-animation": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}
