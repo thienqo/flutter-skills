@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T15:44:56.033076+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "aeaab3a12d89bafac44ea8dd8fcb2998e924032c",
+    "dirty": true,
+    "branch": "fix/priority-skill-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": "gpt-5.6-terra",
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": "gpt-5.6-terra",
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": "gpt-5.6-terra"
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-animation",
+      "case": "ios-reduce-motion-uses-ios-flag",
+      "with_skill": {
+        "response": "Treat iOS Reduce Motion as an additional signal; `MediaQuery.disableAnimationsOf(context)` alone only covers the Android case here.\n\n```dart\nimport 'dart:ui' show PlatformDispatcher;\n\nbool shouldReduceMotion(BuildContext context) {\n  final features = PlatformDispatcher.instance.accessibilityFeatures;\n  return MediaQuery.disableAnimationsOf(context) || features.reduceMotion;\n}\n```\n\nUse `shouldReduceMotion(context)` wherever the decorative animation starts or selects its duration. For nonessential motion, immediately show its final/static state (or a minimal fade), rather than playing the full animation.\n\nTo react while the screen remains mounted, observe accessibility changes and update state:\n\n```dart\nclass _DecorativeAnimationState extends State<DecorativeAnimation>\n    with SingleTickerProviderStateMixin, WidgetsBindingObserver {\n  late final AnimationController _controller;\n  bool _reduceMotion = false;\n\n  @override\n  void initState() {\n    super.initState();\n    WidgetsBinding.instance.addObserver(this);\n    _controller = AnimationController(\n      vsync: this,\n      duration: const Duration(milliseconds: 500),\n    );\n    _syncMotionPreference();\n  }\n\n  @override\n  void didChangeAccessibilityFeatures() {\n    _syncMotionPreference();\n  }\n\n  void _syncMotionPreference() {\n    final features = PlatformDispatcher.instance.accessibilityFeatures;\n    final reduce = features.disableAnimations || features.reduceMotion;\n\n    if (_reduceMotion == reduce) return;\n    setState(() => _reduceMotion = reduce);\n\n    if (reduce) {\n      _controller.value = 1; // static completed visual\n      _controller.stop();\n    } else {\n      _controller.forward(from: 0);\n    }\n  }\n\n  @override\n  void dispose() {\n    WidgetsBinding.instance.removeObserver(this);\n    _controller.dispose();\n    super.dispose();\n  }\n}\n```\n\nIf Android behavior must specifically follow `MediaQuery.disableAnimationsOf`, also recompute that value in `didChangeDependencies()` and combine it with `reduceMotion`.\n\nVerify:\n\n- iOS: enable Reduce Motion with screen reader off; decorative motion must stop even though `MediaQuery.disableAnimationsOf` is false.\n- Android: enable Remove animations; existing reduced-motion behavior remains intact.\n- Change either setting while the screen is open; the animation stops or resumes without leaving/reopening the route.\n- Check initial, active, completed, and interrupted states, and confirm the controller is disposed with the screen.",
+        "judgment": {
+          "score": 50,
+          "expectations": [
+            {
+              "criterion": "reads the iOS AccessibilityFeatures.reduceMotion flag independently of disableAnimations and preserves the Android disableAnimations path",
+              "met": true,
+              "evidence": "It explicitly combines `MediaQuery.disableAnimationsOf(context)` with `features.reduceMotion`, and says to recompute the MediaQuery value in `didChangeDependencies()` to preserve Android-specific behavior."
+            },
+            {
+              "criterion": "keeps accessibleNavigation separate from reduced motion and tests iOS with reduceMotion true and disableAnimations false",
+              "met": false,
+              "evidence": "It specifies the required iOS test case, but never addresses `accessibleNavigation` or explicitly keeps it separate from reduced-motion handling."
+            },
+            {
+              "criterion": "handles setting changes while mounted and preserves essential interaction when decorative motion is reduced",
+              "met": false,
+              "evidence": "It observes `didChangeAccessibilityFeatures()` and updates the animation while mounted, but only addresses static decorative visuals; it does not explicitly verify that essential interaction remains available."
+            }
+          ],
+          "summary": "The response correctly adds iOS `reduceMotion`, retains an Android MediaQuery path, and handles live accessibility changes. It misses the explicit `accessibleNavigation` separation and the required explicit preservation of essential interaction."
+        },
+        "judgments": [
+          {
+            "score": 50,
+            "expectations": [
+              {
+                "criterion": "reads the iOS AccessibilityFeatures.reduceMotion flag independently of disableAnimations and preserves the Android disableAnimations path",
+                "met": true,
+                "evidence": "It explicitly combines `MediaQuery.disableAnimationsOf(context)` with `features.reduceMotion`, and says to recompute the MediaQuery value in `didChangeDependencies()` to preserve Android-specific behavior."
+              },
+              {
+                "criterion": "keeps accessibleNavigation separate from reduced motion and tests iOS with reduceMotion true and disableAnimations false",
+                "met": false,
+                "evidence": "It specifies the required iOS test case, but never addresses `accessibleNavigation` or explicitly keeps it separate from reduced-motion handling."
+              },
+              {
+                "criterion": "handles setting changes while mounted and preserves essential interaction when decorative motion is reduced",
+                "met": false,
+                "evidence": "It observes `didChangeAccessibilityFeatures()` and updates the animation while mounted, but only addresses static decorative visuals; it does not explicitly verify that essential interaction remains available."
+              }
+            ],
+            "summary": "The response correctly adds iOS `reduceMotion`, retains an Android MediaQuery path, and handles live accessibility changes. It misses the explicit `accessibleNavigation` separation and the required explicit preservation of essential interaction."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 50.0,
+          "minimum_score": 50,
+          "maximum_score": 50,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": true,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 0,
+    "mandatory_failures": 1,
+    "baseline_average": null,
+    "with_skill_average": 50.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-animation": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 50.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

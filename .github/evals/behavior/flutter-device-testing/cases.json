@@ -1,5 +1,15 @@
 [
   {
+    "name": "terminated-android-push-without-force-stop",
+    "prompt": "Review a version-2 lifecycle matrix for an Android FCM notification tap. The app has already registered with FCM. A row uses lifecycle cold with a custom send-and-tap trigger. We need one scenario for normal delivery while the process is absent and another for delivery behavior after force-stop. The project has separate hooks for preparing and verifying runtime state, sending FCM, confirming notification delivery, tapping, and checking the destination. Describe the two scenario rows and the expected result before and after manually reopening the app. Device and app fields are already configured.",
+    "resources": ["references/lifecycle-entry-matrix.md"],
+    "expectations": [
+      {"text": "uses terminated with a bounded precondition proving an absent process and a package outside the force-stopped state before the normal delivery trigger", "mandatory": true},
+      {"text": "uses the separate explicit force-stop mode for the force-stop scenario and explains that FCM on Android resumes delivery after manual reopen", "mandatory": true},
+      "keeps the notification delivery and tap or navigation assertions distinct from the preparation and provider send"
+    ]
+  },
+  {
     "name": "integration-test-imports-key-explicitly",
     "prompt": "An integration test imports flutter_test, integration_test, and package:my_app/main.dart as app. It uses find.byKey(const Key('start_checkout')), but dart analyze cannot resolve Key. The app exposes Future<void> main(). Show the smallest change and explain how to verify it without a connected device.",
     "resources": ["references/integration-test-workflows.md"],

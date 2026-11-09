@@ -10,7 +10,7 @@ Do not bypass authentication, CORS, network controls, or TLS errors. If access n
 
 ## Constrain reference trust boundaries
 
-The exact user-provided entry URL or local file is the initial read-only acquisition target. It does not authorize other origins, local files, network zones, redirects, or credentials discovered inside the document. Before every request and redirect hop, parse and normalize the target, resolve relative references from their containing document, and reapply these checks:
+The exact user-provided entry URL or local file is the initial read-only acquisition target. It does not authorize other origins, local files, network zones, redirects, or credentials discovered inside the document. Before every request and redirect hop, apply the following checks to the normalized, fully resolved target:
 
 - Permit remote acquisition only over HTTP or HTTPS. For local entry documents, resolve local references to canonical paths inside the explicitly approved input or workspace root; reject path traversal, symlink escape, device files, and other URI schemes.
 - Resolve and inspect each destination rather than trusting its hostname text. Block loopback, link-local, multicast, unspecified, private or unique-local networks, cloud metadata addresses, and internal service names unless the user separately and explicitly authorized that exact target. Revalidate after DNS resolution and at every redirect; do not allow a public URL to redirect or rebind into a blocked network.
@@ -35,7 +35,9 @@ Use this ledger as the acquisition boundary. “Complete inventory” means comp
 
 ## Normalize the document set
 
-Identify Swagger 2.0 through `swagger: "2.0"` and OpenAPI through `openapi`. Preserve the original dialect while resolving its semantics; do not mechanically rewrite a contract just to generate a client. Record every entry document and external `$ref`, resolve relative references from the containing document, detect cycles without infinite traversal, and distinguish an inaccessible reference from an invalid pointer.
+Identify Swagger 2.0 through `swagger: "2.0"` and OpenAPI through `openapi`. Preserve the original dialect while resolving its semantics; do not mechanically rewrite a contract just to generate a client. Record every entry document and external `$ref`, detect cycles without infinite traversal, and distinguish an inaccessible reference from an invalid pointer.
+
+For OpenAPI 3.1 Schema Objects, resolve relative schema references against the schema's own `$id` if present, or the closest ancestor schema's `$id`. Resolve a relative `$id` against the inherited base. For example, `$id: https://schemas.example.org/v1/customer.json` makes `$ref: address.json` resolve to `https://schemas.example.org/v1/address.json` even when the OpenAPI document was fetched from another host. Resolve other OpenAPI 3.1 references and schemas without an applicable `$id` against the referring document's base URI. Apply acquisition and credential checks to the resulting URI before fetching. An identifier only changes resolution and does not authorize a fetch.
 
 For Swagger 2.0, account for `host`, `basePath`, `schemes`, `definitions`, `parameters`, `responses`, `securityDefinitions`, body parameters, and file types. For OpenAPI 3.x, account for `servers`, `components`, `requestBody`, media types, callbacks, webhooks where supported, and the version's JSON Schema dialect. OpenAPI 3.0 `nullable` and OpenAPI 3.1 null types are not interchangeable syntax.
 

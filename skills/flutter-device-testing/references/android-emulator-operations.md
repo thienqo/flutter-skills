@@ -34,7 +34,7 @@ Use the narrowest operation that represents the scenario:
 
 - Home/background and resume are different from killing the process.
 - `am kill` represents eligible background-process death; it is not equivalent to user force-stop.
-- `am force-stop` changes later intent, alarm, and background-delivery semantics. Use it only when the scenario is explicitly a force-stop or cold-entry case.
+- `am force-stop` changes later intent, alarm, and background-delivery semantics. Reserve it for explicit force-stop scenarios or a cold deep link that directly launches the app. For FCM delivery with the app process absent, verify the package is outside the force-stopped state. FCM delivery resumes after the app is manually reopened following force-stop.
 - Clearing package data or uninstalling destroys app-owned state and requires an explicit clean-state decision.
 
 For deep links, target the selected serial and verify application behavior after Android accepts the intent. Quote the URI for the device shell as well as the host shell. For a dynamic URI, use the [lifecycle runner](lifecycle-entry-matrix.md) to escape it before passing it to ADB.
@@ -104,3 +104,4 @@ Android Emulator is useful for repeatable functional, API-level, lifecycle, perm
 - [Android Emulator snapshots](https://developer.android.com/studio/run/emulator-snapshots)
 - [Android Debug Bridge](https://developer.android.com/tools/adb)
 - [Create deep links](https://developer.android.com/training/app-links/create-deeplinks)
+- [Firebase: FCM receive preconditions](https://firebase.google.com/docs/cloud-messaging/flutter/receive-messages)

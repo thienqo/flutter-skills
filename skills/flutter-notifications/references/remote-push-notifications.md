@@ -21,13 +21,15 @@ Validate a versioned allowlist payload into a typed intent. Only recognized fiel
 
 Silent/data pushes are opportunistic hints, not a guaranteed scheduler or durable queue. Persist or fetch authoritative domain state when correctness matters.
 
+For FCM on Android, launch the app at least once for registration. Use an absent app process with a package outside the force-stopped state to test terminated delivery. After force-stop, FCM requires manually reopening the app before delivery resumes. On iOS, manually reopen after swiping the app away before testing background messages again.
+
 ## Verification matrix
 
 Add a parser test that a valid payload with instruction-like text or unknown fields yields only the expected typed intent. Verify that rejected intents produce no navigation or other side effects.
 
 Exercise initial token, token refresh, logout/account switch, foreground, background, terminated tap, duplicate payload, malformed payload, expired destination, offline receipt, and a provider send from the correct non-production environment. For notification taps that navigate, also cover signed-out continuation, Back behavior, a destination obscured by a dialog or sheet, a slow or failed destination API, account changes between receipt and tap, and duplicate delivery through initial-message and live listeners. Assert that one notification identity produces at most one intended navigation or domain effect.
 
-Make the matrix replayable with stable scenario names, payload identifiers, account fixtures, lifecycle state, expected destination, and cleanup. Use the lifecycle runner from `flutter-device-testing` when project-specific provider, setup, and assertion commands can be expressed as shell-free argv hooks. Record which layer was proven: handler logic, provider acceptance, device receipt, visible presentation, or navigation result.
+Make the matrix replayable with stable scenario names, payload identifiers, account fixtures, lifecycle state, expected destination, and cleanup. When using the lifecycle runner from `flutter-device-testing` for a terminated FCM delivery or tap, use `lifecycle: "terminated"` and a bounded `precondition` that proves the intended state before the trigger. On Android use a separate `force-stop` row when that behavior is in scope. Record which layer was proven: handler logic, provider acceptance, device receipt, visible presentation, or navigation result.
 
 ## Sources
 

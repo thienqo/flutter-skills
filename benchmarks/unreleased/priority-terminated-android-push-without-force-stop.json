@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T15:48:50.513836+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "aeaab3a12d89bafac44ea8dd8fcb2998e924032c",
+    "dirty": true,
+    "branch": "fix/priority-skill-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": "gpt-5.6-terra",
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": "gpt-5.6-terra",
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": "gpt-5.6-terra"
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-device-testing",
+      "case": "terminated-android-push-without-force-stop",
+      "with_skill": {
+        "response": "Use `terminated`, not `cold`, for the normal process-absent FCM case\u2014version 2 does not permit `cold` with a custom trigger.\n\n1. `terminated-fcm-delivery-and-tap`\n\n   - `lifecycle`: `terminated`\n   - `before`: use the project hook to prepare the signed-in/runtime fixture and leave the app process absent without force-stopping it.\n   - `precondition`: verify both that the process is absent and that the package is not in Android\u2019s force-stopped state immediately before sending.\n   - `trigger`: project send-FCM hook.\n   - `assert`: confirm notification delivery, tap it, then verify the expected destination and any intended single navigation side effect.\n   - `after`: idempotent fixture/runtime cleanup.\n\n   Expected result: the notification is delivered while the app process is absent; tapping it launches/routes to the intended destination.\n\n2. `force-stop-fcm-blocked`\n\n   - `lifecycle`: `force-stop` (Android only; the runner performs `am force-stop` before the trigger).\n   - `before`: prepare the account and notification fixture.\n   - `trigger`: project send-FCM hook.\n   - `assert`: bounded check that no FCM notification is delivered or presented; there is consequently nothing to tap and no destination navigation.\n   - `after`: idempotent cleanup.\n\n   Expected result: after force-stop, FCM delivery remains blocked. Manually reopen the app to clear the force-stopped condition; only then should a subsequent, distinct normal-delivery check confirm notification delivery, tap, and destination routing again. Do not treat reopening as proof unless that follow-up send/delivery/navigation check is explicitly exercised.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "uses terminated with a bounded precondition proving an absent process and a package outside the force-stopped state before the normal delivery trigger",
+              "met": true,
+              "evidence": "Normal row uses `lifecycle: terminated` and explicitly verifies process absence plus package not force-stopped immediately before sending."
+            },
+            {
+              "criterion": "uses the separate explicit force-stop mode for the force-stop scenario and explains that FCM on Android resumes delivery after manual reopen",
+              "met": true,
+              "evidence": "Force-stop row uses `lifecycle: force-stop`; it states manual reopen clears the force-stopped condition and requires a subsequent normal-delivery send/check."
+            },
+            {
+              "criterion": "keeps the notification delivery and tap or navigation assertions distinct from the preparation and provider send",
+              "met": true,
+              "evidence": "Preparation is in `before`, FCM send is the `trigger`, and delivery confirmation, tap, and destination verification are separate assertions."
+            }
+          ],
+          "summary": "The response explicitly satisfies all required lifecycle, force-stop recovery, and hook/assertion separation requirements."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "uses terminated with a bounded precondition proving an absent process and a package outside the force-stopped state before the normal delivery trigger",
+                "met": true,
+                "evidence": "Normal row uses `lifecycle: terminated` and explicitly verifies process absence plus package not force-stopped immediately before sending."
+              },
+              {
+                "criterion": "uses the separate explicit force-stop mode for the force-stop scenario and explains that FCM on Android resumes delivery after manual reopen",
+                "met": true,
+                "evidence": "Force-stop row uses `lifecycle: force-stop`; it states manual reopen clears the force-stopped condition and requires a subsequent normal-delivery send/check."
+              },
+              {
+                "criterion": "keeps the notification delivery and tap or navigation assertions distinct from the preparation and provider send",
+                "met": true,
+                "evidence": "Preparation is in `before`, FCM send is the `trigger`, and delivery confirmation, tap, and destination verification are separate assertions."
+              }
+            ],
+            "summary": "The response explicitly satisfies all required lifecycle, force-stop recovery, and hook/assertion separation requirements."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-device-testing": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

@@ -7,17 +7,21 @@ Screen readers (TalkBack on Android, VoiceOver on iOS/macOS) translate Flutter's
 Flutter automatically builds a semantics tree from built-in widgets (e.g., `Text`, `ElevatedButton`, `Checkbox`). Only add manual `Semantics` widgets when custom interactive or composite components are used.
 
 ### 1. `Semantics`
-Use to annotate custom interactive elements with label, hint, value, button flag, or custom actions:
+Use to annotate custom interactive elements with label, value, role, or custom actions. Share the same enabled condition across touch, keyboard, and semantics. `enabled` describes the state while the presence of `onTap` exposes an action. When one wrapper owns the semantics for the entire control, exclude duplicate child semantics. Preserve meaningful child nodes in a composite control.
 ```dart
+final activate = isActionable ? onAddToCart : null;
+
 Semantics(
   button: true,
   enabled: isActionable,
   label: 'Add item to shopping cart',
-  hint: 'Double tap to activate',
-  onTap: onAddToCart,
-  child: CustomCartButton(),
+  onTap: activate,
+  excludeSemantics: true,
+  child: CustomCartButton(onPressed: activate),
 )
 ```
+
+The custom control uses a null `onPressed` to disable pointer and keyboard activation. Test the disabled node's label and state, absence of a tap action, and unchanged application state after attempted activation. Verify that the enabled control exposes and dispatches one action. See [Semantics.enabled](https://api.flutter.dev/flutter/semantics/SemanticsProperties/enabled.html) and [Semantics.onTap](https://api.flutter.dev/flutter/semantics/SemanticsProperties/onTap.html).
 
 ### 2. `MergeSemantics`
 Merge a subtree of related nodes into a single semantic focus node. Essential for list tiles or cards containing an icon, title, and subtitle so the screen reader speaks the entire group together instead of forcing three separate swipes:

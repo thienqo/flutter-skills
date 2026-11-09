@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T15:44:56.032511+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "aeaab3a12d89bafac44ea8dd8fcb2998e924032c",
+    "dirty": true,
+    "branch": "fix/priority-skill-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": "gpt-5.6-terra",
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": "gpt-5.6-terra",
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": "gpt-5.6-terra"
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-accessibility",
+      "case": "disabled-custom-control-has-no-semantic-tap",
+      "with_skill": {
+        "response": "```dart\nclass CheckoutButton extends StatelessWidget {\n  const CheckoutButton({\n    super.key,\n    required this.isSubmitting,\n    required this.submit,\n  });\n\n  final bool isSubmitting;\n  final VoidCallback submit;\n\n  @override\n  Widget build(BuildContext context) {\n    final onActivate = isSubmitting ? null : submit;\n\n    return Semantics(\n      button: true,\n      enabled: !isSubmitting,\n      label: isSubmitting ? 'Submitting order' : 'Place order',\n      // A null callback removes the accessibility action while disabled.\n      onTap: onActivate,\n      excludeSemantics: true,\n      child: CustomCheckoutButton(\n        onPressed: onActivate, // Also disables pointer and keyboard activation.\n        isLoading: isSubmitting,\n      ),\n    );\n  }\n}\n```\n\nThe key is using the same nullable callback for semantics, pointer, and keyboard activation. `enabled: false` describes state, but does not itself remove `onTap`.\n\n```dart\ntestWidgets('checkout button exposes and activates enabled action', (tester) async {\n  var submissions = 0;\n\n  await tester.pumpWidget(\n    MaterialApp(\n      home: CheckoutButton(\n        isSubmitting: false,\n        submit: () => submissions++,\n      ),\n    ),\n  );\n\n  expect(\n    tester.getSemantics(find.byType(CheckoutButton)),\n    matchesSemantics(\n      isButton: true,\n      isEnabled: true,\n      label: 'Place order',\n      hasTapAction: true,\n    ),\n  );\n\n  await tester.tap(find.byType(CustomCheckoutButton));\n  expect(submissions, 1);\n});\n\ntestWidgets('checkout button is labelled but cannot activate while submitting',\n    (tester) async {\n  var submissions = 0;\n\n  await tester.pumpWidget(\n    MaterialApp(\n      home: CheckoutButton(\n        isSubmitting: true,\n        submit: () => submissions++,\n      ),\n    ),\n  );\n\n  expect(\n    tester.getSemantics(find.byType(CheckoutButton)),\n    matchesSemantics(\n      isButton: true,\n      isEnabled: false,\n      label: 'Submitting order',\n      hasTapAction: false,\n    ),\n  );\n\n  await tester.tap(find.byType(CustomCheckoutButton));\n  expect(submissions, 0);\n});\n```\n\nEnsure `CustomCheckoutButton` treats `onPressed: null` as disabled for both its gesture handler and keyboard shortcuts.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "preserves the disabled semantic node and removes the semantic tap callback while disabled",
+              "met": true,
+              "evidence": "The Semantics widget remains present with enabled: !isSubmitting and onTap: onActivate, where onActivate is null while submitting. The disabled test explicitly checks isEnabled: false, the submitting label, and hasTapAction: false."
+            },
+            {
+              "criterion": "uses the same enabled condition for semantic, pointer, and keyboard activation",
+              "met": true,
+              "evidence": "A single nullable onActivate callback is derived from isSubmitting and passed to Semantics.onTap and CustomCheckoutButton.onPressed; the response explicitly states onPressed null disables pointer and keyboard activation."
+            },
+            {
+              "criterion": "tests the disabled label and state, absence of semantic tap and side effects, and a single activation when enabled",
+              "met": true,
+              "evidence": "The disabled test verifies label, disabled state, no tap action, and zero submissions. The enabled test verifies enabled semantics with a tap action and confirms one submission after activation."
+            }
+          ],
+          "summary": "The response explicitly applies one disabled condition across semantics and custom input handling, retains the disabled semantic label/state, removes the semantic action, and covers both paths with tests."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "preserves the disabled semantic node and removes the semantic tap callback while disabled",
+                "met": true,
+                "evidence": "The Semantics widget remains present with enabled: !isSubmitting and onTap: onActivate, where onActivate is null while submitting. The disabled test explicitly checks isEnabled: false, the submitting label, and hasTapAction: false."
+              },
+              {
+                "criterion": "uses the same enabled condition for semantic, pointer, and keyboard activation",
+                "met": true,
+                "evidence": "A single nullable onActivate callback is derived from isSubmitting and passed to Semantics.onTap and CustomCheckoutButton.onPressed; the response explicitly states onPressed null disables pointer and keyboard activation."
+              },
+              {
+                "criterion": "tests the disabled label and state, absence of semantic tap and side effects, and a single activation when enabled",
+                "met": true,
+                "evidence": "The disabled test verifies label, disabled state, no tap action, and zero submissions. The enabled test verifies enabled semantics with a tap action and confirms one submission after activation."
+              }
+            ],
+            "summary": "The response explicitly applies one disabled condition across semantics and custom input handling, retains the disabled semantic label/state, removes the semantic action, and covers both paths with tests."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-accessibility": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

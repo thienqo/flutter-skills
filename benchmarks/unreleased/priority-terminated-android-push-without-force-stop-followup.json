@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T15:47:01.376590+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "aeaab3a12d89bafac44ea8dd8fcb2998e924032c",
+    "dirty": true,
+    "branch": "fix/priority-skill-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": "gpt-5.6-terra",
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": "gpt-5.6-terra",
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": "gpt-5.6-terra"
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-device-testing",
+      "case": "terminated-android-push-without-force-stop",
+      "with_skill": {
+        "response": "Use `terminated` for normal FCM delivery with the process absent. A `cold` row cannot use a custom trigger; `cold` is reserved for the runner\u2019s URI-entry preparation.\n\n```json\n{\n  \"matrix_version\": 2,\n  \"platform\": \"android\",\n  \"target_kind\": \"android-emulator\",\n  \"target_label\": \"test-android\",\n  \"include_device_id\": false,\n  \"app_id\": \"com.example.app\",\n  \"timeout_seconds\": 60,\n  \"context\": {\n    \"build_mode\": \"debug\",\n    \"entrypoint\": \"lib/main.dart\",\n    \"data_source\": \"project notification fixture\",\n    \"provider\": \"FCM test provider\"\n  },\n  \"scenarios\": [\n    {\n      \"name\": \"terminated-fcm-notification-tap\",\n      \"lifecycle\": \"terminated\",\n      \"before\": [\n        {\n          \"name\": \"ensure registered and not force-stopped\",\n          \"argv\": [\"tool/fcm-fixture\", \"prepare-registered-not-force-stopped\"]\n        }\n      ],\n      \"precondition\": [\n        {\n          \"name\": \"verify app process absent\",\n          \"argv\": [\"tool/assert-runtime-state\", \"process-absent\"]\n        }\n      ],\n      \"trigger\": {\n        \"name\": \"send, confirm receipt, and tap notification\",\n        \"argv\": [\"tool/fcm-fixture\", \"send-confirm-receipt-and-tap\", \"order-42\"]\n      },\n      \"assert\": [\n        {\n          \"name\": \"opens order once\",\n          \"argv\": [\"tool/assert-notification-route\", \"order-42\", \"1\"]\n        }\n      ],\n      \"after\": [\n        {\n          \"name\": \"clear fixture state\",\n          \"argv\": [\"tool/fcm-fixture\", \"clear\"]\n        }\n      ]\n    },\n    {\n      \"name\": \"force-stop-fcm-does-not-deliver\",\n      \"lifecycle\": \"force-stop\",\n      \"before\": [\n        {\n          \"name\": \"ensure FCM registration\",\n          \"argv\": [\"tool/fcm-fixture\", \"prepare-registered\"]\n        }\n      ],\n      \"trigger\": {\n        \"name\": \"send FCM and observe bounded delivery window\",\n        \"argv\": [\"tool/fcm-fixture\", \"send-and-observe\", \"order-42\", \"30\"]\n      },\n      \"assert\": [\n        {\n          \"name\": \"no notification receipt or presentation while force-stopped\",\n          \"argv\": [\"tool/assert-no-notification\", \"order-42\"]\n        }\n      ],\n      \"after\": [\n        {\n          \"name\": \"clear fixture state\",\n          \"argv\": [\"tool/fcm-fixture\", \"clear\"]\n        }\n      ]\n    }\n  ]\n}\n```\n\nThe `terminated` row\u2019s precondition must prove the process is absent, while its setup must also prove the registered app is no longer in Android\u2019s force-stopped state. The `force-stop` lifecycle asks the runner to apply `am force-stop` before its trigger; there is no notification to tap if delivery is correctly suppressed.\n\nIf you also need to verify delivery after the user reopens the app, add that as a separate scenario\u2014not as part of the force-stop assertion. Run the matrix dry run first and require a successful `planned` report before executing it.",
+        "judgment": {
+          "score": 10,
+          "expectations": [
+            {
+              "criterion": "uses terminated with a bounded precondition proving an absent process and a package outside the force-stopped state before the normal delivery trigger",
+              "met": false,
+              "evidence": "It uses `terminated` and verifies `process-absent`, but the package's non-force-stopped state is only implied by a setup command, not explicitly verified as a bounded precondition."
+            },
+            {
+              "criterion": "uses the separate explicit force-stop mode for the force-stop scenario and explains that FCM on Android resumes delivery after manual reopen",
+              "met": false,
+              "evidence": "It uses a `force-stop` lifecycle row, but does not explicitly state that FCM delivery resumes after a manual reopen; it only suggests adding a separate scenario."
+            },
+            {
+              "criterion": "keeps the notification delivery and tap or navigation assertions distinct from the preparation and provider send",
+              "met": false,
+              "evidence": "The normal trigger combines send, receipt confirmation, and notification tap, leaving only a route assertion; delivery and tap are not modeled as distinct assertions."
+            }
+          ],
+          "summary": "The response identifies terminated and force-stop as separate scenarios, but misses the required explicit bounded state verification, manual-reopen delivery explanation, and separation of delivery from tap/navigation checks."
+        },
+        "judgments": [
+          {
+            "score": 10,
+            "expectations": [
+              {
+                "criterion": "uses terminated with a bounded precondition proving an absent process and a package outside the force-stopped state before the normal delivery trigger",
+                "met": false,
+                "evidence": "It uses `terminated` and verifies `process-absent`, but the package's non-force-stopped state is only implied by a setup command, not explicitly verified as a bounded precondition."
+              },
+              {
+                "criterion": "uses the separate explicit force-stop mode for the force-stop scenario and explains that FCM on Android resumes delivery after manual reopen",
+                "met": false,
+                "evidence": "It uses a `force-stop` lifecycle row, but does not explicitly state that FCM delivery resumes after a manual reopen; it only suggests adding a separate scenario."
+              },
+              {
+                "criterion": "keeps the notification delivery and tap or navigation assertions distinct from the preparation and provider send",
+                "met": false,
+                "evidence": "The normal trigger combines send, receipt confirmation, and notification tap, leaving only a route assertion; delivery and tap are not modeled as distinct assertions."
+              }
+            ],
+            "summary": "The response identifies terminated and force-stop as separate scenarios, but misses the required explicit bounded state verification, manual-reopen delivery explanation, and separation of delivery from tap/navigation checks."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 10.0,
+          "minimum_score": 10,
+          "maximum_score": 10,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": true,
+      "passed": false
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 0,
+    "mandatory_failures": 1,
+    "baseline_average": null,
+    "with_skill_average": 10.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-device-testing": {
+        "cases": 1,
+        "passed": 0,
+        "baseline_average": null,
+        "with_skill_average": 10.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

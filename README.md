@@ -69,7 +69,7 @@ In Codex, type `$flutter-app-workflow` for end-to-end feature delivery or name a
 
 ## Quality
 
-**268 behavior-focused evaluation cases** and **94 cross-catalog routing cases** define expected behavior and skill selection. See [measured results](benchmarks/README.md) and [contribution guidelines](CONTRIBUTING.md).
+**272 behavior-focused evaluation cases** and **94 cross-catalog routing cases** define expected behavior and skill selection. See [measured results](benchmarks/README.md) and [contribution guidelines](CONTRIBUTING.md).
 
 ## License
 
