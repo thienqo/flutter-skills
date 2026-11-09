@@ -600,6 +600,13 @@
     "forbidden": ["flutter-media", "flutter-app-workflow", "flutter-platform-integration"]
   },
   {
+    "name": "music-player-queue-and-system-controls",
+    "prompt": "Fix a Flutter music player's Next and Pause actions. The existing system media integration and in-app player disagree after a rapid queue skip or a lock-screen pause during buffering. Keep the existing player and OS configuration.",
+    "required": ["flutter-media"],
+    "optional": ["dart-concurrency", "flutter-testing", "flutter-state-management"],
+    "forbidden": ["flutter-app-workflow", "flutter-notifications", "flutter-background-execution"]
+  },
+  {
     "name": "location-maps-nearby",
     "prompt": "Fix an existing Flutter store finder so it can use approximate location, show when location services are disabled, and let the user select an area manually. Keep the current map SDK and API.",
     "required": ["flutter-location-maps"],

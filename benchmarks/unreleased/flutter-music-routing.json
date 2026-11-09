@@ -1,0 +1,93 @@
+{
+  "created_at": "2026-11-09T11:41:26.229242+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "684254e678549212fee9d09a7c2cc7133cd7153f",
+    "dirty": true,
+    "branch": "feature/flutter-music-playback"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [],
+  "routing": [
+    {
+      "case": "media-hls-viewer-without-broadcast-ingest",
+      "response": {
+        "skills": [
+          "flutter-media"
+        ],
+        "reason": "Playback controls, buffering, and retry behavior belong to the existing livestream player."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-media"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "media-negative-text-only-websocket",
+      "response": {
+        "skills": [
+          "flutter-networking"
+        ],
+        "reason": "WebSocket reconnection and duplicate JSON message delivery are both transport concerns."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-networking"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "music-player-queue-and-system-controls",
+      "response": {
+        "skills": [
+          "flutter-media",
+          "dart-concurrency"
+        ],
+        "reason": "Synchronize in-app and system playback controls by fixing races between queue skips, buffering, and pause commands."
+      },
+      "passed": true,
+      "selected": [
+        "dart-concurrency",
+        "flutter-media"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    }
+  ],
+  "summary": {
+    "behavior_cases": 0,
+    "behavior_passed": 0,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": null,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {},
+    "routing_cases": 3,
+    "routing_passed": 3
+  }
+}

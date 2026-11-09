@@ -155,5 +155,35 @@
       },
       "covers startup, buffering, errors, retry, pause/exit cleanup and labels the target/live-stream checks unexecuted"
     ]
+  },
+  {
+    "name": "music-queue-preserves-entry-identity-and-latest-skip",
+    "prompt": "Plan a fix for a Flutter music queue A1, B, A2, C. A1 and A2 play the same track but are distinct entries. From A1, the user presses Next twice before B finishes opening. A2 opens successfully, then B returns a late success or error. Later the user removes A1 from the queue. Keep the existing player. Explain the correct selected entry and deterministic checks.",
+    "resources": ["references/music-playback.md"],
+    "expectations": [
+      {"id": "identity-and-intended-skip", "text": "Resolves the second Next against the pending B selection, selects A2, and preserves it after A1 is removed by using distinct stable queue entry identities instead of track IDs or indices.", "mandatory": true},
+      {"id": "stale-player-effects", "text": "Rejects stale successes and errors from B without changing accepted playback or published metadata, and releases any abandoned resources under the existing adapter contract.", "mandatory": true},
+      "Proposes deterministic completion-order and queue-edit checks while keeping the existing player."
+    ]
+  },
+  {
+    "name": "music-system-pause-wins-over-late-readiness",
+    "prompt": "An existing Flutter music player already has a system media-session integration. While the current track buffers and a call interrupts audio, the user presses Pause on the lock screen. The buffer becomes ready and an interruption-ended event says resumption is allowed. The app currently starts playing and shows different states in the app and on the lock screen. Plan a fix and checks without changing packages or claiming device execution.",
+    "resources": ["references/music-playback.md", "references/audio-interruptions-and-routing.md"],
+    "expectations": [
+      {"id": "shared-media-owner", "text": "Routes the lock-screen Pause and app controls through the existing playback owner and derives both surfaces from its accepted state rather than maintaining independent playback state or duplicate handlers.", "mandatory": true},
+      {"id": "pause-survives-readiness-and-focus", "text": "Keeps explicit Pause authoritative across both late buffer readiness and interruption end while distinguishing user intent from actual playback and processing state.", "mandatory": true},
+      "Proposes deterministic event-order tests and separately names real lock-screen or headset verification as pending."
+    ]
+  },
+  {
+    "name": "music-session-restores-progress-without-autoplay",
+    "prompt": "Plan a fix for a Flutter music app that persists the user's last paused listening session. On reopening the app, a queue item may have moved or been removed, a signed playback URL can expire, and the playable duration can shrink. The user should see the restored session without autoplay and be able to start through the app or a supported system Play command. Keep the existing player and auth adapter.",
+    "resources": ["references/music-playback.md"],
+    "expectations": [
+      {"id": "restore-stable-state", "text": "Restores by stable entry identity with validated seek position and an explicit missing or inaccessible entry fallback, and reacquires authorized sources without persisting signed URLs.", "mandatory": true},
+      {"id": "explicit-start", "text": "Restores the paused state without starting audio, treats explicit app or supported system Play as a separate path, and does not promise playback resumption after termination from ordinary restoration alone.", "mandatory": true},
+      "Proposes deterministic restore checks for moved or missing entries, changed seek limits, and expired authorization."
+    ]
   }
 ]

@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T11:42:07.695095+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "684254e678549212fee9d09a7c2cc7133cd7153f",
+    "dirty": true,
+    "branch": "feature/flutter-music-playback"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-media",
+      "case": "music-queue-preserves-entry-identity-and-latest-skip",
+      "with_skill": {
+        "response": "**A2 remains selected throughout the late B result and the removal of A1.** The first Next targets B. The second Next advances from the pending B selection to A2. Once A2 opens, it becomes the accepted playback source. Removing A1 leaves `[B, A2, C]` and moves A2 from index 2 to index 1, using zero-based indices. A2 keeps its source and playback position.\n\n### Fix plan\n\n- Give each queue entry a stable ID distinct from its track ID. Keep the latest intended entry separate from the accepted playback source while a load is pending. Resolve Next and Previous from the intended entry, and derive indices from the current queue order.\n- Tag each load with its entry ID and a request generation. Only the current request may commit its source, metadata, playback state, or error. Ignore stale B errors and release any independently owned resource returned by a stale B success. If opening a source can mutate the shared player before its future completes, use the existing SDK\u2019s cancellation if it guarantees superseded opens cannot take effect. Otherwise, serialize source changes and recheck the latest intent before committing or starting playback. A generation check alone protects app state but cannot undo a source change inside the player.\n- Preserve the existing playback owner. On explicit stop or disposal of that owner, invalidate pending requests and release its owned subscriptions, sources, and controller in the SDK\u2019s required order. If the existing player is app-wide, leaving the queue screen only detaches the screen\u2019s listeners.\n\n### Deterministic checks\n\n1. Start at A1 and hold B\u2019s open pending. Press Next twice and assert the intended entry advances `A1 \u2192 B \u2192 A2`, even though A1 and A2 share a track ID.\n2. With an adapter that supports overlapping opens, complete A2 first, then complete B with success and error in separate runs. Assert A2 remains selected and is the accepted player source, metadata and controls still reflect A2, and B\u2019s error never surfaces as the current error. Verify cleanup of any stale resource B returns. With a serialized adapter, assert B settles before A2 opens and that superseded B is never committed or started.\n3. Set a known playback position on A2, then remove A1. Assert the queue is `[B, A2, C]`, A2 is still selected at index 1, and removal triggers no reopen, seek, or playback restart. Verify Next targets C and Previous from A2 targets B.\n4. Stop while an open is pending, then complete it. Assert playback stays stopped and any resource returned by the abandoned request is released.\n\nInspection and execution are pending. Before implementation, check `pubspec.yaml`, the lockfile, Flutter SDK constraints, the existing queue/player adapter and tests, and the target-native media-session configuration. Confirm who owns queue commands, source mutation, cancellation, events, disposal, and any system controls or audio focus before adding handlers. On each affected native target, repeat the rapid skips and removal with distinguishable B audio and verify that no B audio replaces A2 after A2 takes over. Exercise the same sequence through lock-screen controls if the existing integration exposes them.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Resolve the second Next from pending B and preserve A2 after A1 is removed using stable queue entry identities.",
+              "met": true,
+              "evidence": "The response explicitly advances from A1 to pending B to A2. It assigns stable IDs to queue entries independently of track IDs and derives indices from queue order, so removing A1 leaves A2 selected at index 1."
+            },
+            {
+              "criterion": "Reject stale B successes and errors, preserve accepted playback and published metadata, and release abandoned resources under the existing adapter contract.",
+              "met": true,
+              "evidence": "Only the current request may commit playback, metadata, or errors. The response discards stale B errors, releases independently owned resources returned by stale B successes, and calls for guaranteed cancellation or serialization when an open can mutate the shared player."
+            },
+            {
+              "criterion": "Propose deterministic completion-order and queue-edit checks while keeping the existing player.",
+              "met": true,
+              "evidence": "The response preserves the existing playback owner and specifies controlled completion tests for late B success and error, plus a serialization check when opens cannot safely overlap. It also checks that removing A1 preserves A2 and its position without reopening, seeking, or restarting playback."
+            }
+          ],
+          "summary": "All three criteria are met. The plan identifies A2 as the selected entry and specifies deterministic checks for both stale outcomes and the queue edit."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Resolve the second Next from pending B and preserve A2 after A1 is removed using stable queue entry identities.",
+                "met": true,
+                "evidence": "The response explicitly advances from A1 to pending B to A2. It assigns stable IDs to queue entries independently of track IDs and derives indices from queue order, so removing A1 leaves A2 selected at index 1."
+              },
+              {
+                "criterion": "Reject stale B successes and errors, preserve accepted playback and published metadata, and release abandoned resources under the existing adapter contract.",
+                "met": true,
+                "evidence": "Only the current request may commit playback, metadata, or errors. The response discards stale B errors, releases independently owned resources returned by stale B successes, and calls for guaranteed cancellation or serialization when an open can mutate the shared player."
+              },
+              {
+                "criterion": "Propose deterministic completion-order and queue-edit checks while keeping the existing player.",
+                "met": true,
+                "evidence": "The response preserves the existing playback owner and specifies controlled completion tests for late B success and error, plus a serialization check when opens cannot safely overlap. It also checks that removing A1 preserves A2 and its position without reopening, seeking, or restarting playback."
+              }
+            ],
+            "summary": "All three criteria are met. The plan identifies A2 as the selected entry and specifies deterministic checks for both stale outcomes and the queue edit."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-media": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

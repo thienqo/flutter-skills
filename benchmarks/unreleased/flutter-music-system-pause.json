@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T11:40:39.732167+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "684254e678549212fee9d09a7c2cc7133cd7153f",
+    "dirty": true,
+    "branch": "feature/flutter-music-playback"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-media",
+      "case": "music-system-pause-wins-over-late-readiness",
+      "with_skill": {
+        "response": "Treat lock-screen Pause as a change to the playback owner\u2019s intent, even while the track is buffering and no audio is audible. Route it through the same command path as in-app Pause. When the buffer becomes ready and the call ends, the track should stay paused, and both surfaces should offer Play.\n\n1. **Confirm ownership before changing handlers.** Inspect `pubspec.yaml`, the lockfile, Flutter SDK constraints, the player adapter, the media-session command and state wiring, existing tests, and native configuration for the affected targets. Confirm which layer already owns automatic start on readiness, interruption recovery, audio focus or session activation, and system state publication. Use the resolved SDK\u2019s supported controls to make that owner honor Pause, including canceling any SDK-managed pending start or resume. Keep the existing packages and architecture.\n2. **Separate playback intent from observed state.** Record Pause immediately in the existing owner and invalidate pending start or resume work. Buffer readiness may update readiness. An interruption-ended event may permit recovery. Before any asynchronous recovery commits a start, recheck that the work is still current, the user still intends to play, the platform permits resumption, and any required session activation succeeded. Derive the in-app and lock-screen controls from the same accepted playback state, keeping buffering distinct from audible playback.\n3. **Handle Stop and teardown at the ownership boundary.** On Stop, clear playback intent, invalidate pending recovery, stop the owned playback, and publish the stopped state. When the playback owner is disposed, cancel its subscriptions and release its resources according to the resolved SDK contract. If the player is app-wide, leaving the player screen only detaches that screen.\n\nUse a controllable player and media-session fake to reproduce the sequence through the actual remote Pause handler. Deliver readiness and interruption-ended in both orders. Assert that no start or resume occurs, the selected track stays paused, and both surfaces offer Play. Also check Pause while activation is pending, successful recovery when Play intent remains current, failed activation, and a late callback after Stop or disposal.\n\nRepository inspection and test execution are pending. On each affected native target, reproduce the sequence with the screen locked, a buffering track, and a call. Confirm that lock-screen Pause reaches the owner, audio stays silent after readiness and call end, both surfaces show paused when checked, and a subsequent explicit Play starts playback.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Routes lock-screen Pause and app controls through the existing playback owner and derives both surfaces from its accepted state.",
+              "met": true,
+              "evidence": "The response routes lock-screen Pause through the same command path as in-app Pause and explicitly derives both surfaces' controls from the owner's accepted playback state."
+            },
+            {
+              "criterion": "Keeps explicit Pause authoritative across late buffer readiness and interruption end while distinguishing user intent from actual playback and processing state.",
+              "met": true,
+              "evidence": "The owner records Pause immediately and invalidates pending start or resume work. Readiness can update processing state and interruption end can permit recovery, but any asynchronous start must recheck current Play intent. The response also distinguishes buffering from audible playback."
+            },
+            {
+              "criterion": "Proposes deterministic event-order tests and separately names real lock-screen or headset verification as pending.",
+              "met": true,
+              "evidence": "The fake-based test sends remote Pause through the actual handler, delivers readiness and interruption end in both orders, and checks that playback stays paused and both surfaces offer Play. The response separately leaves execution pending and specifies a real lock-screen check on each affected native target."
+            }
+          ],
+          "summary": "The plan satisfies all three criteria, preserves the existing packages, and makes no claim of device execution."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Routes lock-screen Pause and app controls through the existing playback owner and derives both surfaces from its accepted state.",
+                "met": true,
+                "evidence": "The response routes lock-screen Pause through the same command path as in-app Pause and explicitly derives both surfaces' controls from the owner's accepted playback state."
+              },
+              {
+                "criterion": "Keeps explicit Pause authoritative across late buffer readiness and interruption end while distinguishing user intent from actual playback and processing state.",
+                "met": true,
+                "evidence": "The owner records Pause immediately and invalidates pending start or resume work. Readiness can update processing state and interruption end can permit recovery, but any asynchronous start must recheck current Play intent. The response also distinguishes buffering from audible playback."
+              },
+              {
+                "criterion": "Proposes deterministic event-order tests and separately names real lock-screen or headset verification as pending.",
+                "met": true,
+                "evidence": "The fake-based test sends remote Pause through the actual handler, delivers readiness and interruption end in both orders, and checks that playback stays paused and both surfaces offer Play. The response separately leaves execution pending and specifies a real lock-screen check on each affected native target."
+              }
+            ],
+            "summary": "The plan satisfies all three criteria, preserves the existing packages, and makes no claim of device execution."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-media": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}
