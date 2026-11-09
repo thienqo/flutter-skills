@@ -17,6 +17,7 @@ Create test entrypoints inside the `integration_test/` directory at the project 
 
 Inspect the imported entrypoint before choosing the startup call. The example below assumes the app exposes `Future<void> main()`. Await asynchronous initialization before the first pump. For a synchronous `void main()`, call it without `await`. If the app declares `void main() async`, prefer extracting initialization into an awaitable `Future<void>` bootstrap shared by production and tests so the test can observe completion.
 
+<!-- checked-snippet: integration-test-checkout -->
 ```dart
 import 'package:flutter/foundation.dart' show Key;
 import 'package:flutter_test/flutter_test.dart';

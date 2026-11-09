@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Analyze the documented integration-test snippet in pinned Flutter CI and add manual VS Code tasks for maintainer checks. Clarify how to verify version-sensitive skill guidance.
+
 - Fix the integration-test `Key` import, transformed geometry, shell restoration, reduced-motion signal, and build_runner flag guidance. Add five targeted evals and shorten README usage guidance.
 
 - Correct Riverpod async disposal guidance by version and distinguish Google Play consumable ordering from StoreKit finish. Add two behavior cases and strengthen adjacent lifecycle and billing evaluations.

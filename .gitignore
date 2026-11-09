@@ -8,6 +8,7 @@ coverage/
 node_modules/
 *.iml
 .idea/
-.vscode/
+.vscode/*
+!.vscode/tasks.json
 __pycache__/
 *.pyc

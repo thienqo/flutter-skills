@@ -34,6 +34,8 @@ python3 .github/scripts/run_behavior_evals.py --execute --suite all --max-cases 
 
 ## Local checks
 
+In VS Code, use **Tasks: Run Task** for repository validation, reference coverage, Dart snippet analysis, or a source link audit. The source audit checks links over the network and writes its report to `.eval-results/source-freshness.json`.
+
 ```sh
 python3 .github/scripts/validate_repository.py
 python3 .github/scripts/run_behavior_evals.py
@@ -44,6 +46,8 @@ npm run pack:check
 bash .github/scripts/run_dart_skills_lint.sh
 npx skills add . --list
 ```
+
+With Flutter 3.44.8 and its Dart SDK on `PATH`, run `python3 .github/scripts/check_dart_snippets.py` to analyze the marked integration-test example from Markdown in a temporary fixture. The first run may download locked dependencies. Analyzer diagnostics point back to the Markdown lines. This check covers the selected example's imports and types.
 
 If marketplace metadata changes, also run:
 
