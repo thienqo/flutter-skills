@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T14:22:20.092579+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "2e3e76b23e39b481d3e6651c3f860460580d1adf",
+    "dirty": true,
+    "branch": "feature/flutter-media-qr-scanning"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-media",
+      "case": "qr-scanning-invalidates-late-results-on-route-exit",
+      "with_skill": {
+        "response": "Give the scanner route one session owner for the camera controller, detection subscription, and current scan attempt. Use the app\u2019s existing navigation lifecycle to track whether the scanner is the active route. A covered scanner can remain mounted, so `mounted` alone cannot authorize navigation from a lookup result.\n\n1. **Reserve the attempt before lookup.** Apply the existing barcode selection and validation rules, then reserve the attempt synchronously before starting the lookup. Ignore overlapping detections while it is reserved. Before acting on a completion, check that the route is active and the result still belongs to the current session and attempt. Consume a successful attempt before navigating so it can act only once.\n2. **Invalidate on cover and on exit.** When another route covers the scanner, invalidate the attempt immediately, suspend detection delivery, and stop or pause the camera according to the installed plugin\u2019s contract. Cancel the lookup if the existing API supports cancellation. The attempt guard still applies to late successes and failures. On pop or disposal, permanently invalidate the session, detach route observation, cancel the detection subscription, and release the controller in the SDK\u2019s required order. If abandoned initialization later returns a controller, release it too. Handle cleanup failures explicitly.\n3. **Rearm when the user returns.** Start a fresh attempt only when the scanner is active, the app is in an eligible foreground state, camera permission is available, and the flow is armed for another scan. A lookup from before the cover stays invalid even if it finishes after the user returns. Serialize camera stop and restart if the backend requires exclusive access, and keep a single detection subscription. For a recoverable rejection while active, follow the existing retry policy so a barcode held in view cannot trigger a lookup loop.\n\n**Contract checks are pending.** Inspect `pubspec.yaml`, the lockfile, Flutter and Dart constraints, the scanner controller and route wiring, existing tests, and native permissions and backends for the supported targets. Confirm which camera, detection delivery, and app lifecycle behaviors the resolved plugin already owns before adding handlers. Use its supported start, stop, subscription, and disposal APIs.\n\n**Regression checks are pending.** Use controlled detections and deferred lookups to cover repeated frames during lookup, success and failure while covered or after pop, and an old lookup completing after return while a fresh attempt is pending. Verify that stale completions cause no navigation, error UI, or rearming, and that a fresh valid scan opens the intended destination once. Exercise a rapid cover and return during camera startup or shutdown to check cleanup and subscription ownership. On the affected device, separately verify permission grant and denial, camera release on cover and pop, and successful decoding of a representative product barcode after return. Device execution is pending.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Pause scanning while covered, invalidate stale work on coverage or exit, and release scanner-owned resources on exit under the existing plugin contract.",
+              "met": true,
+              "evidence": "Coverage immediately invalidates the attempt, suspends detection delivery, and pauses or stops the camera. Pop or disposal permanently invalidates the session, detaches route observation, cancels the subscription, and releases the controller in the plugin-required order."
+            },
+            {
+              "criterion": "Resume only for an active scanner route with camera permission and an armed attempt, without competing lifecycle handlers or duplicate subscriptions.",
+              "met": true,
+              "evidence": "A fresh attempt requires an active route, eligible foreground state, camera permission, and an armed flow. One session owner keeps a single detection subscription and checks which lifecycle behaviors the plugin already owns before adding handlers."
+            },
+            {
+              "criterion": "Plan deterministic late-result checks and leave camera permission and decoding checks on real devices pending.",
+              "met": true,
+              "evidence": "Controlled detections and deferred lookups test late success and failure while covered or after pop, plus stale completion after return during a fresh attempt. The plan verifies that stale results cannot navigate, display errors, or rearm scanning. Device permission and barcode decoding checks are explicitly pending."
+            }
+          ],
+          "summary": "The response meets all three criteria and distinguishes planned regression checks from pending device verification."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Pause scanning while covered, invalidate stale work on coverage or exit, and release scanner-owned resources on exit under the existing plugin contract.",
+                "met": true,
+                "evidence": "Coverage immediately invalidates the attempt, suspends detection delivery, and pauses or stops the camera. Pop or disposal permanently invalidates the session, detaches route observation, cancels the subscription, and releases the controller in the plugin-required order."
+              },
+              {
+                "criterion": "Resume only for an active scanner route with camera permission and an armed attempt, without competing lifecycle handlers or duplicate subscriptions.",
+                "met": true,
+                "evidence": "A fresh attempt requires an active route, eligible foreground state, camera permission, and an armed flow. One session owner keeps a single detection subscription and checks which lifecycle behaviors the plugin already owns before adding handlers."
+              },
+              {
+                "criterion": "Plan deterministic late-result checks and leave camera permission and decoding checks on real devices pending.",
+                "met": true,
+                "evidence": "Controlled detections and deferred lookups test late success and failure while covered or after pop, plus stale completion after return during a fresh attempt. The plan verifies that stale results cannot navigate, display errors, or rearm scanning. Device permission and barcode decoding checks are explicitly pending."
+              }
+            ],
+            "summary": "The response meets all three criteria and distinguishes planned regression checks from pending device verification."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-media": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

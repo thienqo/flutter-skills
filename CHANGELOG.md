@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Extend `flutter-media` with QR and barcode scanning guidance for repeat detection, payload validation, manual entry, and camera lifecycle. Add three behavior cases and two routing cases.
+
 - Add `flutter-payments-checkout` for external-gateway order payments, idempotent attempts, redirect recovery, verified results, and fulfillment. Add four behavior cases and extend checkout routing coverage.
 
 - Extend `flutter-media` with music queues, shared app and system media controls, and paused-session restoration. Add three behavior cases and one routing case.

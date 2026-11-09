@@ -185,5 +185,35 @@
       {"id": "explicit-start", "text": "Restores the paused state without starting audio, treats explicit app or supported system Play as a separate path, and does not promise playback resumption after termination from ordinary restoration alone.", "mandatory": true},
       "Proposes deterministic restore checks for moved or missing entries, changed seek limits, and expired authorization."
     ]
+  },
+  {
+    "name": "qr-scanning-claims-one-action-before-lookup",
+    "prompt": "Plan a fix for a Flutter ticket scanner with an existing camera plugin. A valid QR code is detected on several frames while the ticket lookup is slow. Two detail routes open. The user must be able to return and deliberately scan the same code again. Explain the action guard, recovery after a rejected code, and deterministic tests.",
+    "resources": ["references/qr-and-barcode-scanning.md"],
+    "expectations": [
+      {"id": "claim-before-async", "text": "Reserves one scan attempt before any asynchronous lookup or navigation and prevents overlapping callbacks from causing duplicate lookup or route actions.", "mandatory": true},
+      {"id": "rearm-deliberately", "text": "Defines recovery after rejection and a new attempt when the user intentionally scans again, without permanently suppressing a code or depending only on frame throttling.", "mandatory": true},
+      "Proposes deterministic repeated-frame tests with a deferred lookup and keeps the existing scanner."
+    ]
+  },
+  {
+    "name": "qr-scanning-validates-links-and-manual-entry",
+    "prompt": "Plan a Flutter order pickup scanner. It accepts an HTTPS URL from orders.example.com with path /pickup and one order token. A malicious QR code uses orders.example.com.evil.test. Users can type the token when the camera is unavailable. The backend authorizes pickup. Explain which checks are shared and what must happen before opening pickup details.",
+    "resources": ["references/qr-and-barcode-scanning.md"],
+    "expectations": [
+      {"id": "validate-structured-input", "text": "Treats decoded QR data as untrusted and parses the URL, requires HTTPS, exact expected host and path, validates the token, and rejects the lookalike host before navigation or lookup.", "mandatory": true},
+      {"id": "same-domain-checks", "text": "Keeps manual token entry available without a camera, shares domain validation and backend authorization across both inputs, and keeps the raw token out of logs.", "mandatory": true},
+      "Proposes checks for valid and invalid links, malformed or manually entered tokens, and backend denial."
+    ]
+  },
+  {
+    "name": "qr-scanning-invalidates-late-results-on-route-exit",
+    "prompt": "Plan a fix for an existing Flutter product scanner. Another route covers the scanner while it remains mounted and a barcode lookup is pending. The lookup can finish after the scanner is covered or after the scanner is popped. The same flow may resume after the user returns to the scanner. Explain camera and subscription ownership, when scanning resumes, and regression checks without claiming device execution.",
+    "resources": ["references/qr-and-barcode-scanning.md", "references/capture-and-recording.md"],
+    "expectations": [
+      {"id": "inactive-route-invalidates-work", "text": "Pauses scanning when covered even while mounted, invalidates old detections and lookup results on coverage or exit, and stops or releases scanner-owned resources on exit under the existing plugin contract.", "mandatory": true},
+      {"id": "resume-only-in-active-scope", "text": "Resumes only for an active scanner route with camera permission and an armed attempt, without competing lifecycle handlers or duplicate subscriptions.", "mandatory": true},
+      "Plans deterministic late-result checks and leaves camera permissions and decoding on real devices as pending."
+    ]
   }
 ]
