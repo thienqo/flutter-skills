@@ -41,21 +41,9 @@ In VS Code, open **Extensions**, search for `thienqo.flutter-skills`, and select
 
 ## Use
 
-Describe the task naturally after installation. Agents that support implicit skill invocation can select matching specialists from their descriptions; selection depends on the host and enabled skills. Codex supports both [implicit matching and explicit invocation](https://learn.chatgpt.com/docs/build-skills). For example:
+After installation, describe your Flutter task in plain language. Agents with automatic skill selection can choose from the skills you enabled.
 
-```text
-Fix our Flutter livestream's host/viewer roles and reconnect cleanup,
-preserving the existing SDK and backend token API.
-```
-
-Use `flutter-app-workflow` for complete feature delivery, or name a specialist explicitly for a focused task:
-
-```text
-Use $flutter-openapi-client to read this Swagger contract and generate
-the Customer APIs using this project's existing networking stack.
-```
-
-Skills guide the agent through implementation and verification, with clear reporting of what was tested and what remains unverified.
+In Codex, type `$flutter-app-workflow` for end-to-end feature delivery or name a specialist such as `$flutter-openapi-client` for Swagger work. [Codex skill invocation](https://learn.chatgpt.com/docs/build-skills)
 
 ## Catalog
 
@@ -81,7 +69,7 @@ Skills guide the agent through implementation and verification, with clear repor
 
 ## Quality
 
-**263 behavior-focused evaluation cases** and **94 cross-catalog routing cases** define expected behavior and skill selection. See [measured results](benchmarks/README.md) and [contribution guidelines](CONTRIBUTING.md).
+**268 behavior-focused evaluation cases** and **94 cross-catalog routing cases** define expected behavior and skill selection. See [measured results](benchmarks/README.md) and [contribution guidelines](CONTRIBUTING.md).
 
 ## License
 

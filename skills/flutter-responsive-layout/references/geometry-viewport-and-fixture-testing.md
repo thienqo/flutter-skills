@@ -22,7 +22,7 @@ Do not scan every render object and fail on any intersection. Parent and child b
 - **Intentional overlay:** name the allowed overlay and verify that underlying content has the required inset, scrolling, or alternate access path.
 - **Reachable:** each required action must remain hit-testable and must produce its observable result.
 
-After layout, `WidgetTester.getRect` provides an axis-aligned rectangle suitable for explicit disjoint, containment, and gap assertions. For example:
+After layout, `WidgetTester.getRect` is useful for disjoint, containment, and gap assertions when the relevant boxes are untransformed. For example:
 
 ```dart
 final fieldRect = tester.getRect(find.byKey(const ValueKey('last-field')));
@@ -39,7 +39,7 @@ expect(
 );
 ```
 
-`getRect` is an axis-aligned bounding box. Transforms, clipping, irregular shapes, opacity, and platform views can make rectangle intersection an incomplete or overly conservative signal. Pair geometry with the actual tap, focus, scroll, or keyboard behavior and with a rendered comparison when appearance matters. A center-point `hitTestable` check does not prove that the entire target is unobscured.
+`getRect` constructs a rectangle from the transformed top-left and bottom-right corners. With rotation or skew, those two points can understate the extent. For an axis-aligned bound of a rotated or skewed box, take min and max coordinates across all four transformed corners in the same coordinate space. For actual overlap of rotated shapes, a bound is only a broad check. Pair geometry with hit testing or rendered evidence as appropriate, especially with clipping, opacity, and platform views. A center-point `hitTestable` check does not prove that the entire target is unobscured.
 
 ## Exercise a bounded viewport matrix
 

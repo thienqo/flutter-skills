@@ -20,7 +20,7 @@ When implementing complex motion or addressing accessibility in Flutter, apply t
 See the [Hero contract](https://api.flutter.dev/flutter/widgets/Hero-class.html) for matching tags and nested-navigator participation.
 
 ## Reduced Motion
-- Read platform preferences via `MediaQuery.disableAnimationsOf(context)` or `MediaQuery.accessibleNavigationOf(context)`.
+- Read the platform's reduced-motion request via `MediaQuery.disableAnimationsOf(context)` or its equivalent for the resolved Flutter SDK. `accessibleNavigation` describes assistive interaction such as a running screen reader. Apply any screen-reader-specific animation policy separately.
 - Replace nonessential motion with immediate state changes or minimal fade transitions.
 - Ensure the user can still complete tasks regardless of the motion setting.
 
@@ -35,3 +35,8 @@ See the [Hero contract](https://api.flutter.dev/flutter/widgets/Hero-class.html)
 ## Ticker Leak Prevention
 - Always call `dispose()` on `AnimationController` instances within the owning `State`'s `dispose()` method.
 - Use `SingleTickerProviderStateMixin` for one controller, or `TickerProviderStateMixin` for multiple. Never leak tickers across route changes.
+
+## Sources
+
+- [Flutter reduced-motion signal](https://api.flutter.dev/flutter/dart-ui/AccessibilityFeatures/disableAnimations.html)
+- [Flutter accessible navigation signal](https://api.flutter.dev/flutter/dart-ui/AccessibilityFeatures/accessibleNavigation.html)

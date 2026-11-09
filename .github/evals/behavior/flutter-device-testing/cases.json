@@ -1,5 +1,14 @@
 [
   {
+    "name": "integration-test-imports-key-explicitly",
+    "prompt": "An integration test imports flutter_test, integration_test, and package:my_app/main.dart as app. It uses find.byKey(const Key('start_checkout')), but dart analyze cannot resolve Key. The app exposes Future<void> main(). Show the smallest change and explain how to verify it without a connected device.",
+    "resources": ["references/integration-test-workflows.md"],
+    "expectations": [
+      {"text": "adds an unprefixed Flutter import that exports Key while keeping the keyed finder and awaited app.main", "mandatory": true},
+      "separates a targeted analyzer check from the pending device run"
+    ]
+  },
+  {
     "name": "verifies-deep-link-on-device",
     "prompt": "Confirm a product deep link launches the correct screen on an Android emulator.",
     "resources": [

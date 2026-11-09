@@ -1,5 +1,14 @@
 [
   {
+    "name": "build-runner-215-ignores-legacy-delete-flag",
+    "prompt": "A Flutter repository pins build_runner 2.15.0. A teammate proposes adding --delete-conflicting-outputs to fix stale generated models. Keep the installed generator and explain what to run and how to check the result safely.",
+    "resources": ["references/code-generation-with-build-runner.md"],
+    "expectations": [
+      {"text": "identifies the legacy flag as ignored in 2.15.0 and uses the project's supported generation command without treating the flag as a remedy", "mandatory": true},
+      "inspects generation errors and generated diffs without hand editing or indiscriminately deleting files, then runs relevant analysis or tests"
+    ]
+  },
+  {
     "name": "sdk-compatible-modeling",
     "prompt": "Refactor these status classes using modern Dart while keeping the package's Dart 3.3 constraint.",
     "expectations": [

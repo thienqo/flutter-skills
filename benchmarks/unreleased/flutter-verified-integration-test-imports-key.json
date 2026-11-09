@@ -1,0 +1,106 @@
+{
+  "created_at": "2026-11-09T14:56:07.997794+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "9c1cbd08269c3dbac776425c0b4f96af00cd7d41",
+    "dirty": true,
+    "branch": "fix/verified-flutter-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-device-testing",
+      "case": "integration-test-imports-key-explicitly",
+      "with_skill": {
+        "response": "Add one import to the integration test:\n\n```dart\nimport 'package:flutter/foundation.dart' show Key;\n```\n\nKeep `find.byKey(const Key('start_checkout'))` as written. Keep `await app.main()` before the first pump so the app\u2019s asynchronous initialization completes.\n\nFrom the project root, run `dart analyze integration_test/app_test.dart`, substituting your test\u2019s path. The undefined `Key` diagnostic should disappear. Static analysis requires no connected device and verifies that `Key` resolves. The checkout flow itself remains untested.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Adds an unprefixed Flutter import that exports Key while keeping the keyed finder and awaited app.main",
+              "met": true,
+              "evidence": "Adds `import 'package:flutter/foundation.dart' show Key;` and explicitly retains both `find.byKey(const Key('start_checkout'))` and `await app.main()`."
+            },
+            {
+              "criterion": "Separates a targeted analyzer check from the pending device run",
+              "met": true,
+              "evidence": "Directs the user to analyze the specific integration test file, identifies the expected disappearance of the unresolved `Key` diagnostic, and states that analysis needs no connected device and leaves the checkout flow untested."
+            }
+          ],
+          "summary": "Both criteria are met. The response gives a one-line fix and a device-free check, with runtime verification still pending."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Adds an unprefixed Flutter import that exports Key while keeping the keyed finder and awaited app.main",
+                "met": true,
+                "evidence": "Adds `import 'package:flutter/foundation.dart' show Key;` and explicitly retains both `find.byKey(const Key('start_checkout'))` and `await app.main()`."
+              },
+              {
+                "criterion": "Separates a targeted analyzer check from the pending device run",
+                "met": true,
+                "evidence": "Directs the user to analyze the specific integration test file, identifies the expected disappearance of the unresolved `Key` diagnostic, and states that analysis needs no connected device and leaves the checkout flow untested."
+              }
+            ],
+            "summary": "Both criteria are met. The response gives a one-line fix and a device-free check, with runtime verification still pending."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 2,
+          "unanimous_expectations": 2,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-device-testing": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

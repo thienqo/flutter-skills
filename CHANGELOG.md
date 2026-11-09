@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix the integration-test `Key` import, transformed geometry, shell restoration, reduced-motion signal, and build_runner flag guidance. Add five targeted evals and shorten README usage guidance.
+
 - Correct Riverpod async disposal guidance by version and distinguish Google Play consumable ordering from StoreKit finish. Add two behavior cases and strengthen adjacent lifecycle and billing evaluations.
 
 - Extend `flutter-media` with QR and barcode scanning guidance for repeat detection, payload validation, manual entry, and camera lifecycle. Add three behavior cases and two routing cases.

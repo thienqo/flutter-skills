@@ -1,5 +1,14 @@
 [
   {
+    "name": "stateful-shell-configures-process-restoration",
+    "prompt": "A Flutter app uses StatefulShellRoute.indexedStack with the installed go_router version supporting state restoration. Branch history survives a tab switch but disappears after OS process termination. Plan the change for navigation and a form draft, and distinguish test evidence from real-device verification.",
+    "resources": ["references/nested-shell-navigation.md"],
+    "expectations": [
+      {"text": "distinguishes in-memory tab stacks from process restoration and configures restorationScopeId on the app, router, shell, and each branch plus a shell pageBuilder returning a page with restorationId", "mandatory": true},
+      "handles form restoration separately and distinguishes a framework restoration test from platform evidence"
+    ]
+  },
+  {
     "name": "preserves-existing-go-router",
     "prompt": "Add a protected order details deep link to an app already using go_router.",
     "resources": [
