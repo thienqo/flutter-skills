@@ -33,6 +33,7 @@ Load only the available specialists needed for the vertical slice:
 - Data, AI & product: `flutter-networking`, `flutter-openapi-client`, `flutter-persistence`, `flutter-authentication`, `flutter-in-app-purchases`, `flutter-product-analytics`, `flutter-ai-integration`
 - Platform & ops: `flutter-platform-integration`, `flutter-webview`, `flutter-notifications`, `flutter-background-execution`, `flutter-localization`, `flutter-dependency-upgrades`, `flutter-observability`, `flutter-runtime-debugging`
 - Reusable packages: `flutter-package-development` when the slice includes a reusable package or plugin's public API, consumers, examples, or distribution readiness; app-owned native bridges stay with platform integration.
+- Location and maps: `flutter-location-maps` for location fixes, map interaction, nearby search, and address picking.
 - Media: `flutter-media` for capture, audio/video playback, livestreams, calls, and screen sharing within the slice.
 - Language & security: `dart-language`, `dart-concurrency`, `flutter-security`, `flutter-code-review`
 - Quality & delivery: `flutter-testing`, `flutter-accessibility`, `flutter-performance`, `flutter-ci-cd`, `flutter-build-release`, `flutter-device-testing`

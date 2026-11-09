@@ -1,0 +1,477 @@
+{
+  "created_at": "2026-11-09T11:20:14.540748+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "83122865736cc6ec6c3df3ddc56108654d40f92b",
+    "dirty": true,
+    "branch": "feature/flutter-location-maps"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-location-maps",
+      "case": "location-maps-approximate-nearby",
+      "with_skill": {
+        "response": "Allow Android approximate and iOS reduced-accuracy grants to start nearby browsing. Keep the existing map and search adapters, and use a one-time location fix when the user taps **Use my location**. Manual city selection stays available throughout.\n\n### State transitions\n\n| Event | Screen behavior |\n|---|---|\n| User taps **Use my location** | Check foreground authorization and whether location services are enabled. Request permission if needed. With either approximate or precise access, request a fresh fix with a timeout. |\n| A usable fix arrives | Search through the existing adapter using the fix as the origin. Label approximate results **Near your approximate location** and avoid presenting distances from that origin as exact. |\n| Permission is denied or restricted, services are off, or the fix is missing, stale, or times out | Show the specific reason and keep city selection available. Offer Settings when it can resolve the issue. Recheck authorization, precision, and service availability on return without repeating the permission prompt. |\n| User selects a city | Search from the city using the existing manual flow. The city becomes the active origin immediately. Any pending device fix or previous search loses authority to update the screen. |\n| Precision changes while the screen is open | If device location is still the active choice, update the authorization state and reacquire a fix if the old one is no longer suitable. If a city is selected, preserve its results and camera position. |\n\n### Implementation\n\nFirst inspect the SDK constraints, lockfile, resolved location adapter, Android and iOS permission configuration, and existing tests. Find the precise-only gate and replace it with a check for either supported foreground grant. Track authorization, precision, service availability, and fix quality separately. Judge a fix by its acquisition time and reported accuracy using limits appropriate for store browsing.\n\nIn the existing screen state owner, keep the device fix, active search origin, and map viewport separate. Center the map on a device fix only while the user\u2019s recenter intent is still active. A pan or city selection supersedes that camera intent. Give fix and search requests a generation tied to the current intent and query. Cancel superseded work where supported, and ignore late successes and errors after an origin change or screen disposal. Preserve the existing search contract for radius, units, filters, and ordering.\n\n### Focused checks\n\n- Use fake adapters and a controlled clock to prove that approximate and precise grants both start browsing, and that denial, disabled services, stale or missing fixes, and timeouts all leave manual city search usable.\n- Select a city while a device fix or search is pending. Deliver the old success and error after the city results and verify that neither replaces the results, changes the error state, nor moves the camera. Also check a pan during recentering and callbacks after disposal.\n- Simulate returning from Settings and a precision downgrade. Verify that the screen rechecks access, avoids a prompt loop, and preserves a selected city.\n\nThese are proposed checks. Real Android and iOS permission dialogs, Settings transitions, map rendering, and responses from the configured search provider remain unverified.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Uses approximate or reduced access for nearby browsing without requiring precision or repeatedly prompting, and makes the rough origin clear.",
+              "met": true,
+              "evidence": "Both Android approximate and iOS reduced-accuracy grants can start nearby browsing. The plan labels results \u201cNear your approximate location,\u201d avoids presenting distances as exact, and explicitly checks that returning from Settings does not trigger a prompt loop."
+            },
+            {
+              "criterion": "Keeps permission, precision, service availability, and usable fix state distinct and retains manual city selection when a device fix is unavailable.",
+              "met": true,
+              "evidence": "The plan tracks authorization, precision, service availability, and fix quality separately. It keeps manual city search available when access is denied or restricted, services are off, or a fix is missing, stale, or times out. Selecting a city immediately makes it the active origin."
+            },
+            {
+              "criterion": "Preserves existing adapters and distinguishes deterministic state checks from target permission and settings checks.",
+              "met": true,
+              "evidence": "The plan retains the existing map and search adapters and preserves the search contract. It proposes fake adapters and a controlled clock for state checks, simulates a Settings return and precision downgrade, and explicitly identifies real Android and iOS permission dialogs and Settings transitions as unverified."
+            }
+          ],
+          "summary": "The candidate meets all three criteria and clearly separates proposed checks from device behavior that remains unverified."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Uses approximate or reduced access for nearby browsing without requiring precision or repeatedly prompting, and makes the rough origin clear.",
+                "met": true,
+                "evidence": "Both Android approximate and iOS reduced-accuracy grants can start nearby browsing. The plan labels results \u201cNear your approximate location,\u201d avoids presenting distances as exact, and explicitly checks that returning from Settings does not trigger a prompt loop."
+              },
+              {
+                "criterion": "Keeps permission, precision, service availability, and usable fix state distinct and retains manual city selection when a device fix is unavailable.",
+                "met": true,
+                "evidence": "The plan tracks authorization, precision, service availability, and fix quality separately. It keeps manual city search available when access is denied or restricted, services are off, or a fix is missing, stale, or times out. Selecting a city immediately makes it the active origin."
+              },
+              {
+                "criterion": "Preserves existing adapters and distinguishes deterministic state checks from target permission and settings checks.",
+                "met": true,
+                "evidence": "The plan retains the existing map and search adapters and preserves the search contract. It proposes fake adapters and a controlled clock for state checks, simulates a Settings return and precision downgrade, and explicitly identifies real Android and iOS permission dialogs and Settings transitions as unverified."
+              }
+            ],
+            "summary": "The candidate meets all three criteria and clearly separates proposed checks from device behavior that remains unverified."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-location-maps",
+      "case": "location-maps-stale-fix-disabled-service",
+      "with_skill": {
+        "response": "Show **\u201cLocation services are off. Turn them on to use your current location, or pick a pin on the map.\u201d** Keep the map interactive and manual pin selection available. Keep any selected pin and the current map view in place. The 30-minute-old fix is too stale for the current-location action, so don\u2019t show it as the user\u2019s current position or use it as the pickup pin.\n\nWhen the user taps **Use current location**, check whether location services are enabled. If they\u2019re off, offer a way to open settings. When the user returns, recheck permission and services, then try a bounded, one-time fresh fix if the original request is still active. Accept a fix only if it\u2019s **at most two minutes old** and its reported accuracy is **100 meters or better**. If the request times out or yields no qualifying fix, show a retry option and keep manual picking available. If the user starts picking a pin or leaves the screen while the request is pending, ignore its late success or failure.\n\nUse a fake clock and a fake location adapter to test these cases:\n\n- With permission granted, services off, and a 30-minute-old fix, show the services-off message, make no fresh-fix request, and let the user pick a pin.\n- On return from settings, request a fix once if services are on and the action is still active. If services are still off, keep the same fallback.\n- Accept fixes exactly two minutes old and exactly 100 meters accurate. Reject fixes beyond either limit or with missing accuracy. Verify that a null fix or timeout leaves manual picking usable.\n- Complete a pending request after a manual pin selection or screen exit. Verify that neither a late fix nor a late error changes the camera, pin, or visible message.\n\nOn each supported device platform, verify the settings handoff, the return to the map, and manual pin selection with location services disabled. Those checks require the real device and location provider.",
+        "judgment": {
+          "score": 67,
+          "expectations": [
+            {
+              "criterion": "Rejects the 30-minute fix for current-location confirmation, checks both fix age and accuracy, and keeps service-off distinct from denied permission.",
+              "met": true,
+              "evidence": "Rejects the stale fix as the current position or pickup pin, requires a fix at most two minutes old with reported accuracy of 100 meters or better, and shows a services-off message in the permission-granted scenario."
+            },
+            {
+              "criterion": "Preserves manual pin selection, rechecks service and permission after settings return, and only requests a bounded fresh fix when allowed and still wanted.",
+              "met": false,
+              "evidence": "Preserves manual picking, rechecks both states, and limits the attempt to a bounded, one-time request while the action is active. It does not explicitly make granted permission a condition for requesting the fix. The settings-return test lists enabled services and an active action as the conditions."
+            },
+            {
+              "criterion": "Covers disabled service, stale or null fix, timeout, and qualified fresh fix with focused checks.",
+              "met": true,
+              "evidence": "Tests that disabled services prevent a fresh request, fixes beyond either threshold are rejected, fixes at both acceptance boundaries qualify, and null results or timeouts leave manual picking available."
+            }
+          ],
+          "summary": "The response meets two of the three criteria. It checks permission after settings return but leaves the decision to block a fresh request when permission is denied implicit."
+        },
+        "judgments": [
+          {
+            "score": 67,
+            "expectations": [
+              {
+                "criterion": "Rejects the 30-minute fix for current-location confirmation, checks both fix age and accuracy, and keeps service-off distinct from denied permission.",
+                "met": true,
+                "evidence": "Rejects the stale fix as the current position or pickup pin, requires a fix at most two minutes old with reported accuracy of 100 meters or better, and shows a services-off message in the permission-granted scenario."
+              },
+              {
+                "criterion": "Preserves manual pin selection, rechecks service and permission after settings return, and only requests a bounded fresh fix when allowed and still wanted.",
+                "met": false,
+                "evidence": "Preserves manual picking, rechecks both states, and limits the attempt to a bounded, one-time request while the action is active. It does not explicitly make granted permission a condition for requesting the fix. The settings-return test lists enabled services and an active action as the conditions."
+              },
+              {
+                "criterion": "Covers disabled service, stale or null fix, timeout, and qualified fresh fix with focused checks.",
+                "met": true,
+                "evidence": "Tests that disabled services prevent a fresh request, fixes beyond either threshold are rejected, fixes at both acceptance boundaries qualify, and null results or timeouts leave manual picking available."
+              }
+            ],
+            "summary": "The response meets two of the three criteria. It checks permission after settings return but leaves the decision to block a fresh request when permission is denied implicit."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 67.0,
+          "minimum_score": 67,
+          "maximum_score": 67,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": true,
+      "passed": false
+    },
+    {
+      "skill": "flutter-location-maps",
+      "case": "location-maps-camera-scope",
+      "with_skill": {
+        "response": "A manual pan should switch the camera from **Following** to **Browsing**. If a location fix arrives while the map is still active, update the position indicator and leave the viewport and selection where the user put them. **Recenter** restores Following and moves to the latest usable fix, or waits for the next usable fix if none is available.\n\n### State and ownership\n\n- **Active map session.** Let the existing map state owner manage the location subscription or one-shot request, area search, and camera work. Give each active session an identity. When the user leaves, invalidate that identity before canceling work and detaching the controller. If the map stays mounted in a tab, tie this to tab activity. Check session identity on both success and error paths, since cancellation can race with completion.\n- **Location and camera.** Keep the device fix, viewport, selection, and camera mode separate. A pan changes camera intent and viewport without invalidating the pending fix. Use the installed SDK\u2019s gesture contract to distinguish user pans from programmatic movement. Before issuing a follow or Recenter command, check the active session, current camera intent, and ready controller identity. If the controller is replaced, invalidate queued commands and ignore callbacks from the old controller. Keep an otherwise current location request valid within the same session. Once the replacement is ready, derive any camera move from the current intent and fix.\n- **Area search.** Identify each request by its query generation and viewport or area, including active filters. If search tracks the viewport, invalidate the older query as soon as the area changes, even if the next search waits for camera idle. If the app uses an explicit search area, preserve that area until the user changes it. Accept results and errors only for the current query in the active session. For viewport-bound searches, also invalidate requests tied to a replaced controller\u2019s viewport. An obsolete completion must leave the current results, loading state, and error state alone.\n\n### Regression checks\n\nUse controllable location and search futures with fake map controllers so completion order is deterministic.\n\n| Sequence | Expected behavior |\n|---|---|\n| First fix arrives in Following | Indicator updates and the ready controller centers on the fix. |\n| Pan, then complete the pending fix | Indicator updates. Viewport and selection stay put. Recenter uses that fix and subsequent fixes follow again. |\n| Pan while a follow command is waiting for controller readiness | The queued command cannot move the camera once the controller becomes ready. |\n| Change search area while the old query is pending | Test old success and old error separately, both before and after the newer query completes. Only the current query can change results, loading, or errors. |\n| Leave with location and search pending, then reopen | Complete each old request with success and with error. Neither session receives stale updates, error messages, or camera commands. |\n| Replace the controller while work is pending | Old callbacks and queued commands have no effect. A current fix can still update the indicator. The replacement camera moves only if current intent is Following. A search tied to the old viewport cannot publish a late result or error. |\n\nThe installed SDK\u2019s gesture, readiness, and controller disposal contracts still need to be checked. Verify pan, indicator updates, and Recenter on the affected targets with the real map SDK.",
+        "judgment": {
+          "score": 67,
+          "expectations": [
+            {
+              "criterion": "Separates position indicator, camera, and follow state so a manual pan stops auto movement and explicit recenter restores it.",
+              "met": true,
+              "evidence": "A pan switches Following to Browsing. A pending fix still updates the position indicator while leaving the viewport and selection in place. Recenter restores Following and uses the latest usable fix."
+            },
+            {
+              "criterion": "Cancels owned subscriptions and invalidates pending successes and errors on exit or controller replacement, and distinguishes newer and older requests even while mounted.",
+              "met": false,
+              "evidence": "On exit, the plan invalidates the session before canceling work and guards both success and error paths. Query generations distinguish old and new searches while mounted. On controller replacement, the plan invalidates old camera work and viewport-bound searches, but explicitly keeps a pending location request valid and does not specify canceling owned subscriptions."
+            },
+            {
+              "criterion": "Tests manual pan, recenter, and late completion without claiming actual map rendering was verified.",
+              "met": true,
+              "evidence": "The proposed regression checks use fake controllers and controllable futures to cover pan, Recenter, and late successes and errors. Real SDK verification is described as future work."
+            }
+          ],
+          "summary": "The response meets two of three criteria. The mandatory lifecycle criterion is only partially met because controller replacement can leave a pending location request valid and has no explicit subscription cancellation step."
+        },
+        "judgments": [
+          {
+            "score": 67,
+            "expectations": [
+              {
+                "criterion": "Separates position indicator, camera, and follow state so a manual pan stops auto movement and explicit recenter restores it.",
+                "met": true,
+                "evidence": "A pan switches Following to Browsing. A pending fix still updates the position indicator while leaving the viewport and selection in place. Recenter restores Following and uses the latest usable fix."
+              },
+              {
+                "criterion": "Cancels owned subscriptions and invalidates pending successes and errors on exit or controller replacement, and distinguishes newer and older requests even while mounted.",
+                "met": false,
+                "evidence": "On exit, the plan invalidates the session before canceling work and guards both success and error paths. Query generations distinguish old and new searches while mounted. On controller replacement, the plan invalidates old camera work and viewport-bound searches, but explicitly keeps a pending location request valid and does not specify canceling owned subscriptions."
+              },
+              {
+                "criterion": "Tests manual pan, recenter, and late completion without claiming actual map rendering was verified.",
+                "met": true,
+                "evidence": "The proposed regression checks use fake controllers and controllable futures to cover pan, Recenter, and late successes and errors. Real SDK verification is described as future work."
+              }
+            ],
+            "summary": "The response meets two of three criteria. The mandatory lifecycle criterion is only partially met because controller replacement can leave a pending location request valid and has no explicit subscription cancellation step."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 67.0,
+          "minimum_score": 67,
+          "maximum_score": 67,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": true,
+      "passed": false
+    },
+    {
+      "skill": "flutter-location-maps",
+      "case": "location-maps-address-and-viewport-order",
+      "with_skill": {
+        "response": "Use the `flutter-location-maps` skill to make the selected pin the source of truth for confirmation and saving. Keep the current provider and picker state owner.\n\n1. **Update the selection as soon as the pin moves.** When the user drags from A to B, store B\u2019s coordinates immediately and advance a selection revision. Clear A\u2019s nearby results and provisional label, then show each lookup as pending once it starts. Start the lookups on drag end, or use the picker\u2019s existing debounce.\n2. **Guard both lookups against stale responses.** Capture B\u2019s coordinates and revision when starting nearby search and reverse geocoding. Apply a success or error only if its revision still matches the current selection and the picker is still active. Cancel obsolete requests if the provider supports it, and invalidate outstanding work when the picker closes. The revision also handles A \u2192 B \u2192 A, where coordinates alone would accept the first A\u2019s response.\n3. **Convert coordinates at the adapter boundary.** Use named `latitude` and `longitude` fields in picker state. Pass `(latitude, longitude)` to the map constructor and serialize GeoJSON positions as `[longitude, latitude]`. Use the same conversion when saving the confirmed point.\n4. **Save the confirmed pin snapshot.** Capture the selected coordinates when the user confirms and save that snapshot. Treat the reverse-geocoded label as provisional and use it only if it belongs to the confirmed revision. If a label is required and B\u2019s lookup is pending, fails, or returns no match, show that state and follow the picker\u2019s existing validation rules.\n\nUse fake provider responses to resolve B before A and verify that late A successes and errors leave B\u2019s results, label, and status intact. Also cover A \u2192 B \u2192 A, completion after the picker closes, and confirmation while B\u2019s label is pending. With latitude `10.77` and longitude `106.69`, assert map input `(10.77, 106.69)` and saved GeoJSON `[106.69, 10.77]`.\n\nThis plan is based on the supplied behavior. The installed adapter\u2019s drag callback and the save API\u2019s label requirement still need to be checked during implementation.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Key searches and labels to the current viewport or pin and reject stale results while keeping B\u2019s coordinates and list-marker results consistent.",
+              "met": true,
+              "evidence": "Stores B\u2019s coordinates immediately, clears A\u2019s nearby results, and applies search and geocoding responses only when their selection revision is current. Explicitly tests that late A successes and errors leave B\u2019s results, label, and status intact."
+            },
+            {
+              "criterion": "Identify GeoJSON longitude-then-latitude order, convert explicitly at the adapter boundary, and propose asymmetric coordinates for a swap test.",
+              "met": true,
+              "evidence": "Passes latitude then longitude to the map constructor and serializes longitude then latitude for GeoJSON. Asserts map input (10.77, 106.69) and saved GeoJSON [106.69, 10.77]."
+            },
+            {
+              "criterion": "Treat the label as provisional, handle no match or provider failure without moving the selected pin, and preserve confirmation before saving.",
+              "met": true,
+              "evidence": "Uses the provisional label only if it matches the confirmed revision. Handles failure and no match through lookup status and existing validation while saving the coordinate snapshot captured at confirmation."
+            }
+          ],
+          "summary": "The plan meets all three criteria and keeps the current provider."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Key searches and labels to the current viewport or pin and reject stale results while keeping B\u2019s coordinates and list-marker results consistent.",
+                "met": true,
+                "evidence": "Stores B\u2019s coordinates immediately, clears A\u2019s nearby results, and applies search and geocoding responses only when their selection revision is current. Explicitly tests that late A successes and errors leave B\u2019s results, label, and status intact."
+              },
+              {
+                "criterion": "Identify GeoJSON longitude-then-latitude order, convert explicitly at the adapter boundary, and propose asymmetric coordinates for a swap test.",
+                "met": true,
+                "evidence": "Passes latitude then longitude to the map constructor and serializes longitude then latitude for GeoJSON. Asserts map input (10.77, 106.69) and saved GeoJSON [106.69, 10.77]."
+              },
+              {
+                "criterion": "Treat the label as provisional, handle no match or provider failure without moving the selected pin, and preserve confirmation before saving.",
+                "met": true,
+                "evidence": "Uses the provisional label only if it matches the confirmed revision. Handles failure and no match through lookup status and existing validation while saving the coordinate snapshot captured at confirmation."
+              }
+            ],
+            "summary": "The plan meets all three criteria and keeps the current provider."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    },
+    {
+      "skill": "flutter-location-maps",
+      "case": "location-maps-background-tracking-boundary",
+      "with_skill": {
+        "response": "Give a shift-scoped tracking service ownership of location collection and uploads. The courier starts it explicitly through **Start shift** while the app is visible. The map observes the latest fix and can be opened or closed independently. The current SDK\u2019s map-scoped tracking is the only behavior established today.\n\n**Specialist ownership**\n\n- **Flutter location and maps** owns permission and service-state handling, fix quality, sampling policy, and the separation between device location and map state. Request access at Start shift, and handle insufficient accuracy, disabled services, and missing fixes as distinct states.\n- **Flutter background execution** owns the tracking session\u2019s lifecycle across screen lock and backgrounding. Review the resolved SDK and native configuration for each target, including authorization, capabilities, permitted start and stop paths, and required system indicators. If the SDK only delivers fixes while the map is open, the tracking session needs a location adapter that supports the required lifecycle.\n- **Flutter networking** owns delivery, retries, and any offline queue. **Flutter device testing** owns the evidence from physical devices, including timestamps that show when fixes were acquired and when the server received them.\n\n**Stop shift** immediately revokes the session\u2019s authority to collect or send location. Cancel the subscription, stop native tracking, and disable queued retries for that shift. Tag callbacks and uploads with a shift ID so late callbacks cannot send data or feed a later shift. An upload already in flight may still reach the server. If the product requires a strict cutoff, define and test how the server enforces it.\n\n**Verify screen lock and process termination separately.** On supported physical devices, start a shift in the foreground, lock the screen for a representative shift interval, and confirm that fresh fixes are acquired and received by the server during the locked interval. Exercise permission and service changes, connectivity loss and recovery, and Stop shift with pending work. Use deterministic tests for stale callbacks, retry cancellation, and stop\u2013restart races.\n\nFor termination, test OS process reclamation and user-initiated termination separately on each supported platform. Establish whether collection and delivery continue, resume after an OS relaunch, or require the courier to reopen the app. Keep both locked-screen delivery and any post-termination behavior unverified until the resolved SDK and native setup demonstrate each claim on the target devices.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Pairs location-session behavior with background execution and requires checking the installed SDK and platform authorization, capabilities, and allowed start and stop conditions.",
+              "met": true,
+              "evidence": "Assigns collection and uploads to a shift-scoped service started explicitly in the foreground, gives the background execution specialist ownership across screen lock and backgrounding, and requires review of the resolved SDK and each target's native authorization, capabilities, and permitted start and stop paths."
+            },
+            {
+              "criterion": "Stops owned tracking and prevents stale updates after the shift ends, and treats lock/background delivery and post-termination delivery as distinct claims requiring target evidence.",
+              "met": true,
+              "evidence": "Stop shift revokes session authority, cancels the subscription, stops native tracking, and disables queued retries. Shift IDs prevent late callbacks from sending data or affecting later shifts. The response flags uploads already in flight and requires separate physical-device evidence for locked-screen delivery, OS process reclamation, and user-initiated termination."
+            },
+            {
+              "criterion": "Proposes focused permission, interruption, and lifecycle checks and identifies device evidence as pending.",
+              "met": true,
+              "evidence": "Calls for testing permission and service changes, connectivity loss and recovery, stopping with pending work, stale callbacks, retry cancellation, and stop\u2013restart races. It leaves both delivery claims unverified pending target-device tests that distinguish fix acquisition from server receipt."
+            }
+          ],
+          "summary": "The response meets all three mandatory criteria. It assigns specialist ownership, defines Stop shift behavior, and makes locked-screen and post-termination promises conditional on separate target-device evidence."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Pairs location-session behavior with background execution and requires checking the installed SDK and platform authorization, capabilities, and allowed start and stop conditions.",
+                "met": true,
+                "evidence": "Assigns collection and uploads to a shift-scoped service started explicitly in the foreground, gives the background execution specialist ownership across screen lock and backgrounding, and requires review of the resolved SDK and each target's native authorization, capabilities, and permitted start and stop paths."
+              },
+              {
+                "criterion": "Stops owned tracking and prevents stale updates after the shift ends, and treats lock/background delivery and post-termination delivery as distinct claims requiring target evidence.",
+                "met": true,
+                "evidence": "Stop shift revokes session authority, cancels the subscription, stops native tracking, and disables queued retries. Shift IDs prevent late callbacks from sending data or affecting later shifts. The response flags uploads already in flight and requires separate physical-device evidence for locked-screen delivery, OS process reclamation, and user-initiated termination."
+              },
+              {
+                "criterion": "Proposes focused permission, interruption, and lifecycle checks and identifies device evidence as pending.",
+                "met": true,
+                "evidence": "Calls for testing permission and service changes, connectivity loss and recovery, stopping with pending work, stale callbacks, retry cancellation, and stop\u2013restart races. It leaves both delivery claims unverified pending target-device tests that distinguish fix acquisition from server receipt."
+              }
+            ],
+            "summary": "The response meets all three mandatory criteria. It assigns specialist ownership, defines Stop shift behavior, and makes locked-screen and post-termination promises conditional on separate target-device evidence."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [
+    {
+      "case": "location-maps-nearby-vietnamese",
+      "response": {
+        "skills": [
+          "flutter-location-maps"
+        ],
+        "reason": "M\u00e0n t\u00ecm c\u1eeda h\u00e0ng c\u1ea7n h\u1ed7 tr\u1ee3 v\u1ecb tr\u00ed g\u1ea7n \u0111\u00fang, b\u00e1o khi d\u1ecbch v\u1ee5 v\u1ecb tr\u00ed t\u1eaft v\u00e0 cho ch\u1ecdn khu v\u1ef1c th\u1ee7 c\u00f4ng, \u0111\u1ed3ng th\u1eddi gi\u1eef nguy\u00ean SDK b\u1ea3n \u0111\u1ed3 v\u00e0 API hi\u1ec7n t\u1ea1i."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-location-maps"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "location-maps-manual-pan",
+      "response": {
+        "skills": [
+          "flutter-location-maps"
+        ],
+        "reason": "Separate location indicator updates from camera follow in the existing SDK, pausing follow on user pan and resuming it only on Recenter."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-location-maps"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "location-maps-reverse-geocode-selection",
+      "response": {
+        "skills": [
+          "dart-concurrency"
+        ],
+        "reason": "Guard against stale reverse-geocoding results so only the latest pin selection can update the address."
+      },
+      "passed": false,
+      "selected": [
+        "dart-concurrency"
+      ],
+      "missing": [
+        "flutter-location-maps"
+      ],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "location-maps-background-courier",
+      "response": {
+        "skills": [
+          "flutter-background-execution",
+          "flutter-location-maps"
+        ],
+        "reason": "Background execution keeps tracking active while the screen is locked and stops it at shift end, while the location specialist handles GPS permissions."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-background-execution",
+        "flutter-location-maps"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "location-maps-negative-deep-link",
+      "response": {
+        "skills": [
+          "flutter-navigation"
+        ],
+        "reason": "The fix is limited to routing the deep link to the existing store map tab by store ID while preserving back-stack behavior."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-navigation"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "location-maps-negative-http-retry",
+      "response": {
+        "skills": [
+          "flutter-networking"
+        ],
+        "reason": "Duplicate retries are a focused HTTP adapter issue."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-networking"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    }
+  ],
+  "summary": {
+    "behavior_cases": 5,
+    "behavior_passed": 3,
+    "mandatory_failures": 2,
+    "baseline_average": null,
+    "with_skill_average": 86.8,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-location-maps": {
+        "cases": 5,
+        "passed": 3,
+        "baseline_average": null,
+        "with_skill_average": 86.8,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 6,
+    "routing_passed": 5
+  }
+}

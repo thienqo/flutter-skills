@@ -60,9 +60,9 @@ class RepositoryTests(unittest.TestCase):
     def test_repository_validator_passes(self):
         errors, _, counts = VALIDATOR.validate_repository()
         self.assertEqual(errors, [])
-        self.assertEqual(counts["skills"], 38)
-        self.assertEqual(counts["evals"], 246)
-        self.assertEqual(counts["routing_evals"], 84)
+        self.assertEqual(counts["skills"], 39)
+        self.assertEqual(counts["evals"], 251)
+        self.assertEqual(counts["routing_evals"], 90)
 
     def test_workflow_routing_tracks_new_removed_and_duplicate_specialists(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -428,8 +428,8 @@ class RepositoryTests(unittest.TestCase):
         routing = BEHAVIOR_EVAL.routing_cases()
         expectations = {
             "pr-smoke.json": (6, 7),
-            "nightly-representative.json": (38, 84),
-            "release-full.json": (246, 84),
+            "nightly-representative.json": (39, 90),
+            "release-full.json": (251, 90),
         }
         for filename, counts in expectations.items():
             profile = BEHAVIOR_EVAL.load_json(BEHAVIOR_EVAL.PROFILES_DIR / filename)
@@ -682,8 +682,8 @@ class RepositoryTests(unittest.TestCase):
         catalog = BEHAVIOR_EVAL.skill_catalog()
         cases = BEHAVIOR_EVAL.behavior_cases(catalog)
         cov = BEHAVIOR_EVAL.reference_coverage_report(catalog, cases)
-        self.assertEqual(cov["total_references"], 103)
-        self.assertEqual(cov["covered_references"], 103)
+        self.assertEqual(cov["total_references"], 106)
+        self.assertEqual(cov["covered_references"], 106)
         self.assertEqual(cov["uncovered_references"], 0)
         self.assertEqual(cov["coverage_rate"], 100.0)
 

@@ -1,0 +1,143 @@
+{
+  "created_at": "2026-11-09T11:20:56.174379+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "83122865736cc6ec6c3df3ddc56108654d40f92b",
+    "dirty": true,
+    "branch": "feature/flutter-location-maps"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [],
+  "routing": [
+    {
+      "case": "location-maps-nearby-vietnamese",
+      "response": {
+        "skills": [
+          "flutter-location-maps"
+        ],
+        "reason": "M\u1ed9t m\u00e0n t\u00ecm c\u1eeda h\u00e0ng c\u1ea7n h\u1ed7 tr\u1ee3 v\u1ecb tr\u00ed g\u1ea7n \u0111\u00fang, b\u00e1o khi d\u1ecbch v\u1ee5 v\u1ecb tr\u00ed t\u1eaft v\u00e0 cho ch\u1ecdn khu v\u1ef1c th\u1ee7 c\u00f4ng v\u1edbi SDK b\u1ea3n \u0111\u1ed3 v\u00e0 API hi\u1ec7n t\u1ea1i."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-location-maps"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "location-maps-manual-pan",
+      "response": {
+        "skills": [
+          "flutter-location-maps"
+        ],
+        "reason": "Separate location indicator updates from camera follow in the existing SDK, and resume follow only when the user taps Recenter."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-location-maps"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "location-maps-reverse-geocode-selection",
+      "response": {
+        "skills": [
+          "dart-concurrency",
+          "flutter-location-maps"
+        ],
+        "reason": "Fix the map pin picker\u2019s reverse-geocoding race so only the latest pin selection can update the address."
+      },
+      "passed": true,
+      "selected": [
+        "dart-concurrency",
+        "flutter-location-maps"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "location-maps-background-courier",
+      "response": {
+        "skills": [
+          "flutter-background-execution",
+          "flutter-location-maps"
+        ],
+        "reason": "Tracking during a locked-screen shift requires background execution and platform location permissions, with tracking stopped when the user ends the shift."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-background-execution",
+        "flutter-location-maps"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "location-maps-negative-deep-link",
+      "response": {
+        "skills": [
+          "flutter-navigation"
+        ],
+        "reason": "The fix is confined to routing the deep link by store ID to the existing map tab while preserving the back stack."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-navigation"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "location-maps-negative-http-retry",
+      "response": {
+        "skills": [
+          "flutter-networking"
+        ],
+        "reason": "The fix is limited to duplicate HTTP retries in the adapter."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-networking"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    }
+  ],
+  "summary": {
+    "behavior_cases": 0,
+    "behavior_passed": 0,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": null,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {},
+    "routing_cases": 6,
+    "routing_passed": 6
+  }
+}
