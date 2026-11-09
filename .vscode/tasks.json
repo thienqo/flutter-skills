@@ -1,0 +1,50 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Skills: Validate repository",
+      "type": "process",
+      "command": "python3",
+      "args": [".github/scripts/validate_repository.py"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Skills: Check reference coverage",
+      "type": "process",
+      "command": "python3",
+      "args": [".github/scripts/run_behavior_evals.py", "--coverage"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Skills: Analyze Dart snippet",
+      "type": "process",
+      "command": "python3",
+      "args": [".github/scripts/check_dart_snippets.py"],
+      "problemMatcher": {
+        "owner": "skill-snippets",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.+\\.md):(\\d+):(\\d+): (error|warning|info): (.+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      }
+    },
+    {
+      "label": "Skills: Audit source links",
+      "type": "process",
+      "command": "python3",
+      "args": [
+        ".github/scripts/audit_source_freshness.py",
+        "--output",
+        ".eval-results/source-freshness.json",
+        "--fail-on-broken",
+        "--fail-on-stale"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

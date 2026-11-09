@@ -88,3 +88,6 @@ jobs:
 
       - name: Verify media resource ownership and seeded failures
         run: python3 .github/scripts/verify_media_fixture.py
+
+      - name: Analyze the documented integration-test example
+        run: python3 .github/scripts/check_dart_snippets.py

@@ -10,9 +10,11 @@ Before creating or substantially revising a skill:
 
 1. Follow the active Agent Skills authoring guidance available in the agent environment.
 2. Inspect the affected skill, neighboring descriptions, evaluation cases, package manifests, and working tree.
-3. Verify fast-moving Flutter, Dart, package, and platform claims against current primary sources.
+3. Verify technical claims using the source rule below.
 4. Preserve existing project architecture and package choices unless the user's task explicitly requests migration.
 5. Add or update behavior-focused evaluation cases.
+
+For any new or changed technical claim under `skills/`, verify it against current primary sources and record the applicable SDK, package version, or platform scope where it affects the guidance. Cite official documentation, publisher changelogs, or matching source code. Dart and Flutter MCP is optional for inspecting resolved symbols and running local checks.
 
 ## Git, branching, and pull request workflow
 
