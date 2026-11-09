@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T14:23:40.695425+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "2e3e76b23e39b481d3e6651c3f860460580d1adf",
+    "dirty": true,
+    "branch": "feature/flutter-media-qr-scanning"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-media",
+      "case": "qr-scanning-validates-links-and-manual-entry",
+      "with_skill": {
+        "response": "**Open pickup details only after the backend authorizes the token for the signed-in user and the current pickup attempt is still active.** Use the order identifier returned by the backend to navigate to the in-app details screen.\n\n| Input | Checks before contacting the backend |\n|---|---|\n| Camera | Accept QR detections and parse the payload as a URI. Require HTTPS, exact host `orders.example.com`, the default HTTPS port (omitted or `443`), and exact path `/pickup`. Reject user info and fragments. Require exactly one token in the agreed query parameter, rejecting duplicates. An exact host comparison rejects `orders.example.com.evil.test`. |\n| Manual entry | Keep token entry available when camera access is denied or unavailable. Pass the typed token directly to the shared validator. |\n| Both | Validate the token\u2019s presence, length, and syntax against the backend contract before lookup. Submit it to the authenticated pickup endpoint and keep raw tokens out of logs. The query parameter name and token grammar still need to be confirmed. |\n\nUse one attempt guard for both inputs. Reserve the attempt before the first asynchronous operation so repeated camera frames or a simultaneous manual submission cannot start a second lookup. If several codes appear in one detection, ask the user to isolate one. On authorization, consume the attempt and navigate once. On rejection, allow a manual retry and wait for the rejected code to leave view or for the user to explicitly retry before accepting it again.\n\nKeep camera ownership with the scanner route and follow the installed plugin\u2019s lifecycle contract. Pause scanning when the route is covered and invalidate pending results. On exit, release the route\u2019s detection subscription and camera resources in the plugin\u2019s required order. Resume only when the route is active, permission is available, and the next attempt is armed.\n\nRepository inspection and device verification are pending. Before implementation, confirm the locked scanner version, Flutter constraints, target permission configuration, and which frame delivery and lifecycle effects the plugin already handles. Verify that the spoofed host, duplicate token parameters, and malformed manual input never reach lookup. Also verify that repeated detections produce one lookup and one navigation, and that a backend rejection or a response arriving after route exit never opens details. On a target device, check permission grant and denial separately, decode a representative pickup QR, and complete an authorized manual pickup with the camera unavailable.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Parse untrusted QR data, require HTTPS and the exact host and path, validate one token, and reject the lookalike host before lookup or navigation.",
+              "met": true,
+              "evidence": "The camera path parses the payload as a URI, requires HTTPS, exact host orders.example.com and exact path /pickup, and rejects duplicate token parameters. It explicitly rejects orders.example.com.evil.test before lookup, validates the token\u2019s presence, length, and syntax, and opens details only after backend authorization."
+            },
+            {
+              "criterion": "Keep manual entry available without a camera, share token validation and backend authorization, and exclude raw tokens from logs.",
+              "met": true,
+              "evidence": "Manual entry remains available when camera access is denied or unavailable. Both inputs use the shared token validator and authenticated pickup endpoint, and the response explicitly keeps raw tokens out of logs."
+            },
+            {
+              "criterion": "Propose checks for valid and invalid links, malformed or manually entered tokens, and backend denial.",
+              "met": true,
+              "evidence": "The response proposes decoding a representative pickup QR, verifying that a spoofed host, duplicate token parameters, and malformed manual input never reach lookup, completing an authorized manual pickup without a camera, and verifying that backend rejection never opens details."
+            }
+          ],
+          "summary": "All criteria are met. Both inputs share token validation and backend authorization, and pickup details open only after authorization for the signed-in user while the attempt is still active."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Parse untrusted QR data, require HTTPS and the exact host and path, validate one token, and reject the lookalike host before lookup or navigation.",
+                "met": true,
+                "evidence": "The camera path parses the payload as a URI, requires HTTPS, exact host orders.example.com and exact path /pickup, and rejects duplicate token parameters. It explicitly rejects orders.example.com.evil.test before lookup, validates the token\u2019s presence, length, and syntax, and opens details only after backend authorization."
+              },
+              {
+                "criterion": "Keep manual entry available without a camera, share token validation and backend authorization, and exclude raw tokens from logs.",
+                "met": true,
+                "evidence": "Manual entry remains available when camera access is denied or unavailable. Both inputs use the shared token validator and authenticated pickup endpoint, and the response explicitly keeps raw tokens out of logs."
+              },
+              {
+                "criterion": "Propose checks for valid and invalid links, malformed or manually entered tokens, and backend denial.",
+                "met": true,
+                "evidence": "The response proposes decoding a representative pickup QR, verifying that a spoofed host, duplicate token parameters, and malformed manual input never reach lookup, completing an authorized manual pickup without a camera, and verifying that backend rejection never opens details."
+              }
+            ],
+            "summary": "All criteria are met. Both inputs share token validation and backend authorization, and pickup details open only after authorization for the signed-in user while the attempt is still active."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-media": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

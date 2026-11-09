@@ -27,11 +27,11 @@ The default [Codex matrix](../evals/codex-matrix.json) skips baselines and needs
 
 ### Nightly or periodic audit
 
-The [nightly representative profile](../evals/profiles/nightly-representative.json) contains one behavior case for every skill and all routing cases. The Codex-only matrix with skipped baselines needs 172 model invocations (two per behavior case plus one per routing case). Refresh baselines only when measuring skill lift.
+The [nightly representative profile](../evals/profiles/nightly-representative.json) contains one behavior case for every skill and all routing cases. The Codex-only matrix with skipped baselines needs 174 model invocations (two per behavior case plus one per routing case). Refresh baselines only when measuring skill lift.
 
 ### Release
 
-The [release profile](../evals/profiles/release-full.json) resolves all behavior and routing cases. The default Codex-only run with skipped baselines needs 608 model invocations before retries (two per behavior case plus one per routing case). Run it only with an explicit budget and retained output.
+The [release profile](../evals/profiles/release-full.json) resolves all behavior and routing cases. The default Codex-only run with skipped baselines needs 616 model invocations before retries (two per behavior case plus one per routing case). Run it only with an explicit budget and retained output.
 
 ## Holdout cases
 

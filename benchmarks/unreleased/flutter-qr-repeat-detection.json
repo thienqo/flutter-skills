@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T14:20:34.630703+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "2e3e76b23e39b481d3e6651c3f860460580d1adf",
+    "dirty": true,
+    "branch": "feature/flutter-media-qr-scanning"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-media",
+      "case": "qr-scanning-claims-one-action-before-lookup",
+      "with_skill": {
+        "response": "Reserve one scan attempt synchronously before starting ticket validation or lookup. Keep that attempt reserved until the lookup fails or the scanner is ready for a new attempt after returning from ticket details.\n\n- **Detection and lookup.** Select one QR candidate using the scanner\u2019s existing selection policy. While an attempt is reserved, ignore further detections. Validate the payload before lookup. When the lookup completes, verify that the attempt still belongs to the current, active scanner route. On success, mark it consumed before pushing the detail route through the existing navigation owner. The guard lives in the app because the camera plugin\u2019s detection throttle can still emit the same code during a slow lookup.\n- **Rejected code.** For a malformed or rejected ticket, show the rejection and rearm for a different code while suppressing the rejected value for the current attempt. An explicit retry clears that suppression. Treat a transient lookup failure as retryable and use the same explicit retry so a QR held in view cannot trigger a request loop.\n- **Return and scan again.** Keep scanning paused while ticket details cover the scanner. When the scanner is active again, start a fresh attempt and clear attempt-local suppression. Use an explicit **Scan again** action on return so a QR still in view cannot immediately reopen the detail route. The user can then scan the same ticket.\n- **Leave and cleanup.** The scanner route\u2019s owner invalidates pending attempts when the route is covered or left, so late lookup results cannot navigate. Pause detection while covered. On exit, cancel the owned subscription and stop or dispose of the controller as required by the installed plugin.\n\n**Deterministic tests**\n\nUse a fake detection stream, a lookup controlled by a `Completer`, and a navigation observer.\n\n1. Emit the same valid QR several times while lookup is pending. Assert one lookup and zero pushes. Complete it successfully, emit another frame, and assert exactly one detail push.\n2. Pop the detail route and emit the same QR before selecting **Scan again**. Assert no action. Select **Scan again**, emit the same QR, and assert one new lookup and one new push.\n3. Reject a code and keep emitting it. Assert one rejection and no repeated lookup. Verify that a different code can proceed and that explicit retry allows the rejected value to be attempted again. For malformed input, assert zero lookups.\n4. Cover or leave the scanner with a lookup pending, then complete it successfully. Assert no push from the old attempt. Verify pause on cover and owned-resource cleanup on exit.\n\n**Pending verification.** Inspect the resolved scanner version and Flutter constraints, the existing controller and route wiring, and the affected native targets\u2019 camera permissions and lifecycle requirements. Confirm which start, stop, and lifecycle effects the plugin already owns before adding handlers. Run the deterministic tests, then verify on an affected device that camera permission and QR decoding work, capture pauses while details are open, and **Scan again** lets the same physical code open one detail route.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Reserves one scan attempt before any asynchronous lookup or navigation and prevents overlapping callbacks from causing duplicate lookup or route actions.",
+              "met": true,
+              "evidence": "The response reserves the attempt synchronously before validation or lookup, ignores detections while it is reserved, and marks it consumed before pushing the detail route."
+            },
+            {
+              "criterion": "Defines recovery after rejection and a new attempt when the user intentionally scans again, without permanently suppressing a code or depending only on frame throttling.",
+              "met": true,
+              "evidence": "After rejection, the scanner accepts a different code and an explicit retry clears suppression of the rejected value. After returning from details, Scan again enables a fresh attempt with the same code. The guard is enforced by the app."
+            },
+            {
+              "criterion": "Proposes deterministic repeated-frame tests with a deferred lookup and keeps the existing scanner.",
+              "met": true,
+              "evidence": "The response uses a fake detection stream, a Completer-controlled lookup, and a navigation observer to assert one lookup and one push across repeated frames. It tests deliberate same-code rescanning and uses the installed plugin's existing controller and selection policy."
+            }
+          ],
+          "summary": "The plan meets all three criteria with a synchronous attempt guard, explicit recovery and rescanning, and deterministic tests that retain the existing scanner."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Reserves one scan attempt before any asynchronous lookup or navigation and prevents overlapping callbacks from causing duplicate lookup or route actions.",
+                "met": true,
+                "evidence": "The response reserves the attempt synchronously before validation or lookup, ignores detections while it is reserved, and marks it consumed before pushing the detail route."
+              },
+              {
+                "criterion": "Defines recovery after rejection and a new attempt when the user intentionally scans again, without permanently suppressing a code or depending only on frame throttling.",
+                "met": true,
+                "evidence": "After rejection, the scanner accepts a different code and an explicit retry clears suppression of the rejected value. After returning from details, Scan again enables a fresh attempt with the same code. The guard is enforced by the app."
+              },
+              {
+                "criterion": "Proposes deterministic repeated-frame tests with a deferred lookup and keeps the existing scanner.",
+                "met": true,
+                "evidence": "The response uses a fake detection stream, a Completer-controlled lookup, and a navigation observer to assert one lookup and one push across repeated frames. It tests deliberate same-code rescanning and uses the installed plugin's existing controller and selection policy."
+              }
+            ],
+            "summary": "The plan meets all three criteria with a synchronous attempt guard, explicit recovery and rescanning, and deterministic tests that retain the existing scanner."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-media": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

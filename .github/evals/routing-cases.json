@@ -607,6 +607,20 @@
     "forbidden": ["flutter-media", "flutter-app-workflow", "flutter-platform-integration"]
   },
   {
+    "name": "qr-scanning-camera-and-repeat-detection",
+    "prompt": "Fix an existing Flutter barcode scanner that opens a product detail screen multiple times when the camera detects the same code across frames. Preserve the scanner and pause capture while the screen is covered.",
+    "required": ["flutter-media"],
+    "optional": ["dart-concurrency", "flutter-navigation", "flutter-testing"],
+    "forbidden": ["flutter-app-workflow", "flutter-background-execution", "flutter-platform-integration"]
+  },
+  {
+    "name": "qr-scanning-negative-router-only",
+    "prompt": "Fix Flutter router back-stack behavior after opening an already parsed in-app link. The link happens to come from a QR code on another device. Only the route and back action change. The app does not scan any codes.",
+    "required": ["flutter-navigation"],
+    "optional": ["flutter-testing"],
+    "forbidden": ["flutter-media", "flutter-app-workflow"]
+  },
+  {
     "name": "music-player-queue-and-system-controls",
     "prompt": "Fix a Flutter music player's Next and Pause actions. The existing system media integration and in-app player disagree after a rapid queue skip or a lock-screen pause during buffering. Keep the existing player and OS configuration.",
     "required": ["flutter-media"],

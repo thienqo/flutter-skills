@@ -1,0 +1,113 @@
+{
+  "created_at": "2026-11-09T14:20:34.629701+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "2e3e76b23e39b481d3e6651c3f860460580d1adf",
+    "dirty": true,
+    "branch": "feature/flutter-media-qr-scanning"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [],
+  "routing": [
+    {
+      "case": "media-camera-using-existing-plugin",
+      "response": {
+        "skills": [
+          "flutter-media",
+          "dart-concurrency"
+        ],
+        "reason": "The camera preview needs lifecycle-safe controller initialization so a stale completion cannot restore it after route exit."
+      },
+      "passed": true,
+      "selected": [
+        "dart-concurrency",
+        "flutter-media"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "qr-scanning-camera-and-repeat-detection",
+      "response": {
+        "skills": [
+          "flutter-media",
+          "flutter-navigation"
+        ],
+        "reason": "Barcode capture and route lifecycle handling prevent duplicate detail screens and let the existing scanner pause while covered and resume when revealed."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-media",
+        "flutter-navigation"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "qr-scanning-negative-router-only",
+      "response": {
+        "skills": [
+          "flutter-navigation"
+        ],
+        "reason": "The fix only changes how the router opens an already parsed link and handles Back."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-navigation"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "music-player-queue-and-system-controls",
+      "response": {
+        "skills": [
+          "flutter-media",
+          "dart-concurrency"
+        ],
+        "reason": "Playback controls need consistent ordering so rapid skips and lock-screen pauses during buffering leave the in-app player and system media controls in sync."
+      },
+      "passed": true,
+      "selected": [
+        "dart-concurrency",
+        "flutter-media"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    }
+  ],
+  "summary": {
+    "behavior_cases": 0,
+    "behavior_passed": 0,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": null,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {},
+    "routing_cases": 4,
+    "routing_passed": 4
+  }
+}
