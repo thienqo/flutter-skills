@@ -18,16 +18,16 @@
   },
   {
     "name": "state-disposed-with-lifecycle-owner",
-    "prompt": "A stream controller in a ChangeNotifier leaks because nothing closes it. Fix the leak.",
+    "prompt": "In a response-only review, propose a focused fix for a stream controller and subscription owned by a ChangeNotifier created by a Flutter screen. They leak when the screen is removed. No repository or runtime is available. Describe the cleanup change and a widget test that removes the actual owner while an update is pending.",
     "resources": [
       "references/lifecycle-and-disposal.md"
     ],
     "expectations": [
       {
-        "text": "implements dispose to close controllers and cancel subscriptions owned by the notifier",
+        "text": "specifies notifier disposal that closes the owned controller and cancels the owned subscription through the existing owner",
         "mandatory": true
       },
-      "tests that disposal is called and resources are released when the owner is removed",
+      "proposes a widget test that removes or pops the owning screen, asserts disposal and release, and checks that late updates are ignored",
       "does not introduce global or static lifetime to avoid disposal"
     ]
   },
@@ -48,18 +48,26 @@
   },
   {
     "name": "riverpod-checks-mounted-after-await",
-    "prompt": "An AsyncNotifier fetches data and sets state after an await. It sometimes throws because the provider was disposed while the request was in flight. Fix it.",
+    "prompt": "Plan a fix for a Flutter screen on Riverpod 3.2.0. Its automatically disposed AsyncNotifier awaits a fetch. The screen can pop, or a dependency can rebuild the provider, before the fetch resolves. Preserve the dependency version and provider lifetime. Describe the fix and regression tests.",
     "resources": [
       "references/lifecycle-and-disposal.md"
     ],
     "expectations": [
       {
-        "text": "checks ref.mounted (or an equivalent liveness check) after the await before mutating state",
+        "text": "guards late results after the await using the original request's captured Ref.mounted or an equivalent disposal or generation check, including after provider rebuild",
         "mandatory": true
       },
-      "does not remove autoDispose merely to silence the error",
-      "uses ref.keepAlive only when the provider must intentionally survive the gap, with explicit later disposal",
-      "tests both the normal completion and the disposed-during-await case"
+      "preserves auto-disposal and proposes checks for a current completion, a late completion after screen removal, and an old request after rebuild"
+    ]
+  },
+  {
+    "name": "riverpod-2-invalidates-before-late-completion",
+    "prompt": "A Flutter app is pinned to flutter_riverpod 2.6.1. A screen watches an autoDispose AsyncNotifier and starts a fetch. Popping the screen removes the last listener while the request is pending. A teammate wants to add ref.mounted or migrate the dependency. Explain a fix on the existing version and how to verify late successes and errors.",
+    "resources": ["references/lifecycle-and-disposal.md"],
+    "expectations": [
+      {"text": "preserves Riverpod 2.6.1 and automatic disposal, and uses ref.onDispose before the async gap to cancel work or invalidate a lifetime token instead of ref.mounted", "mandatory": true},
+      {"text": "guards both success and error before writing state and proposes removing the watching screen while the request is pending, then checking no late write occurs", "mandatory": true},
+      "tests a current successful request as a control"
     ]
   },
   {

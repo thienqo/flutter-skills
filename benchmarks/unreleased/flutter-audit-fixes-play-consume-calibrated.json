@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T14:40:56.792236+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "a2a9d72922a42b76024e2998b5f655fddce713a8",
+    "dirty": true,
+    "branch": "fix/riverpod-and-iap-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-in-app-purchases",
+      "case": "play-consume-first-reconciles-without-double-grant",
+      "with_skill": {
+        "response": "Keep Google Play coin packs **consume-first**. Persist each verified purchase on the backend before requesting consumption, so recovery can proceed from the saved token after a restart.\n\n1. **Verify and save before consuming.** Confirm the purchase is in the purchased state, validate the coin-pack product, and bind the token to the owning account. Use the token as a unique key in the backend ledger. Save the product, coin quantity, account, and a state such as `awaiting_consumption` before issuing the consume request. Keep the token out of logs.\n2. **Reconcile ambiguous outcomes by saved token.** After a timeout or restart, have the backend query Play for unfinished ledger entries. If Play confirms consumption, proceed to the grant even when the client purchase list is empty. If Play confirms the purchase is still eligible for consumption, retry through the existing consume flow. If the query is inconclusive, keep the record pending and retry reconciliation. An empty client list alone provides no consumption evidence.\n3. **Grant once in an atomic backend operation.** Once consumption is confirmed, credit the recorded account and mark the token delivered in the same database transaction. Enforce a unique credit entry per token so replayed callbacks and concurrent reconciliation attempts cannot credit twice. If the app switches accounts, reconcile against the recorded owner and refresh the displayed balance for the currently signed-in account.\n\nIf this failure already occurred and the backend has no saved token or other durable record that can recover it, the empty client list leaves this recovery path without the evidence it needs. Persisting the verified record before consuming closes that gap for future purchases.\n\nOn **Apple StoreKit**, finish the verified transaction **after** durably delivering the content or enabling access. If the app dies between delivery and `finish()`, use the delivery record when the unfinished transaction returns, then finish it without granting again.\n\n### Deterministic fake-store tests\n\n- Save a verified Play coin-pack purchase, have the fake store consume it and drop the response, then kill the app before any credit. Restart with an empty client purchase list. Have the backend query the saved token and receive `consumed`. Replay the callback and race it against reconciliation. Assert exactly one credit to the recorded account and a delivered ledger entry.\n- Interrupt before the consume request reaches Play. On restart, return an eligible, unconsumed purchase and verify that retry leads to one credit after confirmation. Separately, return an inconclusive lookup and assert the ledger stays pending and the balance stays unchanged.\n- For StoreKit, interrupt after delivery and before `finish()`. Replay the unfinished transaction and assert that it finishes and the delivery count stays at one.\n\n### Real sandbox checks pending\n\n- **Android, Google Play test track, authenticated test account, consumable coin pack, test backend.** Drop the consume response after Play processes the request and terminate the app before credit. Relaunch and confirm the backend can query the saved token and verify consumption even when the client purchase list omits it. Check the Play result, the delivered ledger entry, and a single balance increment across repeated reconciliation.\n- **iOS, StoreKit sandbox, authenticated test account, Apple product handled by the existing integration.** Interrupt after durable delivery and before finish. Relaunch and confirm that StoreKit returns the unfinished transaction, the app finishes it, and the backend records only one delivery.\n\nThese are planned checks. No fake-store or sandbox runs have been performed.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Preserve Play consume-first ordering, durably save the verified token before consumption, and reconcile through Play without relying on the client purchase list.",
+              "met": true,
+              "evidence": "The response saves the verified token in a backend ledger before consuming and directs the backend to query Play by that token after a timeout or restart, including when the client purchase list is empty."
+            },
+            {
+              "criterion": "Grant coins once after confirmed consumption, use one durable idempotency identity for credit and processing state, and deliver before StoreKit finish.",
+              "met": true,
+              "evidence": "After Play confirms consumption, one database transaction creates a credit unique to the token and marks that same token delivered. StoreKit finish follows durable delivery, and replay uses the delivery record to avoid a second grant."
+            },
+            {
+              "criterion": "Plan restart and duplicate replay checks that assert exactly one grant, and separate deterministic tests from pending real sandbox verification.",
+              "met": true,
+              "evidence": "The fake-store test restarts after a lost consume response with an empty client purchase list, races callback replay against reconciliation, and asserts exactly one credit. Android and iOS sandbox checks are listed separately as pending."
+            }
+          ],
+          "summary": "The candidate meets all three criteria and explicitly states that the planned checks have yet to run."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Preserve Play consume-first ordering, durably save the verified token before consumption, and reconcile through Play without relying on the client purchase list.",
+                "met": true,
+                "evidence": "The response saves the verified token in a backend ledger before consuming and directs the backend to query Play by that token after a timeout or restart, including when the client purchase list is empty."
+              },
+              {
+                "criterion": "Grant coins once after confirmed consumption, use one durable idempotency identity for credit and processing state, and deliver before StoreKit finish.",
+                "met": true,
+                "evidence": "After Play confirms consumption, one database transaction creates a credit unique to the token and marks that same token delivered. StoreKit finish follows durable delivery, and replay uses the delivery record to avoid a second grant."
+              },
+              {
+                "criterion": "Plan restart and duplicate replay checks that assert exactly one grant, and separate deterministic tests from pending real sandbox verification.",
+                "met": true,
+                "evidence": "The fake-store test restarts after a lost consume response with an empty client purchase list, races callback replay against reconciliation, and asserts exactly one credit. Android and iOS sandbox checks are listed separately as pending."
+              }
+            ],
+            "summary": "The candidate meets all three criteria and explicitly states that the planned checks have yet to run."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-in-app-purchases": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

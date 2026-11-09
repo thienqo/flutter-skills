@@ -1,0 +1,126 @@
+{
+  "created_at": "2026-11-09T14:38:03.870292+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "a2a9d72922a42b76024e2998b5f655fddce713a8",
+    "dirty": true,
+    "branch": "fix/riverpod-and-iap-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-in-app-purchases",
+      "case": "pending-purchase-does-not-grant-access",
+      "with_skill": {
+        "response": "I\u2019d keep the existing Flutter billing package and fix the Google Play purchase handler so premium unlocks only after a completed purchase is verified and durably recorded for the owning account. A pending update can show \u201cPayment pending\u201d while the account\u2019s existing access stays as it was.\n\n1. **Trace the current flow.** Check the billing package version and its completion behavior, the premium product ID for each environment, purchase listener ownership, the existing verification path, and how premium is persisted and attributed. Identify any path that writes premium directly from a callback, including restore and launch reconciliation. This plan assumes the current account and entitlement model stays in place.\n2. **Route updates through one app-level handler.** Register the listener early and use the package\u2019s existing Play reconciliation APIs on launch and resume. Defer pending purchases without granting or acknowledging them. Handle cancellation and failure without granting access. Send completed and restored purchases through the same verification path, even when the purchase screen is closed.\n3. **Verify, grant, then acknowledge.** Use the trusted verification path to confirm Play reports the purchase as purchased and that it matches the app, premium product, and owning account. If ownership is unclear after an account switch, defer attribution. Atomically record the verified purchase and grant premium, keyed by the Play purchase token. Then acknowledge through the existing package or backend path, whichever already owns that operation. Keep failed or interrupted acknowledgement retryable. A duplicate callback should retry outstanding acknowledgement without granting again. The premium upgrade is non-consumable.\n4. **Reconcile existing premium records.** Check whether the old callback persisted premium from pending purchases. Reconcile affected records against authoritative purchase evidence, preserve verified access, and correct grants that can be traced to a still-pending, cancelled, or failed purchase. Keep verification outages distinct from a confirmed invalid purchase.\n\nUse deterministic tests for pending, cancellation, failure, verification failure, duplicate callbacks, and account switching. Then exercise the Android Play test track with a tester account, the existing non-consumable product, and the intended verification backend. Close the app while payment is pending, complete payment, and relaunch. Verify that there was no new grant or acknowledgement while pending, and that relaunch produces one durable grant followed by acknowledgement. In a separate run, interrupt after the grant commits but before acknowledgement, then relaunch and verify acknowledgement recovers without a second grant. Reinstall or restore on another device and verify that access resolves to the owning account. Check the entitlement record and Play acknowledgement state as evidence.\n\nThe code and store setup are uninspected, so the exact package calls and whether existing grants need repair are implementation checks.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Preserves the existing billing package",
+              "met": true,
+              "evidence": "Explicitly keeps the current Flutter billing package and uses its existing Play reconciliation APIs."
+            },
+            {
+              "criterion": "[MANDATORY] Does not grant entitlement for a pending or unverified transaction",
+              "met": true,
+              "evidence": "Defers pending purchases without granting or acknowledging them. Grants premium only after trusted verification confirms Play reports the purchase as purchased and it matches the app, product, and owning account."
+            },
+            {
+              "criterion": "[MANDATORY] Defines verified idempotent delivery followed by required Google Play acknowledgement",
+              "met": true,
+              "evidence": "Atomically records the verified purchase and grants premium using the Play purchase token as the idempotency key. Acknowledges after the grant commits and retries outstanding acknowledgement without granting again."
+            },
+            {
+              "criterion": "Reconciles completion after backgrounding, restart, or a later store update",
+              "met": true,
+              "evidence": "Registers an app-level listener early, reconciles on launch and resume, and routes later completed and restored purchases through the same verification path. Tests cover payment completion while the app is closed and acknowledgement recovery after relaunch."
+            }
+          ],
+          "summary": "The plan explicitly meets all four criteria. It includes verification steps for both payment completion while the app is closed and interruption between the durable grant and Play acknowledgement."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Preserves the existing billing package",
+                "met": true,
+                "evidence": "Explicitly keeps the current Flutter billing package and uses its existing Play reconciliation APIs."
+              },
+              {
+                "criterion": "[MANDATORY] Does not grant entitlement for a pending or unverified transaction",
+                "met": true,
+                "evidence": "Defers pending purchases without granting or acknowledging them. Grants premium only after trusted verification confirms Play reports the purchase as purchased and it matches the app, product, and owning account."
+              },
+              {
+                "criterion": "[MANDATORY] Defines verified idempotent delivery followed by required Google Play acknowledgement",
+                "met": true,
+                "evidence": "Atomically records the verified purchase and grants premium using the Play purchase token as the idempotency key. Acknowledges after the grant commits and retries outstanding acknowledgement without granting again."
+              },
+              {
+                "criterion": "Reconciles completion after backgrounding, restart, or a later store update",
+                "met": true,
+                "evidence": "Registers an app-level listener early, reconciles on launch and resume, and routes later completed and restored purchases through the same verification path. Tests cover payment completion while the app is closed and acknowledgement recovery after relaunch."
+              }
+            ],
+            "summary": "The plan explicitly meets all four criteria. It includes verification steps for both payment completion while the app is closed and interruption between the durable grant and Play acknowledgement."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 4,
+          "unanimous_expectations": 4,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-in-app-purchases": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

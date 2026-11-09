@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T14:38:03.882033+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "a2a9d72922a42b76024e2998b5f655fddce713a8",
+    "dirty": true,
+    "branch": "fix/riverpod-and-iap-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-in-app-purchases",
+      "case": "duplicate-updates-do-not-redeliver-consumable",
+      "with_skill": {
+        "response": "Keep the grant-then-consume sequence. Make the coin grant idempotent using the verified Google Play purchase token. A delay before consumption widens the window in which the app can crash after crediting coins. The same purchase can still be replayed on restart.\n\n1. **Verify the purchase and bind it to the owning account.** Use the existing verification path to confirm the purchase is completed and matches the expected coin pack. If the account changes while the purchase is in flight, defer delivery until ownership is resolved.\n2. **Record delivery and credit the coins in one durable transaction.** At the authoritative balance store, enforce uniqueness on the purchase token within the Play app. In the same database transaction, insert the delivery record and credit the balance. Save the owning account, product, and pending consumption state on the record. Repeated or concurrent processing of the same token reuses the committed record without crediting coins again.\n3. **Consume after the grant commits.** Keep the current consumption mechanism. On launch and resume, reconcile purchases and retry consumption from durable pending records. If Play consumed the purchase but the response was lost, resolve the outcome through the existing trusted Play verification path. Mark consumption complete once confirmed and keep ambiguous outcomes pending. Retain the delivery record so late callbacks cannot credit coins again.\n\nBefore rollout, check whether existing grant records can be matched to purchase tokens. Backfill delivery records where the match is reliable. If an outstanding purchase might already have been credited and the history cannot establish which, route it for reconciliation before automatically granting it.\n\nTest with a fake Play integration that can crash immediately after the grant commits and again after Play consumes the purchase but before the app records success. Restart, replay the update, and assert that the balance increases exactly once and consumption eventually resolves. Also replay the same token concurrently to verify the database constraint protects the grant. Then reproduce the interrupted flow with a Google Play test purchase and verify the durable credit, consumption, and ability to repurchase the pack.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Rejects timing delays as an exactly-once strategy",
+              "met": true,
+              "evidence": "The response explains that a delay widens the crash window and still allows the same purchase to replay on restart. It relies on an idempotent grant to prevent duplicate credits."
+            },
+            {
+              "criterion": "Uses stable transaction identity and durable idempotent delivery",
+              "met": true,
+              "evidence": "The response keys delivery on the verified Google Play purchase token, enforces token uniqueness, and commits the delivery record and balance credit in one durable database transaction. Repeated or concurrent processing reuses the committed record without issuing another credit."
+            },
+            {
+              "criterion": "Orders recoverable delivery before consumption and handles duplicate callbacks after restart",
+              "met": true,
+              "evidence": "The response requires the grant to commit before consumption, retries consumption from durable pending records after restart, and retains delivery records to suppress duplicate credits from replayed callbacks. It explicitly tests a crash after the grant commits followed by restart and replay."
+            }
+          ],
+          "summary": "All three mandatory criteria are met. The plan preserves grant-before-consume ordering and makes the coin credit safe to replay across crashes."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Rejects timing delays as an exactly-once strategy",
+                "met": true,
+                "evidence": "The response explains that a delay widens the crash window and still allows the same purchase to replay on restart. It relies on an idempotent grant to prevent duplicate credits."
+              },
+              {
+                "criterion": "Uses stable transaction identity and durable idempotent delivery",
+                "met": true,
+                "evidence": "The response keys delivery on the verified Google Play purchase token, enforces token uniqueness, and commits the delivery record and balance credit in one durable database transaction. Repeated or concurrent processing reuses the committed record without issuing another credit."
+              },
+              {
+                "criterion": "Orders recoverable delivery before consumption and handles duplicate callbacks after restart",
+                "met": true,
+                "evidence": "The response requires the grant to commit before consumption, retries consumption from durable pending records after restart, and retains delivery records to suppress duplicate credits from replayed callbacks. It explicitly tests a crash after the grant commits followed by restart and replay."
+              }
+            ],
+            "summary": "All three mandatory criteria are met. The plan preserves grant-before-consume ordering and makes the coin credit safe to replay across crashes."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-in-app-purchases": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

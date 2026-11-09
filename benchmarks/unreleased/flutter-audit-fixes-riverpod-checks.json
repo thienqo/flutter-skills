@@ -1,0 +1,106 @@
+{
+  "created_at": "2026-11-09T14:38:03.858961+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "a2a9d72922a42b76024e2998b5f655fddce713a8",
+    "dirty": true,
+    "branch": "fix/riverpod-and-iap-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-state-management",
+      "case": "riverpod-checks-mounted-after-await",
+      "with_skill": {
+        "response": "Keep the `AsyncNotifier` automatically disposed on Riverpod 3.2.0. Treat each provider build as a separate lifetime for the fetch it starts.\n\n- Capture the current `ref` in a local variable before the first `await`. After the fetch completes, check `requestRef.mounted` immediately before publishing either `AsyncData` or `AsyncError`. Riverpod 3.2.0 makes that check reliable on a stale `Ref` after recomputation. Reading the notifier\u2019s `ref` again after the await could check the replacement build\u2019s lifetime.\n- If the fetch supports cancellation, register its request-specific cancel callback with `requestRef.onDispose` before awaiting. Keep the mounted check because completion can race with cancellation. If the notifier allows overlapping fetches within one build, also check a request identity before publishing so only the latest request can update state.\n- If the fetch runs directly in `build()`, return its result or let its error propagate through the returned future so Riverpod owns the async state transition. Use the mounted guard for any manual state writes or other post-fetch effects.\n\nUse controllable futures in the regression tests so completion order is deterministic.\n\n1. **Active screen.** Verify loading transitions to data on success and to error on failure. If the screen offers retry, verify a successful retry clears the error.\n2. **Screen pop.** Start a fetch, pop the screen, and pump until auto-disposal runs. Verify cancellation if supported. Complete the old request with success and, in a separate case, with an error. Assert there is no late state publication or uncaught exception.\n3. **Dependency rebuild.** Keep the screen mounted, start request A, and change the watched dependency to start request B. Complete A while B is pending and verify B\u2019s loading state survives. Also complete A after B has published data and verify B\u2019s data survives. Cover both stale success and stale error.\n4. **Overlapping refreshes, if supported.** Start two requests within the same provider lifetime and resolve the newer one first. Verify the older completion cannot overwrite it even though the captured `Ref` is still mounted.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "[MANDATORY] guards late results after the await using the original request's captured Ref.mounted or an equivalent disposal or generation check, including after provider rebuild",
+              "met": true,
+              "evidence": "The response captures the request's Ref before awaiting and checks that same Ref immediately before publishing data or an error. It explicitly explains that rereading the notifier's ref after the await could check the replacement build's lifetime."
+            },
+            {
+              "criterion": "preserves auto-disposal and proposes checks for a current completion, a late completion after screen removal, and an old request after rebuild",
+              "met": true,
+              "evidence": "The response retains auto-disposal on Riverpod 3.2.0 and proposes deterministic tests for active success and failure, late success and failure after the screen pops and disposal runs, and stale success and failure after a dependency rebuild. The rebuild tests verify that the stale completion leaves the replacement request's loading state or published data intact."
+            }
+          ],
+          "summary": "Both criteria are explicitly met."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "[MANDATORY] guards late results after the await using the original request's captured Ref.mounted or an equivalent disposal or generation check, including after provider rebuild",
+                "met": true,
+                "evidence": "The response captures the request's Ref before awaiting and checks that same Ref immediately before publishing data or an error. It explicitly explains that rereading the notifier's ref after the await could check the replacement build's lifetime."
+              },
+              {
+                "criterion": "preserves auto-disposal and proposes checks for a current completion, a late completion after screen removal, and an old request after rebuild",
+                "met": true,
+                "evidence": "The response retains auto-disposal on Riverpod 3.2.0 and proposes deterministic tests for active success and failure, late success and failure after the screen pops and disposal runs, and stale success and failure after a dependency rebuild. The rebuild tests verify that the stale completion leaves the replacement request's loading state or published data intact."
+              }
+            ],
+            "summary": "Both criteria are explicitly met."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 2,
+          "unanimous_expectations": 2,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-state-management": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

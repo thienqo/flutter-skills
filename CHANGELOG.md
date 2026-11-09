@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Correct Riverpod async disposal guidance by version and distinguish Google Play consumable ordering from StoreKit finish. Add two behavior cases and strengthen adjacent lifecycle and billing evaluations.
+
 - Extend `flutter-media` with QR and barcode scanning guidance for repeat detection, payload validation, manual entry, and camera lifecycle. Add three behavior cases and two routing cases.
 
 - Add `flutter-payments-checkout` for external-gateway order payments, idempotent attempts, redirect recovery, verified results, and fulfillment. Add four behavior cases and extend checkout routing coverage.

@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T14:38:03.863599+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "a2a9d72922a42b76024e2998b5f655fddce713a8",
+    "dirty": true,
+    "branch": "fix/riverpod-and-iap-guidance"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-state-management",
+      "case": "state-disposed-with-lifecycle-owner",
+      "with_skill": {
+        "response": "Keep the `ChangeNotifier` scoped to the screen. If the screen\u2019s `State` creates it, call `notifier.dispose()` from `State.dispose()`. If a screen-scoped `ChangeNotifierProvider(create: ...)` creates it, let the provider dispose it. A provider that receives an existing notifier through `.value` leaves disposal to the notifier\u2019s creator.\n\nIn `ChangeNotifier.dispose()`, mark the notifier disposed first, cancel its owned subscription, close its owned `StreamController`, then call `super.dispose()`. Keep `dispose()` synchronous. If a stream handler awaits work, check the disposed flag after the `await` before changing state, adding to the controller, or calling `notifyListeners()`. Apply the same guard to any error path that publishes an update. Canceling the subscription stops future deliveries, while the guard covers a handler that already started.\n\nFor the widget test, mount the screen through its normal ownership path with a controllable input stream and a `Completer` that holds an update pending. Emit an event and pump until the handler reaches the pending work. Replace the screen, including its provider if it owns the notifier, and pump. Assert that the upstream subscription was canceled and the owned controller was closed, using a cancellation callback and a controller probe. Then complete the pending work and pump again. Assert that the completion produced no state change, output event, notification, or uncaught exception. If the handler publishes errors, repeat the test with a late failure.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "Specifies notifier disposal that closes the owned controller and cancels the owned subscription through the existing owner.",
+              "met": true,
+              "evidence": "The response assigns disposal to the State or screen-scoped provider that creates the notifier. It explicitly cancels the owned subscription and closes the owned controller in the notifier's dispose method."
+            },
+            {
+              "criterion": "Proposes a widget test that removes or pops the owning screen, asserts disposal and release, and checks that late updates are ignored.",
+              "met": true,
+              "evidence": "The test holds an update pending with a Completer, then removes the screen and its provider when the provider owns the notifier. It verifies disposal through subscription cancellation and controller closure, then completes the pending work and checks for no state change, output event, notification, or uncaught exception."
+            },
+            {
+              "criterion": "Does not introduce global or static lifetime to avoid disposal.",
+              "met": true,
+              "evidence": "The response explicitly keeps the notifier scoped to the screen and ties cleanup to its creator's lifecycle."
+            }
+          ],
+          "summary": "All three criteria are met. The fix follows the screen's ownership path, and the proposed test verifies resource release and ignores an update that was already in flight."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "Specifies notifier disposal that closes the owned controller and cancels the owned subscription through the existing owner.",
+                "met": true,
+                "evidence": "The response assigns disposal to the State or screen-scoped provider that creates the notifier. It explicitly cancels the owned subscription and closes the owned controller in the notifier's dispose method."
+              },
+              {
+                "criterion": "Proposes a widget test that removes or pops the owning screen, asserts disposal and release, and checks that late updates are ignored.",
+                "met": true,
+                "evidence": "The test holds an update pending with a Completer, then removes the screen and its provider when the provider owns the notifier. It verifies disposal through subscription cancellation and controller closure, then completes the pending work and checks for no state change, output event, notification, or uncaught exception."
+              },
+              {
+                "criterion": "Does not introduce global or static lifetime to avoid disposal.",
+                "met": true,
+                "evidence": "The response explicitly keeps the notifier scoped to the screen and ties cleanup to its creator's lifecycle."
+              }
+            ],
+            "summary": "All three criteria are met. The fix follows the screen's ownership path, and the proposed test verifies resource release and ignores an update that was already in flight."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-state-management": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}
