@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "Flutter Skills",
     "shortDescription": "Build and ship Flutter apps with focused skills.",
-    "longDescription": "Use package-neutral Flutter and Dart skills for complete delivery, focused implementation, location and maps, review, testing, performance, security, and release workflows.",
+    "longDescription": "Use package-neutral Flutter and Dart skills for complete delivery, payment checkout, location and maps, review, testing, performance, security, and release workflows.",
     "developerName": "thienqo",
     "category": "Developer Tools",
     "capabilities": [

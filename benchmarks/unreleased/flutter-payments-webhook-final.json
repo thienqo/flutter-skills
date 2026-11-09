@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-11-09T12:35:24.228970+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "20eabdca5410afffd16e924ada06b16471f1c7bb",
+    "dirty": true,
+    "branch": "feature/flutter-payments-checkout"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [
+    {
+      "skill": "flutter-payments-checkout",
+      "case": "payments-checkout-duplicate-and-reordered-notifications",
+      "with_skill": {
+        "response": "I\u2019m applying the Flutter Payments Checkout skill. Keep the existing gateway and make the backend the authority for payment status and fulfillment. Use the gateway\u2019s documented signature verification, event identity, and authenticated status query.\n\n### Backend contract\n\n1. **Verify and match the notification.** Verify the signature before trusting the payload. Match the verified transaction to the expected merchant, environment, order, attempt, amount, and currency. Use the backend\u2019s trusted transaction mapping to resolve missing identifiers. If a required fact is missing, query the gateway through its authenticated API. Keep the attempt unconfirmed until the match is established.\n2. **Commit the payment transition and fulfillment intent together.** Keep payment attempts, orders, and fulfillment records distinct. In one database transaction, deduplicate the delivery using the gateway\u2019s documented identity, serialize the decision on the order with a row lock or equivalent conditional write, and apply the verified payment transition. When the verified outcome meets the order\u2019s fulfillment policy, mark the order paid and insert a durable fulfillment intent with a unique key on `(order_id, fulfillment_operation)`. Acknowledge successful handling after commit. A crash before commit leaves the event safe to retry. A crash after commit leaves the fulfillment intent available to the worker.\n3. **Use the same transition logic for notifications and status queries.** The duplicate success produces no additional intent, even if both handlers run concurrently. The older processing notification leaves the confirmed payment intact. If verified outcomes conflict and their ordering is unclear, reconcile through the gateway\u2019s authenticated status query. Handle refunds as separate, legitimate transitions under the order\u2019s policy.\n4. **Make the fulfillment effect idempotent.** Have the worker retry the durable intent with the same order-and-operation key. If fulfillment calls an external system, that system must honor the key or provide an equivalent way to reconcile an uncertain result. This covers a crash after the external action succeeds but before the worker records completion.\n\n### Flutter contract\n\nExpose an authenticated order status endpoint that authorizes access to the specific order and returns separate order payment, payment attempt, and fulfillment statuses. Flutter shows **Paid** when the backend reports it and displays fulfillment progress independently. A checkout return, client callback, timeout, or app resume can trigger a refresh. If the backend still reports a pending attempt, show that status and recover it by fetching the order again after restart.\n\n### Verification\n\nUse deterministic tests to race two copies of the success event, deliver the older processing event afterward, and race a status query against the notification. Assert that the order stays paid and the fulfillment effect occurs once. Inject crashes before the payment transaction commits, after it commits, and after the fulfillment effect but before completion is recorded. Also test invalid signatures, wrong merchant or environment, mismatched amount or currency, and unauthorized order access.\n\nThe gateway wasn\u2019t identified in the request, so its event key and status mapping remain integration details. This is a plan. The gateway sandbox, backend callback and status-query paths, and Flutter device recovery paths still need to be exercised.",
+        "judgment": {
+          "score": 100,
+          "expectations": [
+            {
+              "criterion": "1. Verify the signature, match the expected order, attempt, and amount, and prevent stale processing from regressing verified success.",
+              "met": true,
+              "evidence": "The response requires signature verification before trusting the payload and explicitly matches the verified transaction to the expected order, attempt, and amount. It states that an older processing notification leaves the confirmed payment intact."
+            },
+            {
+              "criterion": "2. Deduplicate deliveries and use a durable fulfillment intent or equivalent atomic mechanism plus an idempotent fulfillment operation.",
+              "met": true,
+              "evidence": "The response deduplicates by gateway event identity, serializes concurrent handlers on the order, and commits the payment transition with a uniquely keyed durable fulfillment intent. Worker retries reuse the same operation key, and the response requires downstream idempotency or equivalent reconciliation if the worker crashes after the effect succeeds."
+            },
+            {
+              "criterion": "3. Keep the app reading authorized backend state and test duplicate, reordered, and interrupted delivery paths.",
+              "met": true,
+              "evidence": "Flutter reads payment state from an authenticated endpoint that authorizes access to the specific order. The test plan races duplicate success notifications, delivers older processing after success, and injects crashes before commit, after commit, and after fulfillment but before completion is recorded."
+            }
+          ],
+          "summary": "All three criteria are met. The plan explicitly covers payment verification, concurrent delivery, crash recovery, and authorized backend reads."
+        },
+        "judgments": [
+          {
+            "score": 100,
+            "expectations": [
+              {
+                "criterion": "1. Verify the signature, match the expected order, attempt, and amount, and prevent stale processing from regressing verified success.",
+                "met": true,
+                "evidence": "The response requires signature verification before trusting the payload and explicitly matches the verified transaction to the expected order, attempt, and amount. It states that an older processing notification leaves the confirmed payment intact."
+              },
+              {
+                "criterion": "2. Deduplicate deliveries and use a durable fulfillment intent or equivalent atomic mechanism plus an idempotent fulfillment operation.",
+                "met": true,
+                "evidence": "The response deduplicates by gateway event identity, serializes concurrent handlers on the order, and commits the payment transition with a uniquely keyed durable fulfillment intent. Worker retries reuse the same operation key, and the response requires downstream idempotency or equivalent reconciliation if the worker crashes after the effect succeeds."
+              },
+              {
+                "criterion": "3. Keep the app reading authorized backend state and test duplicate, reordered, and interrupted delivery paths.",
+                "met": true,
+                "evidence": "Flutter reads payment state from an authenticated endpoint that authorizes access to the specific order. The test plan races duplicate success notifications, delivers older processing after success, and injects crashes before commit, after commit, and after fulfillment but before completion is recorded."
+              }
+            ],
+            "summary": "All three criteria are met. The plan explicitly covers payment verification, concurrent delivery, crash recovery, and authorized backend reads."
+          }
+        ],
+        "agreement": {
+          "judge_count": 1,
+          "average_score": 100.0,
+          "minimum_score": 100,
+          "maximum_score": 100,
+          "score_range": 0,
+          "expectation_count": 3,
+          "unanimous_expectations": 3,
+          "expectation_agreement_rate": 100.0,
+          "mandatory_disagreements": []
+        }
+      },
+      "delta": null,
+      "mandatory_failure": false,
+      "passed": true
+    }
+  ],
+  "routing": [],
+  "summary": {
+    "behavior_cases": 1,
+    "behavior_passed": 1,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": 100.0,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {
+      "flutter-payments-checkout": {
+        "cases": 1,
+        "passed": 1,
+        "baseline_average": null,
+        "with_skill_average": 100.0,
+        "average_delta": null
+      }
+    },
+    "routing_cases": 0,
+    "routing_passed": 0
+  }
+}

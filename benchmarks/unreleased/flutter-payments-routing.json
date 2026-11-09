@@ -1,0 +1,113 @@
+{
+  "created_at": "2026-11-09T12:34:07.683448+00:00",
+  "runner_version": "2.0.0",
+  "git": {
+    "commit": "20eabdca5410afffd16e924ada06b16471f1c7bb",
+    "dirty": true,
+    "branch": "feature/flutter-payments-checkout"
+  },
+  "agent": "codex",
+  "agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "model": null,
+  "judge_agent": "codex",
+  "judge_agent_version": "codex-cli 0.167.0-alpha.3.2",
+  "judge_model": null,
+  "judges": [
+    {
+      "agent": "codex",
+      "version": "codex-cli 0.167.0-alpha.3.2",
+      "model": null
+    }
+  ],
+  "independent_primary_judge": false,
+  "catalog_version": "0.13.0",
+  "profile": null,
+  "reference_coverage": null,
+  "behavior": [],
+  "routing": [
+    {
+      "case": "verified-store-subscription-entitlement",
+      "response": {
+        "skills": [
+          "flutter-in-app-purchases"
+        ],
+        "reason": "The billing specialist covers both stores, backend transaction verification, restoration, and subscription entitlement changes across accounts."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-in-app-purchases"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "physical-goods-checkout-is-not-iap",
+      "response": {
+        "skills": [
+          "flutter-payments-checkout"
+        ],
+        "reason": "External gateway checkout requires timeout recovery that prevents duplicate payments and displays the verified order status."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-payments-checkout"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "payments-checkout-return-and-pending-status",
+      "response": {
+        "skills": [
+          "flutter-payments-checkout",
+          "flutter-networking",
+          "flutter-persistence"
+        ],
+        "reason": "Treat the wallet redirect as a signal to reconcile with the merchant backend and persist the pending attempt so reconciliation can resume after restart."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-networking",
+        "flutter-payments-checkout",
+        "flutter-persistence"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    },
+    {
+      "case": "embedded-first-party-web-checkout-bridge",
+      "response": {
+        "skills": [
+          "flutter-webview",
+          "flutter-device-testing"
+        ],
+        "reason": "WebView covers the origin policy, typed JavaScript bridge, cookie-aware logout, and external-link handoff. Device testing covers verification on Android and iOS."
+      },
+      "passed": true,
+      "selected": [
+        "flutter-device-testing",
+        "flutter-webview"
+      ],
+      "missing": [],
+      "forbidden_selected": [],
+      "unexpected": []
+    }
+  ],
+  "summary": {
+    "behavior_cases": 0,
+    "behavior_passed": 0,
+    "mandatory_failures": 0,
+    "baseline_average": null,
+    "with_skill_average": null,
+    "average_delta": null,
+    "judge_agreement_rate": null,
+    "judge_score_range_average": null,
+    "mandatory_judge_disagreements": 0,
+    "by_skill": {},
+    "routing_cases": 4,
+    "routing_passed": 4
+  }
+}

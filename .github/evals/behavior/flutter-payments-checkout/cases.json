@@ -1,0 +1,42 @@
+[
+  {
+    "name": "payments-checkout-lost-create-response",
+    "prompt": "Plan a fix for a Flutter grocery checkout that uses an existing gateway. A user taps Pay twice. The backend creates the gateway payment attempt, but its response to the app times out. The user retries the same unchanged order. The backend can store attempts and the gateway supports idempotent creation. Explain the app and backend behavior and what to verify.",
+    "resources": ["references/order-and-payment-attempts.md"],
+    "expectations": [
+      {"id": "one-attempt-after-timeout", "text": "Treats the lost response as an unknown result, uses backend lookup or replay under the original operation identity for the unchanged order, and protects against concurrent duplicate creation beyond a disabled UI button.", "mandatory": true},
+      {"id": "authoritative-order", "text": "Requires backend authorization of the order and derives amount and currency from trusted backend order data.", "mandatory": true},
+      "Keeps the existing gateway and tests concurrent submit plus a lost response after creation, asserting a single attempt."
+    ]
+  },
+  {
+    "name": "payments-checkout-redirect-before-verification",
+    "prompt": "Plan a Flutter fix for a courier checkout that returns from its existing gateway using a deep link. The URL claims success before the backend has a verified result. A repeated link can also refer to a previous order. The existing backend has an authenticated payment-status endpoint. Explain what the app displays, which order it refreshes, and how to test it.",
+    "resources": ["references/return-and-recovery.md"],
+    "expectations": [
+      {"id": "return-is-a-status-trigger", "text": "Treats the deep link as untrusted, never marks the order paid or triggers fulfillment from it, and shows pending or checking until the authorized backend confirms the result.", "mandatory": true},
+      {"id": "bind-return-to-current-attempt", "text": "Checks the expected return route and correlates the return to the authenticated account and relevant order or attempt, preventing a repeated or stale link from overwriting the active checkout.", "mandatory": true},
+      "Tests a return before verification, a stale or repeated return, and confirmed backend success without claiming native link delivery was exercised."
+    ]
+  },
+  {
+    "name": "payments-checkout-duplicate-and-reordered-notifications",
+    "prompt": "A Flutter order app reads payment state from its backend. A gateway may deliver the same verified success notification twice, then deliver an older processing notification. Two handlers can run concurrently. An order should be fulfilled once even if a worker crashes after verification. Plan the app and backend contract using the existing gateway.",
+    "resources": ["references/verified-results-and-fulfillment.md"],
+    "expectations": [
+      {"id": "verify-and-reconcile", "text": "Requires signature verification and matching the expected order, attempt and amount, and prevents an older processing notification from regressing verified success.", "mandatory": true},
+      {"id": "durable-fulfillment", "text": "Deduplicates deliveries and uses a durable fulfillment intent or equivalent atomic mechanism plus an idempotent fulfillment operation so concurrency or crash recovery cannot fulfill the order twice.", "mandatory": true},
+      "Keeps the app reading authorized backend state and tests duplicate, reordered, and interrupted delivery paths."
+    ]
+  },
+  {
+    "name": "payments-checkout-recovers-pending-attempt-after-restart",
+    "prompt": "A Flutter app was killed while a food order's gateway payment was pending. The user reopens without a redirect. They may have signed into another account, and a gateway confirmation could arrive while the app is offline. Plan recovery for the same order, the displayed states and actions, and focused checks. Preserve the existing gateway.",
+    "resources": ["references/return-and-recovery.md"],
+    "expectations": [
+      {"id": "authorized-restoration", "text": "Uses non-secret order or attempt identity or a backend lookup scoped to the signed-in account, queries authorized backend status on reopening, and rejects recovery for a previous account.", "mandatory": true},
+      {"id": "pending-does-not-start-another-payment", "text": "Distinguishes pending or offline unknown from confirmed failure or cancellation, resumes tracking the same attempt, and only allows another payment after the backend permits it.", "mandatory": true},
+      "Tests restart with no return link, offline recovery to a later confirmed result, and account switching."
+    ]
+  }
+]

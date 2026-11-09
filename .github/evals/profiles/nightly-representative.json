@@ -27,6 +27,7 @@
     {"skill": "flutter-observability", "case": "extend-existing-crash-reporting"},
     {"skill": "flutter-openapi-client", "case": "documented-fields-and-observed-response-stay-distinct"},
     {"skill": "flutter-package-development", "case": "public-api-change-protects-consumers"},
+    {"skill": "flutter-payments-checkout", "case": "payments-checkout-lost-create-response"},
     {"skill": "flutter-performance", "case": "profiles-before-optimizing-list"},
     {"skill": "flutter-persistence", "case": "database-choice-from-query-needs"},
     {"skill": "flutter-platform-integration", "case": "typed-native-contract"},
