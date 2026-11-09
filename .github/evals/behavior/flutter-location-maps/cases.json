@@ -21,11 +21,12 @@
   },
   {
     "name": "location-maps-camera-scope",
-    "prompt": "Plan a fix for an existing Flutter map with follow-me mode. Each map controller binding owns a position subscription. The user pans away and then leaves the map while a one-shot location fix and an older area search are pending. An in-scope fix should still update the position indicator after a pan, without moving the viewport until Recenter is tapped. Describe ownership, subscription cleanup, and regression checks for late successes and errors, including when the map controller is replaced.",
+    "prompt": "Plan a fix for an existing Flutter map with follow-me mode. Each map controller binding owns a position subscription and area search requests. The screen state separately owns a one-shot location fix. The user pans away while an area search and fix are pending. An in-scope fix should still update the position indicator after a pan, without moving the viewport until Recenter is tapped. Describe what happens if the controller is replaced while the screen stays active, then the user leaves. Include subscription cleanup and regression checks for late successes and errors.",
     "resources": ["references/map-interaction-and-lifecycle.md", "references/nearby-search-and-address-picking.md"],
     "expectations": [
       {"id": "pan-preserves-camera-intent", "text": "Separates position indicator, camera, and follow state so a manual pan stops auto movement and explicit recenter restores it.", "mandatory": true},
-      {"id": "invalidate-late-work", "text": "Cancels owned subscriptions and invalidates pending successes and errors on exit or controller replacement, and distinguishes newer and older requests even while mounted.", "mandatory": true},
+      {"id": "invalidate-late-work", "text": "Cancels the retiring binding's subscription and rejects its pending successes and errors on exit or replacement, and distinguishes newer and older requests even while mounted.", "mandatory": true},
+      {"id": "preserve-screen-owned-fix", "text": "Allows a still-current screen-owned fix to update the position indicator after controller replacement, guards camera work with the current controller and camera intent, and rejects the screen-owned result or error after exit.", "mandatory": true},
       "Tests manual pan, recenter, and late completion without claiming actual map rendering was verified."
     ]
   },

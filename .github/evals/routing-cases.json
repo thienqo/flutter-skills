@@ -600,8 +600,8 @@
     "forbidden": ["flutter-media", "flutter-app-workflow", "flutter-platform-integration"]
   },
   {
-    "name": "location-maps-nearby-vietnamese",
-    "prompt": "Sửa màn Flutter tìm cửa hàng gần tôi để dùng được vị trí gần đúng, báo khi dịch vụ vị trí tắt, và cho chọn khu vực thủ công. Giữ map SDK và API hiện tại.",
+    "name": "location-maps-nearby",
+    "prompt": "Fix an existing Flutter store finder so it can use approximate location, show when location services are disabled, and let the user select an area manually. Keep the current map SDK and API.",
     "required": ["flutter-location-maps"],
     "optional": ["flutter-state-management", "flutter-testing", "flutter-ui-patterns"],
     "forbidden": ["flutter-app-workflow", "flutter-background-execution", "flutter-navigation"]

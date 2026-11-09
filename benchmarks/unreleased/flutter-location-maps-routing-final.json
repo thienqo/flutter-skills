@@ -1,8 +1,8 @@
 {
-  "created_at": "2026-11-09T11:25:52.614545+00:00",
+  "created_at": "2026-11-09T11:29:29.371956+00:00",
   "runner_version": "2.0.0",
   "git": {
-    "commit": "83122865736cc6ec6c3df3ddc56108654d40f92b",
+    "commit": "e98e77737107ebb679ea031a6f59206e237001fa",
     "dirty": true,
     "branch": "feature/flutter-location-maps"
   },
@@ -26,18 +26,16 @@
   "behavior": [],
   "routing": [
     {
-      "case": "location-maps-nearby-vietnamese",
+      "case": "location-maps-nearby",
       "response": {
         "skills": [
-          "flutter-location-maps",
-          "flutter-ui-patterns"
+          "flutter-location-maps"
         ],
-        "reason": "X\u1eed l\u00fd v\u1ecb tr\u00ed g\u1ea7n \u0111\u00fang, th\u00f4ng b\u00e1o khi d\u1ecbch v\u1ee5 v\u1ecb tr\u00ed t\u1eaft v\u00e0 th\u00eam l\u1ef1a ch\u1ecdn khu v\u1ef1c th\u1ee7 c\u00f4ng tr\u00ean m\u00e0n hi\u1ec7n t\u1ea1i, gi\u1eef nguy\u00ean map SDK v\u00e0 API."
+        "reason": "The fix concerns location accuracy, disabled location services, and manual area selection within the existing store finder."
       },
       "passed": true,
       "selected": [
-        "flutter-location-maps",
-        "flutter-ui-patterns"
+        "flutter-location-maps"
       ],
       "missing": [],
       "forbidden_selected": [],
@@ -49,7 +47,7 @@
         "skills": [
           "flutter-location-maps"
         ],
-        "reason": "Keep the current map SDK, update the location indicator independently of the camera, and resume following only when the user taps Recenter."
+        "reason": "Keep the current map SDK, update the location indicator after a user pan, and resume camera follow only when Recenter is tapped."
       },
       "passed": true,
       "selected": [
@@ -63,10 +61,10 @@
       "case": "location-maps-reverse-geocode-selection",
       "response": {
         "skills": [
-          "dart-concurrency",
-          "flutter-location-maps"
+          "flutter-location-maps",
+          "dart-concurrency"
         ],
-        "reason": "Fix the reverse-geocoding response race so only the current pin\u2019s address is applied, while keeping the existing service and transport."
+        "reason": "Fix the reverse-geocoding race so only the current pin\u2019s response updates its address, while preserving the existing service and transport."
       },
       "passed": true,
       "selected": [
@@ -84,7 +82,7 @@
           "flutter-background-execution",
           "flutter-location-maps"
         ],
-        "reason": "Keep location updates running while the screen is locked, handle platform location permissions, and stop tracking when the shift ends."
+        "reason": "Keep location tracking active while the screen is locked, handle platform location permissions, and stop tracking when the shift ends."
       },
       "passed": true,
       "selected": [
@@ -101,7 +99,7 @@
         "skills": [
           "flutter-navigation"
         ],
-        "reason": "The fix is confined to routing the store ID to the existing map tab and preserving back-stack behavior."
+        "reason": "The fix is limited to routing the deep link to the existing map tab by store ID while preserving the back stack."
       },
       "passed": true,
       "selected": [
@@ -117,7 +115,7 @@
         "skills": [
           "flutter-networking"
         ],
-        "reason": "The fix is limited to retry behavior in the HTTP adapter."
+        "reason": "The fix is limited to duplicate retries in the HTTP adapter."
       },
       "passed": true,
       "selected": [

@@ -350,108 +350,7 @@
       "passed": true
     }
   ],
-  "routing": [
-    {
-      "case": "location-maps-nearby-vietnamese",
-      "response": {
-        "skills": [
-          "flutter-location-maps"
-        ],
-        "reason": "M\u00e0n t\u00ecm c\u1eeda h\u00e0ng c\u1ea7n h\u1ed7 tr\u1ee3 v\u1ecb tr\u00ed g\u1ea7n \u0111\u00fang, b\u00e1o khi d\u1ecbch v\u1ee5 v\u1ecb tr\u00ed t\u1eaft v\u00e0 cho ch\u1ecdn khu v\u1ef1c th\u1ee7 c\u00f4ng, \u0111\u1ed3ng th\u1eddi gi\u1eef nguy\u00ean SDK b\u1ea3n \u0111\u1ed3 v\u00e0 API hi\u1ec7n t\u1ea1i."
-      },
-      "passed": true,
-      "selected": [
-        "flutter-location-maps"
-      ],
-      "missing": [],
-      "forbidden_selected": [],
-      "unexpected": []
-    },
-    {
-      "case": "location-maps-manual-pan",
-      "response": {
-        "skills": [
-          "flutter-location-maps"
-        ],
-        "reason": "Separate location indicator updates from camera follow in the existing SDK, pausing follow on user pan and resuming it only on Recenter."
-      },
-      "passed": true,
-      "selected": [
-        "flutter-location-maps"
-      ],
-      "missing": [],
-      "forbidden_selected": [],
-      "unexpected": []
-    },
-    {
-      "case": "location-maps-reverse-geocode-selection",
-      "response": {
-        "skills": [
-          "dart-concurrency"
-        ],
-        "reason": "Guard against stale reverse-geocoding results so only the latest pin selection can update the address."
-      },
-      "passed": false,
-      "selected": [
-        "dart-concurrency"
-      ],
-      "missing": [
-        "flutter-location-maps"
-      ],
-      "forbidden_selected": [],
-      "unexpected": []
-    },
-    {
-      "case": "location-maps-background-courier",
-      "response": {
-        "skills": [
-          "flutter-background-execution",
-          "flutter-location-maps"
-        ],
-        "reason": "Background execution keeps tracking active while the screen is locked and stops it at shift end, while the location specialist handles GPS permissions."
-      },
-      "passed": true,
-      "selected": [
-        "flutter-background-execution",
-        "flutter-location-maps"
-      ],
-      "missing": [],
-      "forbidden_selected": [],
-      "unexpected": []
-    },
-    {
-      "case": "location-maps-negative-deep-link",
-      "response": {
-        "skills": [
-          "flutter-navigation"
-        ],
-        "reason": "The fix is limited to routing the deep link to the existing store map tab by store ID while preserving back-stack behavior."
-      },
-      "passed": true,
-      "selected": [
-        "flutter-navigation"
-      ],
-      "missing": [],
-      "forbidden_selected": [],
-      "unexpected": []
-    },
-    {
-      "case": "location-maps-negative-http-retry",
-      "response": {
-        "skills": [
-          "flutter-networking"
-        ],
-        "reason": "Duplicate retries are a focused HTTP adapter issue."
-      },
-      "passed": true,
-      "selected": [
-        "flutter-networking"
-      ],
-      "missing": [],
-      "forbidden_selected": [],
-      "unexpected": []
-    }
-  ],
+  "routing": [],
   "summary": {
     "behavior_cases": 5,
     "behavior_passed": 3,
@@ -471,7 +370,7 @@
         "average_delta": null
       }
     },
-    "routing_cases": 6,
-    "routing_passed": 5
+    "routing_cases": 0,
+    "routing_passed": 0
   }
 }
