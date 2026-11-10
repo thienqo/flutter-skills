@@ -132,7 +132,7 @@ class RepositoryTests(unittest.TestCase):
         self.assertIsNotNone(retry_match)
         self.assertIsNotNone(sleep_match)
         retry_window_seconds = int(retry_match.group(1)) * int(sleep_match.group(1))
-        self.assertGreaterEqual(retry_window_seconds, 180)
+        self.assertGreaterEqual(retry_window_seconds, 600)
         self.assertIn(
             'npm exec --yes --prefix "$smoke_directory" --package="${package_name}@${package_version}" -- flutter-skills --version',
             workflow,
