@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and installation help
+    url: https://github.com/thienqo/flutter-skills/discussions
+    about: Ask usage and installation questions in Discussions.
+  - name: Security policy
+    url: https://github.com/thienqo/flutter-skills/blob/main/SECURITY.md
+    about: Read the private reporting instructions before sharing security details.
