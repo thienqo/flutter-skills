@@ -101,12 +101,12 @@ jobs:
           fi
 
           published_version=""
-          for attempt in {1..36}; do
+          for attempt in {1..60}; do
             if published_version="$(npm view "${package_name}@${package_version}" version 2>/dev/null)"; then
               break
             fi
-            echo "Registry has not exposed ${package_name}@${package_version} yet (attempt ${attempt}/36)."
-            sleep 5
+            echo "Registry has not exposed ${package_name}@${package_version} yet (attempt ${attempt}/60; retrying for up to 10 minutes)."
+            sleep 10
           done
           if [[ "$published_version" != "$package_version" ]]; then
             echo "Registry version mismatch: expected=$package_version actual=$published_version" >&2
