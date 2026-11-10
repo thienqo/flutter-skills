@@ -1,0 +1,77 @@
+name: Bug report
+description: Report a reproducible defect in a skill, installer, or published artifact.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For suspected security vulnerabilities, follow [SECURITY.md](https://github.com/thienqo/flutter-skills/blob/main/SECURITY.md). Do not post exploit details, credentials, or private application data here.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      options:
+        - Agent skill
+        - npm installer or package
+        - VS Code extension
+        - Tessl plugin
+        - Release or distribution workflow
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version and installation source
+      description: Include the version and where you installed it from (for example, npm, VS Code Marketplace, Tessl, or GitHub).
+      placeholder: "0.14.0 from npm"
+    validations:
+      required: true
+
+  - type: input
+    id: skill
+    attributes:
+      label: Skill name
+      description: If this affects a skill, provide its folder name, such as flutter-networking.
+    validations:
+      required: false
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include a minimal prompt or setup and the steps that reveal the problem. Remove secrets and private data.
+      placeholder: |
+        1. Install ...
+        2. Ask the agent to ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: Expected and actual behavior
+      description: Explain what you expected and what happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Relevant evidence
+      description: Link official documentation, logs with sensitive data removed, or a minimal example if useful.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I removed credentials, tokens, personal data, and private project information.
+          required: true
+        - label: I checked whether this issue is already reported.
+          required: true

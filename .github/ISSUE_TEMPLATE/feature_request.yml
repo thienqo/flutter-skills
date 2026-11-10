@@ -1,0 +1,55 @@
+name: Feature request
+description: Suggest a focused improvement to a skill, installer, or distribution channel.
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For usage questions, use [Discussions](https://github.com/thienqo/flutter-skills/discussions). For security concerns, follow [SECURITY.md](https://github.com/thienqo/flutter-skills/blob/main/SECURITY.md) and do not include sensitive details here.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Area
+      options:
+        - Existing Agent Skill
+        - New Agent Skill
+        - npm installer or package
+        - VS Code extension
+        - Tessl plugin
+        - Evaluation or validation tooling
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What task is difficult or unsupported today? Describe a concrete example.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: What should the project do? Keep the request focused and explain how success would be observable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Mention any current workaround or other approach you considered.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked that a similar request has not already been proposed.
+          required: true
