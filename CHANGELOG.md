@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.14.0 - 2026-11-10
 
 - Separate terminated notification delivery from Android force-stop in the lifecycle runner. Correct OpenAPI 3.1 schema reference resolution, disabled semantics actions, and iOS Reduce Motion guidance. Add four focused behavior cases.
 
