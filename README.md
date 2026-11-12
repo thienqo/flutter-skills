@@ -26,7 +26,7 @@ npx @thiennc/flutter-skills --preset auto     # Auto-detect packages from pubspe
 npx @thiennc/flutter-skills presets           # List all presets (core, ui, data, ship, platform, full)
 npx @thiennc/flutter-skills status            # Check installed versions
 npx @thiennc/flutter-skills update            # Update installed Flutter skills
-npx @thiennc/flutter-skills remove --all      # Uninstall Flutter skills safely
+npx @thiennc/flutter-skills remove --all      # Uninstall the Flutter skills this package installed
 ```
 
 <details>
