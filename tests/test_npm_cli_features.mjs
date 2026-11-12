@@ -20,6 +20,10 @@ import {
   listCatalogSkills,
   resolvePresetNames,
 } from "../lib/presets.mjs";
+import {
+  readInstalledFlutterSkills,
+  repositoryIdentity,
+} from "../lib/lockfile.mjs";
 
 function outputCollector() {
   let value = "";
@@ -244,24 +248,247 @@ test("update upgrades only outdated Flutter skills in lockfile", () => {
   }
 });
 
-test("remove --all scopes removal to flutter-skills catalog instead of forwarding --all", () => {
-  let invocation;
-  const status = run(["remove", "--all", "-g"], {
-    cliPath: "/dependency/skills/bin/cli.mjs",
-    nodePath: "/node",
-    spawn: (command, args) => {
-      invocation = { command, args };
-      return { status: 0 };
-    },
-  });
+test("update keeps option values when forwarding to the installer", () => {
+  const tempDir = mkdtempSync(join(tmpdir(), "flutter-skills-update-agent-"));
+  try {
+    writeFileSync(
+      join(tempDir, "skills-lock.json"),
+      JSON.stringify({
+        version: 3,
+        skills: {
+          "dart-language": { source: "thienqo/flutter-skills", ref: "v0.13.0" },
+        },
+      }),
+      "utf8",
+    );
 
-  assert.equal(status, 0);
-  assert.equal(invocation.args[1], "remove");
-  assert.equal(invocation.args[2], "--skill");
-  assert.ok(!invocation.args.includes("--all"));
-  assert.ok(invocation.args.includes("flutter-app-workflow"));
-  assert.ok(invocation.args.includes("-g"));
-  assert.ok(invocation.args.includes("-y"));
+    let invocation;
+    const status = run(["update", "--agent", "codex", "-y"], {
+      cwd: tempDir,
+      stdout: outputCollector().stream,
+      cliPath: "/dependency/skills/bin/cli.mjs",
+      nodePath: "/node",
+      spawn: (command, args) => {
+        invocation = { command, args };
+        return { status: 0 };
+      },
+    });
+
+    assert.equal(status, 0);
+    assert.deepEqual(invocation.args, [
+      "/dependency/skills/bin/cli.mjs",
+      "add",
+      skillsSource,
+      "--skill",
+      "dart-language",
+      "--agent",
+      "codex",
+      "-y",
+    ]);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("update rejects names that are not installed from this package", () => {
+  const tempDir = mkdtempSync(join(tmpdir(), "flutter-skills-update-unknown-"));
+  try {
+    writeFileSync(
+      join(tempDir, "skills-lock.json"),
+      JSON.stringify({
+        skills: { "dart-language": { source: "thienqo/flutter-skills", ref: targetRef } },
+      }),
+      "utf8",
+    );
+
+    const out = outputCollector();
+    const status = run(["update", "deprecated-flutter-skill"], {
+      cwd: tempDir,
+      stdout: out.stream,
+      spawn: () => {
+        throw new Error("installer should not start");
+      },
+    });
+
+    assert.equal(status, 1);
+    assert.match(out.value(), /Not installed from flutter-skills: deprecated-flutter-skill/);
+    assert.match(out.value(), /Installed skills: dart-language/);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("remove --all removes only lockfile-owned skills and keeps confirmation", () => {
+  const tempDir = mkdtempSync(join(tmpdir(), "flutter-skills-remove-all-"));
+  try {
+    writeFileSync(
+      join(tempDir, "skills-lock.json"),
+      JSON.stringify({
+        skills: {
+          "dart-language": { source: "thienqo/flutter-skills", ref: "v0.13.0" },
+          "flutter-media": {
+            sourceUrl: "https://github.com/thienqo/flutter-skills#v0.13.0",
+            ref: "v0.13.0",
+          },
+          "someone-else-skill": { source: "someone/flutter-skills-fork", ref: "main" },
+          "extra-skill": { source: "thienqo/flutter-skills-extra", ref: "main" },
+        },
+      }),
+      "utf8",
+    );
+
+    let invocation;
+    const status = run(["remove", "--all"], {
+      cwd: tempDir,
+      stdout: outputCollector().stream,
+      cliPath: "/dependency/skills/bin/cli.mjs",
+      nodePath: "/node",
+      spawn: (command, args) => {
+        invocation = { command, args };
+        return { status: 0 };
+      },
+    });
+
+    assert.equal(status, 0);
+    assert.equal(invocation.args[1], "remove");
+    assert.equal(invocation.args[2], "--skill");
+    assert.deepEqual(invocation.args.slice(3), ["dart-language", "flutter-media"]);
+    assert.ok(!invocation.args.includes("--all"));
+    assert.ok(!invocation.args.includes("-y"));
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("remove --all forwards an explicit -y flag", () => {
+  const tempDir = mkdtempSync(join(tmpdir(), "flutter-skills-remove-all-yes-"));
+  try {
+    writeFileSync(
+      join(tempDir, "skills-lock.json"),
+      JSON.stringify({
+        skills: { "dart-language": { source: "thienqo/flutter-skills", ref: "v0.13.0" } },
+      }),
+      "utf8",
+    );
+
+    let invocation;
+    const status = run(["remove", "--all", "-y"], {
+      cwd: tempDir,
+      stdout: outputCollector().stream,
+      cliPath: "/dependency/skills/bin/cli.mjs",
+      nodePath: "/node",
+      spawn: (command, args) => {
+        invocation = { command, args };
+        return { status: 0 };
+      },
+    });
+
+    assert.equal(status, 0);
+    assert.deepEqual(invocation.args.slice(1), ["remove", "--skill", "dart-language", "-y"]);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("remove --all reads the global lockfile and forwards -g", () => {
+  const homeDir = mkdtempSync(join(tmpdir(), "flutter-skills-remove-global-"));
+  const projectDir = mkdtempSync(join(tmpdir(), "flutter-skills-remove-global-cwd-"));
+  try {
+    mkdirSync(join(homeDir, ".agents"), { recursive: true });
+    writeFileSync(
+      join(homeDir, ".agents", ".skill-lock.json"),
+      JSON.stringify({
+        skills: {
+          "dart-language": { source: "thienqo/flutter-skills", ref: "v0.13.0" },
+          "someone-else-skill": { source: "someone/flutter-skills-fork", ref: "main" },
+        },
+      }),
+      "utf8",
+    );
+
+    let invocation;
+    const status = run(["remove", "--all", "-g"], {
+      cwd: projectDir,
+      homeDir,
+      stdout: outputCollector().stream,
+      cliPath: "/dependency/skills/bin/cli.mjs",
+      nodePath: "/node",
+      spawn: (command, args) => {
+        invocation = { command, args };
+        return { status: 0 };
+      },
+    });
+
+    assert.equal(status, 0);
+    assert.deepEqual(invocation.args.slice(1), ["remove", "--skill", "dart-language", "-g"]);
+  } finally {
+    rmSync(homeDir, { recursive: true, force: true });
+    rmSync(projectDir, { recursive: true, force: true });
+  }
+});
+
+test("remove --all without owned skills does not start the installer", () => {
+  const tempDir = mkdtempSync(join(tmpdir(), "flutter-skills-remove-all-empty-"));
+  try {
+    const out = outputCollector();
+    const status = run(["remove", "--all"], {
+      cwd: tempDir,
+      stdout: out.stream,
+      spawn: () => {
+        throw new Error("installer should not start");
+      },
+    });
+
+    assert.equal(status, 0);
+    assert.match(out.value(), /No project Flutter skills found to remove/);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("lockfile ownership distinguishes exact repositories from similar names", () => {
+  const tempDir = mkdtempSync(join(tmpdir(), "flutter-skills-ownership-"));
+  try {
+    writeFileSync(
+      join(tempDir, "skills-lock.json"),
+      JSON.stringify({
+        skills: {
+          "dart-language": { source: "thienqo/flutter-skills", ref: "v1" },
+          "flutter-media": {
+            sourceUrl: "https://github.com/thienqo/flutter-skills#v1",
+            ref: "v1",
+          },
+          "clone-skill": { source: "someone/flutter-skills-fork", ref: "v1" },
+          "extra-skill": { source: "thienqo/flutter-skills-extra", ref: "v1" },
+          "lab-skill": { source: "https://github.com/thienqo/flutter-skills-lab", ref: "v1" },
+        },
+      }),
+      "utf8",
+    );
+
+    const state = readInstalledFlutterSkills({ cwd: tempDir });
+    assert.deepEqual(state.skills.map((skill) => skill.name), [
+      "dart-language",
+      "flutter-media",
+    ]);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("repositoryIdentity normalizes supported source spellings", () => {
+  assert.equal(repositoryIdentity("thienqo/flutter-skills"), "thienqo/flutter-skills");
+  assert.equal(
+    repositoryIdentity("https://github.com/thienqo/flutter-skills#v0.14.0"),
+    "thienqo/flutter-skills",
+  );
+  assert.equal(
+    repositoryIdentity("git@github.com:thiennc-tesoglobal/flutter-skills.git"),
+    "thiennc-tesoglobal/flutter-skills",
+  );
+  assert.equal(repositoryIdentity("thienqo/flutter-skills-extra"), "thienqo/flutter-skills-extra");
+  assert.equal(repositoryIdentity(""), null);
+  assert.equal(repositoryIdentity(null), null);
 });
 
 test("passes DISABLE_TELEMETRY=1 when --no-telemetry is set", () => {
