@@ -16,6 +16,8 @@ Choose your agent and skills interactively:
 npx @thiennc/flutter-skills
 ```
 
+Installs into the current project. Add `--global` to use across projects.
+
 Or use presets, auto-detection, and lifecycle commands:
 
 ```sh
@@ -26,8 +28,6 @@ npx @thiennc/flutter-skills status            # Check installed versions
 npx @thiennc/flutter-skills update            # Update installed Flutter skills
 npx @thiennc/flutter-skills remove --all      # Uninstall Flutter skills safely
 ```
-
-Installs into the current project. Add `--global` (`-g`) to manage skills across projects.
 
 <details>
 <summary>Install as a Codex or Claude Code plugin</summary>
