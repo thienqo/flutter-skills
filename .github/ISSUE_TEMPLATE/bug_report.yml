@@ -26,7 +26,7 @@ body:
     attributes:
       label: Version and installation source
       description: Include the version and where you installed it from (for example, npm, VS Code Marketplace, Tessl, or GitHub).
-      placeholder: "0.14.0 from npm"
+      placeholder: "0.15.0 from npm"
     validations:
       required: true
 

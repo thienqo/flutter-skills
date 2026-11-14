@@ -2,7 +2,7 @@
   "$schema": "https://antigravity.google/schemas/v1/plugin.json",
   "name": "flutter-skills",
   "displayName": "Flutter Skills",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Use 40 skills to build, review, test, and release Flutter and Dart apps while preserving your project's architecture and package choices.",
   "logo": "assets/antigravity-icon.png",
   "suggestedPrompts": [
