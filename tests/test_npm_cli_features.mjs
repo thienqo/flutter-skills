@@ -479,7 +479,7 @@ test("lockfile ownership distinguishes exact repositories from similar names", (
 test("repositoryIdentity normalizes supported source spellings", () => {
   assert.equal(repositoryIdentity("thienqo/flutter-skills"), "thienqo/flutter-skills");
   assert.equal(
-    repositoryIdentity("https://github.com/thienqo/flutter-skills#v0.15.0"),
+    repositoryIdentity("https://github.com/thienqo/flutter-skills#v0.14.0"),
     "thienqo/flutter-skills",
   );
   assert.equal(

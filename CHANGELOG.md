@@ -1,10 +1,5 @@
 # Changelog
 
-## 0.15.0 - 2026-11-14
-
-- Add CLI preset bundles (`core`, `ui`, `data`, `ship`, `platform`, `full`), automatic `pubspec.yaml` dependency detection (`--preset auto` / `--detect`), and lifecycle commands (`presets`, `status`, `update`, safe `remove --all`).
-- Add lockfile tracking for installed Flutter skills and `--no-telemetry` flag support.
-
 ## 0.14.0 - 2026-11-10
 
 - Separate terminated notification delivery from Android force-stop in the lifecycle runner. Correct OpenAPI 3.1 schema reference resolution, disabled semantics actions, and iOS Reduce Motion guidance. Add four focused behavior cases.
