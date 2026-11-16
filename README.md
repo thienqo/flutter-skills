@@ -18,6 +18,17 @@ npx @thiennc/flutter-skills
 
 Installs into the current project. Add `--global` to use across projects.
 
+Or use presets, auto-detection, and lifecycle commands:
+
+```sh
+npx @thiennc/flutter-skills --preset core     # Core workflow, Dart 3, architecture, state, testing
+npx @thiennc/flutter-skills --preset auto     # Auto-detect packages from pubspec.yaml + core
+npx @thiennc/flutter-skills presets           # List all presets (core, ui, data, ship, platform, full)
+npx @thiennc/flutter-skills status            # Check installed versions
+npx @thiennc/flutter-skills update            # Update installed Flutter skills
+npx @thiennc/flutter-skills remove --all      # Uninstall the Flutter skills this package installed
+```
+
 <details>
 <summary>Install as a Codex or Claude Code plugin</summary>
 
