@@ -290,6 +290,48 @@ test("update keeps option values when forwarding to the installer", () => {
   }
 });
 
+test("update forwards multiple agent values without treating them as skills", () => {
+  const tempDir = mkdtempSync(join(tmpdir(), "flutter-skills-update-agents-"));
+  try {
+    writeFileSync(
+      join(tempDir, "skills-lock.json"),
+      JSON.stringify({
+        skills: {
+          "dart-language": { source: "thienqo/flutter-skills", ref: "v0.13.0" },
+        },
+      }),
+      "utf8",
+    );
+
+    let invocation;
+    const status = run(["update", "--agent", "codex", "claude-code", "-y"], {
+      cwd: tempDir,
+      stdout: outputCollector().stream,
+      cliPath: "/dependency/skills/bin/cli.mjs",
+      nodePath: "/node",
+      spawn: (command, args) => {
+        invocation = { command, args };
+        return { status: 0 };
+      },
+    });
+
+    assert.equal(status, 0);
+    assert.deepEqual(invocation.args, [
+      "/dependency/skills/bin/cli.mjs",
+      "add",
+      skillsSource,
+      "--skill",
+      "dart-language",
+      "--agent",
+      "codex",
+      "claude-code",
+      "-y",
+    ]);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
 test("update rejects names that are not installed from this package", () => {
   const tempDir = mkdtempSync(join(tmpdir(), "flutter-skills-update-unknown-"));
   try {
@@ -441,6 +483,37 @@ test("remove --all without owned skills does not start the installer", () => {
 
     assert.equal(status, 0);
     assert.match(out.value(), /No project Flutter skills found to remove/);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("remove --all rejects extra skill selectors outside the ownership scope", () => {
+  const tempDir = mkdtempSync(join(tmpdir(), "flutter-skills-remove-all-scope-"));
+  try {
+    writeFileSync(
+      join(tempDir, "skills-lock.json"),
+      JSON.stringify({
+        skills: {
+          "dart-language": { source: "thienqo/flutter-skills", ref: "v1" },
+          "unrelated-skill": { source: "someone/other-repo", ref: "main" },
+        },
+      }),
+      "utf8",
+    );
+
+    const err = outputCollector();
+    const status = run(["remove", "--all", "unrelated-skill", "-y"], {
+      cwd: tempDir,
+      stderr: err.stream,
+      spawn: () => {
+        throw new Error("installer should not start");
+      },
+    });
+
+    assert.equal(status, 1);
+    assert.match(err.value(), /only removes skills installed from this package/);
+    assert.match(err.value(), /unrelated-skill/);
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }
