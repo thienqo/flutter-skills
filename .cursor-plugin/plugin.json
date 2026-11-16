@@ -1,6 +1,6 @@
 {
   "name": "flutter-skills",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Agent skills for building, reviewing, testing, and releasing Flutter and Dart apps with your existing architecture and packages.",
   "author": {
     "name": "thienqo"
@@ -8,6 +8,12 @@
   "homepage": "https://github.com/thienqo/flutter-skills",
   "repository": "https://github.com/thienqo/flutter-skills",
   "license": "BSD-3-Clause",
-  "keywords": ["flutter", "dart", "mobile", "testing", "code-review"],
+  "keywords": [
+    "flutter",
+    "dart",
+    "mobile",
+    "testing",
+    "code-review"
+  ],
   "logo": ".claude-plugin/icon.png"
 }

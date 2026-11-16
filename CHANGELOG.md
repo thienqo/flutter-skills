@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.15.0 - 2026-11-16
+
+- Reland the CLI feature set that was reverted after 0.14.0: preset bundles (`--preset core|ui|data|ship|platform|full|auto`) with `pubspec.yaml` package detection, `status`, `update`, scoped `remove --all`, and `--no-telemetry`.
+- Derive ownership for `update` and scoped `remove --all` from exact repository identity in the lockfile, so forks and similarly named repositories are not updated or swept into `--all`; an explicit `remove <skill>` still forwards to the upstream CLI.
+- Keep `remove --all` inside the lockfile-owned set by rejecting extra skill selectors, and treat `--agent` as variadic in `update` so multiple agent values are not mistaken for requested skill names.
+- Add regression tests for ownership, project and global removal scope, explicit confirmation flags, empty lockfiles, and update argument forwarding.
+
 ## 0.14.0 - 2026-11-10
 
 - Separate terminated notification delivery from Android force-stop in the lifecycle runner. Correct OpenAPI 3.1 schema reference resolution, disabled semantics actions, and iOS Reduce Motion guidance. Add four focused behavior cases.
