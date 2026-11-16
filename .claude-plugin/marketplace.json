@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Focused Flutter and Dart Agent Skills for complete app delivery",
-    "version": "0.14.0"
+    "version": "0.15.0"
   },
   "plugins": [
     {
       "name": "thienqo-flutter-skills",
       "source": "./",
       "description": "Complete Flutter and Dart delivery collection",
-      "version": "0.14.0",
+      "version": "0.15.0",
       "category": "development"
     }
   ]
