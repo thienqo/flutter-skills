@@ -72,3 +72,8 @@ MCP integration must be capability-aware: use the semantic or runtime tools when
 ## Upstream relationship
 
 The official `flutter/agent-plugins` repository is a trusted reference and inspiration for focused workflows such as architecture, responsive layout, routing, HTTP, serialization, localization, and tests. This repository maintains independent wording, broader delivery coordination, package-neutral decision rules, and its own evaluations and quality gates.
+- [Firebase Remote Config for Flutter](https://firebase.google.com/docs/remote-config/get-started?platform=flutter)
+- [Firebase Remote Config loading strategies](https://firebase.google.com/docs/remote-config/loading)
+- [firebase_remote_config package](https://pub.dev/packages/firebase_remote_config)
+- [LaunchDarkly Flutter SDK](https://launchdarkly.com/docs/sdk/client-side/flutter)
+- [LaunchDarkly offline mode](https://launchdarkly.com/docs/sdk/features/offline-mode)

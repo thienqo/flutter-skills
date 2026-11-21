@@ -1,6 +1,6 @@
 # Flutter Skills
 
-[![Agent Skills](https://img.shields.io/badge/Agent%20Skills-40-2ea44f)](skills/)
+[![Agent Skills](https://img.shields.io/badge/Agent%20Skills-41-2ea44f)](skills/)
 [![Validation](https://github.com/thienqo/flutter-skills/actions/workflows/validate-repository.yml/badge.svg)](https://github.com/thienqo/flutter-skills/actions/workflows/validate-repository.yml)
 [![License](https://img.shields.io/badge/License-BSD--3--Clause-blue)](LICENSE)
 
@@ -58,7 +58,7 @@ In Codex, type `$flutter-app-workflow` for end-to-end feature delivery or name a
 
 ## Catalog
 
-**40 skills** covering Dart, architecture, UI, media, payments, APIs, testing, debugging, and release delivery.
+**41 skills** covering Dart, architecture, UI, media, payments, APIs, configuration, testing, debugging, and release delivery.
 
 <details>
 <summary>Browse all skills</summary>
@@ -72,7 +72,7 @@ In Codex, type `$flutter-app-workflow` for end-to-end feature delivery or name a
 | Data & AI | `flutter-networking`, `flutter-openapi-client`, `flutter-persistence`, `flutter-ai-integration` |
 | Location & maps | `flutter-location-maps` (permissions, map interaction, nearby search, address picking) |
 | Media | `flutter-media` (capture, QR and barcode scanning, music and video playback, livestreams, calls, screen sharing) |
-| Identity & product | `flutter-authentication`, `flutter-in-app-purchases`, `flutter-payments-checkout`, `flutter-product-analytics` |
+| Identity & product | `flutter-authentication`, `flutter-in-app-purchases`, `flutter-payments-checkout`, `flutter-product-analytics`, `flutter-remote-config` |
 | Quality | `flutter-code-review`, `flutter-security`, `flutter-testing`, `flutter-runtime-debugging`, `flutter-performance`, `flutter-observability`, `flutter-accessibility`, `flutter-localization` |
 | Platform & packages | `flutter-background-execution`, `flutter-platform-integration`, `flutter-package-development`, `flutter-notifications`, `flutter-webview` |
 
@@ -80,7 +80,7 @@ In Codex, type `$flutter-app-workflow` for end-to-end feature delivery or name a
 
 ## Quality
 
-**272 behavior-focused evaluation cases** and **94 cross-catalog routing cases** define expected behavior and skill selection. See [measured results](benchmarks/README.md) and [contribution guidelines](CONTRIBUTING.md).
+**278 behavior-focused evaluation cases** and **98 cross-catalog routing cases** define expected behavior and skill selection. See [measured results](benchmarks/README.md) and [contribution guidelines](CONTRIBUTING.md).
 
 ## License
 

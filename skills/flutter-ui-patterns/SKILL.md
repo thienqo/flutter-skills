@@ -1,6 +1,6 @@
 ---
 name: flutter-ui-patterns
-description: Build and refactor Flutter widgets, forms with stale-safe asynchronous validation and duplicate-submit handling, widget previews, component APIs, and UI state boundaries. Use alone for form behavior over existing services; add networking or concurrency only when their infrastructure changes, and route visual polish, responsive layout, navigation, animation, and performance to their specialists.
+description: Build and refactor Flutter widgets, forms with stale-safe asynchronous validation and duplicate-submit handling, widget previews, component APIs, and UI state boundaries. Use for form behavior over existing services; add networking or concurrency only when infrastructure changes, and route visual polish, responsive layout, navigation, animation, and performance to their specialists.
 ---
 
 # Flutter UI Patterns

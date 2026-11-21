@@ -1,6 +1,6 @@
 ---
 name: flutter-dependency-upgrades
-description: Plan, execute, or review Flutter and Dart SDK upgrades, dependency resolution, lockfile changes, package breaking changes, and compatible native toolchain migrations. Use when versions or compatibility are the task; route ordinary Dart refactoring to dart-language, security audits to flutter-security, and release artifacts to flutter-build-release.
+description: Plan, execute, or review Flutter and Dart SDK upgrades, dependency resolution, lockfile changes, package breaking changes, and native toolchain migrations. Use when versions or compatibility are the task; route Dart refactoring to dart-language, security audits to flutter-security, and release artifacts to flutter-build-release.
 ---
 
 # Flutter Dependency Upgrades

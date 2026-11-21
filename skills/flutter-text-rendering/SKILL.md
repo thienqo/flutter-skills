@@ -1,6 +1,6 @@
 ---
 name: flutter-text-rendering
-description: Diagnose and fix Flutter text display issues including text overflow, orphaned words, line breaking, truncation, multi-style spans, and text scaling. Use when text clips, leaves dangling single words, overflows containers, or requires rich inline spans; route typography tokens and visual hierarchy to flutter-ui-design and screen-level layout constraints to flutter-responsive-layout.
+description: Diagnose and fix Flutter text display issues including overflow, orphaned words, line breaking, truncation, multi-style spans, and scaling. Use when text clips, leaves a dangling word, overflows containers, or needs rich inline spans; route typography tokens and hierarchy to flutter-ui-design and layout constraints to flutter-responsive-layout.
 ---
 
 # Flutter Text Rendering
