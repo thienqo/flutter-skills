@@ -1,6 +1,6 @@
 ---
 name: flutter-runtime-debugging
-description: Reproduce, inspect, diagnose, and fix Flutter failures in a running app using logs, debugger attachment, DevTools, framework diagnostics, and minimal experiments. Use for runtime exceptions, incorrect live state, hangs, lifecycle failures, or failures that require execution evidence; route benchmarked jank to flutter-performance and planned device-flow verification to flutter-device-testing.
+description: Diagnose and fix Flutter failures in a running app using logs, debugger attachment, DevTools, and minimal experiments. Use for runtime exceptions, incorrect live state, hangs, lifecycle failures, or failures requiring execution evidence; route benchmarked jank to flutter-performance and device-flow verification to flutter-device-testing.
 ---
 
 # Flutter Runtime Debugging

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add `flutter-remote-config` for typed config contracts, safe defaults, fetch and activation timing, targeting, staged rollout and kill switches, offline fallback, and change verification. The catalog now has 41 skills, 278 behavior cases, and 98 routing cases.
+- Tighten five discovery descriptions to keep the combined lookup budget within 12,000 characters.
+
 ## 0.15.0 - 2026-11-16
 
 - Reland the CLI feature set that was reverted after 0.14.0: preset bundles (`--preset core|ui|data|ship|platform|full|auto`) with `pubspec.yaml` package detection, `status`, `update`, scoped `remove --all`, and `--no-telemetry`.

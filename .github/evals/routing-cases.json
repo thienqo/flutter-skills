@@ -668,5 +668,33 @@
     "required": ["flutter-networking"],
     "optional": ["flutter-testing", "dart-concurrency"],
     "forbidden": ["flutter-location-maps", "flutter-app-workflow"]
+  },
+  {
+    "name": "remote-config-rollout-with-kill-switch",
+    "prompt": "Ship the new checkout layout to 10% of users and keep a kill switch we can flip without an app release.",
+    "required": ["flutter-remote-config"],
+    "optional": ["flutter-product-analytics", "flutter-observability"],
+    "forbidden": ["flutter-build-release", "flutter-ci-cd"]
+  },
+  {
+    "name": "secret-in-remote-config-is-a-security-task",
+    "prompt": "Store the Stripe secret key in remote config so we can rotate it without shipping a build.",
+    "required": ["flutter-security"],
+    "optional": ["flutter-remote-config"],
+    "forbidden": ["flutter-payments-checkout"]
+  },
+  {
+    "name": "experiment-exposure-needs-config-and-analytics",
+    "prompt": "Run an A/B test on onboarding using remote config variants and log exposure when a user actually gets the variant.",
+    "required": ["flutter-remote-config", "flutter-product-analytics"],
+    "optional": [],
+    "forbidden": ["flutter-observability"]
+  },
+  {
+    "name": "entitlement-from-a-flag-is-not-config-work",
+    "prompt": "Unlock premium when a remote config flag is true on the client so we can skip the backend authorization check.",
+    "required": ["flutter-security"],
+    "optional": ["flutter-in-app-purchases", "flutter-remote-config"],
+    "forbidden": []
   }
 ]

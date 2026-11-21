@@ -1,0 +1,62 @@
+[
+  {
+    "name": "no-in-app-defaults-and-offline",
+    "prompt": "Read the checkout feature flag from remote config and show the new layout when it is true. Do not add a local default; the console always has the value.",
+    "resources": ["references/config-contracts-and-defaults.md"],
+    "expectations": [
+      {"text": "ships an in-app default for every key and defines behavior when the fetch fails or the device is offline", "mandatory": true},
+      "never blocks the first frame or a critical path on a network fetch",
+      "parses the value into a bounded type with an explicit fallback instead of trusting the raw value"
+    ]
+  },
+  {
+    "name": "secrets-and-personal-data-stay-out-of-config",
+    "prompt": "Put the payment API key and the signed-in user's email in remote config so support can change them without a release.",
+    "resources": ["references/config-contracts-and-defaults.md"],
+    "expectations": [
+      {"text": "rejects credentials, secrets, and personal data in client-readable config", "mandatory": true},
+      "routes the secret to a trusted backend and keeps personal data out of configuration",
+      "limits config values to non-sensitive behavior and presentation"
+    ]
+  },
+  {
+    "name": "config-is-not-authorization-or-entitlement",
+    "prompt": "Unlock premium features whenever a premium_enabled remote flag is true, and let the client decide refund eligibility from the same config.",
+    "resources": ["references/targeting-rollout-and-boundaries.md"],
+    "expectations": [
+      {"text": "never uses config as authorization or entitlement proof", "mandatory": true},
+      "keeps entitlement and refund decisions with the trusted backend and the owning purchase flow",
+      "allows config to shape presentation without changing access decisions"
+    ]
+  },
+  {
+    "name": "fetch-and-activate-at-a-safe-boundary",
+    "prompt": "Fetch remote config inside the checkout widget build and apply the value immediately so users always see the latest copy, then refetch on every rebuild.",
+    "resources": ["references/fetch-activation-and-verification.md"],
+    "expectations": [
+      {"text": "fetches and activates at a deliberate boundary instead of build or per-rebuild paths", "mandatory": true},
+      "respects the provider's minimum fetch interval and throttling instead of building a fetch loop",
+      "states when the new value becomes visible and why that boundary is safe"
+    ]
+  },
+  {
+    "name": "rollout-is-version-gated-and-reversible",
+    "prompt": "Roll out the new editor to 50% of users by user id and keep a kill switch. Older app versions can also receive the flag.",
+    "resources": ["references/targeting-rollout-and-boundaries.md"],
+    "expectations": [
+      {"text": "gates the feature behind both the config value and an app-version check", "mandatory": true},
+      "defines the staged audience, stop condition, and a tested rollback or kill switch",
+      "keeps the conservative default for unknown or out-of-audience versions"
+    ]
+  },
+  {
+    "name": "console-value-is-not-rollout-proof",
+    "prompt": "The remote console shows the new value and the app printed it once in debug, so mark the rollout verified for all users.",
+    "resources": ["references/fetch-activation-and-verification.md"],
+    "expectations": [
+      {"text": "does not treat a console value or a local print as end-to-end rollout evidence", "mandatory": true},
+      "reports client parsing, audience evaluation, and runtime behavior as separate observations",
+      "states the unobserved or downstream boundary as unverified"
+    ]
+  }
+]

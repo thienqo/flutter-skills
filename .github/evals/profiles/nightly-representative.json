@@ -32,6 +32,7 @@
     {"skill": "flutter-persistence", "case": "database-choice-from-query-needs"},
     {"skill": "flutter-platform-integration", "case": "typed-native-contract"},
     {"skill": "flutter-product-analytics", "case": "widget-rebuilds-do-not-own-business-events"},
+    {"skill": "flutter-remote-config", "case": "no-in-app-defaults-and-offline"},
     {"skill": "flutter-responsive-layout", "case": "navigation-adapts-to-window-width"},
     {"skill": "flutter-runtime-debugging", "case": "attach-preserves-failing-state"},
     {"skill": "flutter-security", "case": "hardcoded-service-secret-is-not-fixed-by-obfuscation"},

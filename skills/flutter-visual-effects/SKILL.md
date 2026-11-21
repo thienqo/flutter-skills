@@ -1,6 +1,6 @@
 ---
 name: flutter-visual-effects
-description: Implement or review advanced Flutter visual rendering such as frosted or liquid glass, backdrop blur, refraction, shaders, custom painting, glow, masks, and effect fallbacks. Use when the request explicitly needs a nontrivial visual effect; route art direction, ordinary styling, animation timing, and evidence-based performance diagnosis to their dedicated skills.
+description: Implement or review advanced Flutter visual rendering such as frosted or liquid glass, backdrop blur, refraction, shaders, custom painting, glow, masks, and effect fallbacks. Use when a request needs a nontrivial visual effect; route art direction, styling, animation timing, and performance diagnosis to their skills.
 ---
 
 # Flutter Visual Effects
