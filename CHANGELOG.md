@@ -1,9 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.16.0 - 2026-11-21
 
 - Add `flutter-remote-config` for typed config contracts, safe defaults, fetch and activation timing, targeting, staged rollout and kill switches, offline fallback, and change verification. The catalog now has 41 skills, 278 behavior cases, and 98 routing cases.
-- Tighten five discovery descriptions to keep the combined lookup budget within 12,000 characters.
+- Tighten six discovery descriptions to keep the combined lookup budget within 12,000 characters.
 
 ## 0.15.0 - 2026-11-16
 
