@@ -4,9 +4,9 @@ Fetching and activating are separate steps in most providers, and the difference
 
 ## Fetch versus activate
 
-Firebase Remote Config stores fetched values in the SDK; `activate()` makes them available to the app, and `fetchAndActivate()` performs both. Activating at a deliberate boundary (app start, next session, or an explicit foreground refresh) avoids a value changing in the middle of a screen or gesture. The FlutterFire guide recommends activating at a time that keeps the experience smooth, such as the user's next app open.
+Firebase Remote Config stores fetched values in the SDK; `activate()` makes them available to the app, and `fetchAndActivate()` performs both. Activating at a deliberate boundary (app start, next session, or a user-initiated foreground refresh) avoids a value changing in the middle of a screen or gesture. The FlutterFire guide recommends activating at a time that keeps the experience smooth, such as the user's next app open.
 
-Never fetch from `build`, a gesture handler, or a per-frame path. A short adapter that owns initialization, fetch, activation, and the last-known-good cache is the unit to test.
+Never fetch from `build`, an incidental gesture handler, or a per-frame path. A deliberate, user-initiated refresh action is a defined boundary: it still respects the minimum interval and throttling, shows progress, and never runs per tap. A short adapter that owns initialization, fetch, activation, and the last-known-good cache is the unit to test.
 
 ## Freshness, throttling, and real time
 
